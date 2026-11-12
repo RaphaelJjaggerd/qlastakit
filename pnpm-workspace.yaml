@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - services/*
+  - packages/ts/*
+  - contracts/clients/ts
+
+onlyBuiltDependencies:
+  - esbuild

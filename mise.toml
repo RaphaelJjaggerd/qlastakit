@@ -1,0 +1,10 @@
+# Pins toolchain versions for this repo. `mise install` installs them.
+# Uncomment a language when you start using it.
+[tools]
+node = "22"
+pnpm = "10"
+just = "latest"
+# rust = "stable"
+# go = "1.25"
+# python = "3.13"
+# uv = "latest"

@@ -1,0 +1,12 @@
+node_modules
+dist
+.output
+.turbo
+.tanstack
+.nitro
+.env
+*.log
+target
+__pycache__
+.venv
+.DS_Store

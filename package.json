@@ -1,0 +1,21 @@
+{
+  "name": "foundation",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "contract": "pnpm --filter @kit/api openapi:export && pnpm --filter @kit/api-client generate"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.7",
+    "turbo": "^2.11.11",
+    "typescript": "^5.9.0"
+  }
+}

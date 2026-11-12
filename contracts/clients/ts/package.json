@@ -1,0 +1,18 @@
+{
+  "name": "@kit/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-ts",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@kit/config": "workspace:*",
+    "typescript": "^5.9.0"
+  }
+}
