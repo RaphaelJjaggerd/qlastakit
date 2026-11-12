@@ -2,6 +2,11 @@
 
 Guide for AI agents (and humans) working in this repo. Read this first.
 
+> **Status: draft.** The kit is still being designed. Read `docs/PRD.md` for locked
+> decisions, open questions and the roadmap. Where this file and the PRD disagree (e.g.
+> the PRD locks NestJS and oxlint, the skeleton still uses Hono and Biome), the PRD wins.
+> Do not build product features until the PRD says Phase 1 is done.
+
 ## What this repo is
 
 A foundation monorepo. The infrastructure (UI kit, API plumbing, database, contracts,
