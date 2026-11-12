@@ -35,23 +35,42 @@ First real consumers: the two idea management apps.
 | Build orchestration | Turborepo | TS tasks only |
 | Web app | TanStack Start | Next.js at most for marketing |
 | Main API | **NestJS** | Hono offered later as an option |
-| Database | **Postgres, always** | |
-| ORM | **Drizzle** | Postgres only |
-| Optional DB | **MongoDB**, per project | See open question Q3 |
+| Database | **Postgres only** | MongoDB dropped for now, may revisit later |
+| ORM | **Drizzle** | |
 | Contract | OpenAPI, generated from the API | Hey API for the TS client |
-| Linter | **oxlint** | Needs a formatter, see Q4 |
+| Linter | **oxlint** | Replaces Biome. Type-aware rules via tsgolint |
+| Formatter | **oxfmt** | Replaces Biome. Pre-1.0, see note below |
 | Shared code layout | `packages/<language>/<name>` | |
 | Schema source of truth | Plain SQL migrations in `db/migrations` | Postgres only |
 | Toolchain versions | mise | |
+| Task runner | **mise tasks** | Replaces `just`. One tool for versions and tasks |
 | Local infra | Docker Compose | |
+| Build process | **potato-eng** | See section 3a |
+
+**Why oxlint + oxfmt over Biome** (checked Nov 2026: oxlint 1.93, oxfmt 0.78):
+- oxlint covers far more ESLint rules (typescript, react, import, unicorn, jest ports) and
+  has type-aware rules such as `no-floating-promises`, which matter in async NestJS code.
+- oxfmt passes Prettier's JS/TS conformance tests, also formats Markdown, YAML, TOML and
+  CSS, and sorts Tailwind classes without a plugin.
+- Same Oxc/VoidZero ecosystem as Vite, which TanStack Start runs on.
+- Cost: two tools instead of one, and oxfmt is still pre-1.0, so pin its version in mise
+  and expect occasional config changes. Formatting is easy to redo, so the risk is low.
+  Fallback if oxfmt causes trouble: Prettier.
+
+## 3a. potato-eng
+
+This kit is built with potato-eng and doubles as its test bed.
+
+- This PRD is the input. Run potato-eng's PRD review once the open questions are closed.
+- The reviewed PRD becomes `docs/TASKS.md`, worked one task per fresh session.
+- Anything awkward about potato-eng found while building the kit goes in
+  `docs/potato-eng-notes.md`, to feed back into potato-eng itself.
+- Later: the kit can ship potato-eng config so every project made from it uses the same
+  loop.
 
 ### Open questions
 
-- **Q1. Task runner: keep `just` or use mise tasks?**
-  Options: `just` (simple, popular, one extra install), **mise tasks** (already using mise
-  for versions, so one tool fewer), Taskfile (YAML, verbose), Make (preinstalled, but tab
-  rules and shell quirks), Turborepo only (cannot run Rust or Go natively).
-  Recommendation: mise tasks, purely for one less tool. `just` is also fine.
+Resolved: Q1 (mise tasks), Q3 (Postgres only), Q4 (oxlint + oxfmt).
 
 - **Q2. How do NestJS and Hono both exist without doubling the work?**
   Proposal: business logic lives in plain classes or functions (e.g. `packages/ts/core` or
@@ -59,15 +78,6 @@ First real consumers: the two idea management apps.
   controllers and Hono routes are thin adapters over the same services. Hono is added only
   when a project actually wants it. Decide: does the kit ship both, or one per project
   chosen at scaffold time?
-
-- **Q3. MongoDB scope.** Drizzle does not support MongoDB, so Mongo means a separate
-  driver (official `mongodb` driver or Mongoose) and SQL migrations do not apply to it.
-  Decide: is Mongo an extra store next to Postgres (e.g. for documents or logs), or a
-  replacement for Postgres in some projects? Recommendation: extra store only, since
-  "Postgres always" is locked.
-
-- **Q4. Formatter to pair with oxlint.** oxfmt (from the same Oxc project) or Prettier.
-  Check oxfmt maturity before choosing.
 
 - **Q5. NestJS OpenAPI style.** `@nestjs/swagger` with DTO classes, or zod schemas via
   `nestjs-zod`. Zod keeps schemas closer to the rest of the TS code.
@@ -100,21 +110,23 @@ What exists today (verified working end to end against Postgres):
 - Linting with **Biome**, tasks with **just**
 - `AGENTS.md`, `CLAUDE.md`, recipes, decision records, `/new-feature` command
 
-Gaps against the locked decisions: API is Hono not NestJS, linter is Biome not oxlint,
-task runner pending Q1. Untested here: `just` recipes and Docker Compose.
+Gaps against the locked decisions: API is Hono not NestJS, Biome instead of
+oxlint + oxfmt, `just` instead of mise tasks. Untested here: `just` recipes and Docker Compose.
 
 ## 5. Roadmap
 
 ### Phase 0: Finish fleshing out (current)
-- [ ] Answer Q1 to Q10 and move each into "Locked"
+- [x] Q1 task runner, Q3 database, Q4 linter/formatter
+- [ ] Answer Q2, Q5 to Q10 and move each into "Locked"
 - [ ] Update decision records in `docs/decisions` to match
+- [ ] Run potato-eng PRD review, then generate `docs/TASKS.md`
 
 ### Phase 1: Align the skeleton with decisions
 - [ ] Replace Hono API with NestJS (Drizzle module, OpenAPI per Q5, same JSON error shape)
 - [ ] Keep the `notes` reference feature with framework-free service logic (Q2)
-- [ ] Swap Biome for oxlint + chosen formatter (Q4)
-- [ ] Switch task runner if Q1 says so
-- [ ] Verify `just check` (or equivalent) and Docker Compose locally
+- [ ] Swap Biome for oxlint (type-aware) + oxfmt, versions pinned in mise
+- [ ] Replace `justfile` with mise tasks in `mise.toml`
+- [ ] Verify `mise run check` and Docker Compose locally
 - [ ] Update `AGENTS.md`, recipes and `services/api/AGENTS.md` for NestJS
 
 ### Phase 2: Core modules (one at a time, each with a test)
@@ -122,7 +134,6 @@ task runner pending Q1. Untested here: `just` recipes and Docker Compose.
 - [ ] Email
 - [ ] Payments (Q7)
 - [ ] UI kit (Q10)
-- [ ] MongoDB option (Q3)
 
 ### Phase 3: More apps (only the ones Q9 picks)
 - [ ] Mobile (Expo) using the generated client
@@ -135,6 +146,7 @@ task runner pending Q1. Untested here: `just` recipes and Docker Compose.
 
 ### Later
 - [ ] Hono adapter option
+- [ ] Revisit MongoDB if a project needs it (Drizzle does not support it)
 - [ ] First Rust, Go or Python service + shared package (via `docs/recipes/add-service.md`)
 - [ ] Deployment adapters and CI
 - [ ] Scaffolding CLI (Q8)
@@ -142,3 +154,5 @@ task runner pending Q1. Untested here: `just` recipes and Docker Compose.
 ## 6. Change log
 - 2026-11-12: Draft created. Skeleton built and verified. Locked NestJS, Drizzle,
   Postgres, oxlint. Mongo optional.
+- 2026-11-12: Locked mise tasks, Postgres only (Mongo dropped for now), oxlint + oxfmt.
+  Added potato-eng as the build process.
