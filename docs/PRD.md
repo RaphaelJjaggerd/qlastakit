@@ -34,7 +34,8 @@ First real consumers: the two idea management apps.
 | Package manager | pnpm workspaces | |
 | Build orchestration | Turborepo | TS tasks only |
 | Web app | TanStack Start | Next.js at most for marketing |
-| Main API | **NestJS** | Hono offered later as an option |
+| Main API | **NestJS** | Only framework shipped. Hono/Express added per project when wanted |
+| Business logic | **Framework-free core** | `packages/ts/core`, see rules below |
 | Database | **Postgres only** | MongoDB dropped for now, may revisit later |
 | ORM | **Drizzle** | |
 | Contract | OpenAPI, generated from the API | Hey API for the TS client |
@@ -57,6 +58,15 @@ First real consumers: the two idea management apps.
   and expect occasional config changes. Formatting is easy to redo, so the risk is low.
   Fallback if oxfmt causes trouble: Prettier.
 
+**Framework-free core (Q2).** Business logic, zod schemas, database access and error
+types live in `packages/ts/core`, shared by any JS/TS framework (NestJS, Hono, Express).
+- No framework imports inside core: no decorators, no `Request`/`Context` objects.
+- Dependencies are passed in (e.g. a `db` argument or plain constructor), not injected by
+  the framework. NestJS wraps core in providers; Hono and Express call it directly.
+- Per framework, only the thin adapter is written: routing, middleware/guards, error to
+  HTTP mapping, OpenAPI generation.
+- Only NestJS ships. A second adapter is added only when a real project wants it.
+
 ## 3a. potato-eng
 
 This kit is built with potato-eng and doubles as its test bed.
@@ -70,14 +80,7 @@ This kit is built with potato-eng and doubles as its test bed.
 
 ### Open questions
 
-Resolved: Q1 (mise tasks), Q3 (Postgres only), Q4 (oxlint + oxfmt).
-
-- **Q2. How do NestJS and Hono both exist without doubling the work?**
-  Proposal: business logic lives in plain classes or functions (e.g. `packages/ts/core` or
-  `services/api/src/features/*/service.ts`) with no Nest decorators inside. NestJS
-  controllers and Hono routes are thin adapters over the same services. Hono is added only
-  when a project actually wants it. Decide: does the kit ship both, or one per project
-  chosen at scaffold time?
+Resolved: Q1 (mise tasks), Q2 (framework-free core), Q3 (Postgres only), Q4 (oxlint + oxfmt).
 
 - **Q5. NestJS OpenAPI style.** `@nestjs/swagger` with DTO classes, or zod schemas via
   `nestjs-zod`. Zod keeps schemas closer to the rest of the TS code.
@@ -116,14 +119,15 @@ oxlint + oxfmt, `just` instead of mise tasks. Untested here: `just` recipes and 
 ## 5. Roadmap
 
 ### Phase 0: Finish fleshing out (current)
-- [x] Q1 task runner, Q3 database, Q4 linter/formatter
-- [ ] Answer Q2, Q5 to Q10 and move each into "Locked"
+- [x] Q1 task runner, Q2 shared logic, Q3 database, Q4 linter/formatter
+- [ ] Answer Q5 to Q10 and move each into "Locked"
 - [ ] Update decision records in `docs/decisions` to match
 - [ ] Run potato-eng PRD review, then generate `docs/TASKS.md`
 
 ### Phase 1: Align the skeleton with decisions
 - [ ] Replace Hono API with NestJS (Drizzle module, OpenAPI per Q5, same JSON error shape)
-- [ ] Keep the `notes` reference feature with framework-free service logic (Q2)
+- [ ] Create `packages/ts/core` and move the `notes` logic and schemas there (Q2)
+- [ ] NestJS `notes` controller as a thin adapter over core
 - [ ] Swap Biome for oxlint (type-aware) + oxfmt, versions pinned in mise
 - [ ] Replace `justfile` with mise tasks in `mise.toml`
 - [ ] Verify `mise run check` and Docker Compose locally
@@ -156,3 +160,4 @@ oxlint + oxfmt, `just` instead of mise tasks. Untested here: `just` recipes and 
   Postgres, oxlint. Mongo optional.
 - 2026-11-12: Locked mise tasks, Postgres only (Mongo dropped for now), oxlint + oxfmt.
   Added potato-eng as the build process.
+- 2026-11-13: Locked Q2: framework-free `packages/ts/core`, NestJS only adapter shipped.
