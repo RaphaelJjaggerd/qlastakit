@@ -1,5 +1,5 @@
 // Business logic lives here. No HTTP concerns: plain functions in, plain data out.
-import { notes } from "@kit/db";
+import { notes } from "@qlastakit/db";
 import { desc } from "drizzle-orm";
 import { getDb } from "../../db";
 import type { CreateNote, Note } from "./schema";

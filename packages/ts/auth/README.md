@@ -1,4 +1,4 @@
-# @kit/auth (planned)
+# @qlastakit/auth (planned)
 
 Not built yet. Plan: Better Auth inside `services/api`, issuing JWTs that any language
 can verify through a JWKS endpoint (`/auth/jwks`). This package will hold shared TS

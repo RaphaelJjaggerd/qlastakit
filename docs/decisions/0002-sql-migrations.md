@@ -7,4 +7,4 @@
 depending on a TypeScript tool.
 
 **Consequence.** Write SQL by hand, then update `packages/ts/db/src/schema.ts`
-(or regenerate it with `pnpm --filter @kit/db pull`).
+(or regenerate it with `pnpm --filter @qlastakit/db pull`).

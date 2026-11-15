@@ -1,163 +1,217 @@
-# Foundation Monorepo: PRD
+# qlastakit v1: PRD
 
-**Status:** draft, still being fleshed out. Do not build features on it yet.
-**Last updated:** 2026-11-12
+**Status:** draft from the design grill of 2026-11-15. Not yet through potato-eng's
+PRD review. Do not build product features until Phase 0 is done.
+**Scope:** the kit only. The CLI, GUI and Qlastabase are in `docs/VISION.md` and each
+gets its own PRD later.
 
-## 1. Vision
+## 1. What this is
 
-One monorepo to start every project from (web, mobile, desktop), so no project starts
-from scratch. Inspired by turbostarter.dev and superstarter.dev, but not locked to
-TypeScript: TS is the core today, and Rust, Go, Python, Kotlin or Swift can join later
-without a rewrite.
+qlastakit is the monorepo every project starts from, so no project starts from scratch.
+It handles UI, auth, payments, email, storage, jobs, AI plumbing and deployment. The
+developer (human or AI agent) writes only the idea and its business logic.
 
-The kit handles UI, infrastructure and plumbing. The developer (human or AI agent) only
-writes the idea and its custom business logic.
-
-First real consumers: the two idea management apps.
+- **Audience for v1:** Raphael only. Private repo, opinionated, no docs site.
+- **How projects use it:** copy the repo, rename, delete what is not needed. No CLI yet.
+- **v1 is done when:** the first idea management app is built on the kit and deployed
+  to production. Nothing counts as finished until it survives that app.
 
 ## 2. Principles
 
-1. **KISS.** Build a module only when a real project needs it. No empty abstractions.
-2. **Contract-first seams.** Apps talk to services only through a generated OpenAPI
-   client. No TS-only coupling between apps and services.
-3. **Business logic is framework-free.** Plain services with no HTTP framework imports,
-   so the HTTP layer (NestJS today, Hono later) stays a thin, swappable shell.
+1. **KISS.** A module is built only when a real project needs it. No empty abstractions.
+2. **Contract-first seams.** Apps reach services only through a client generated from
+   OpenAPI. No TypeScript-only coupling between apps and services.
+3. **Framework-free core.** Business logic, zod schemas and data access live in
+   `packages/ts/core` with no framework imports. HTTP frameworks are thin adapters.
 4. **Shared code grouped by language:** `packages/ts`, `rust`, `go`, `python`.
-5. **AI-friendly.** `AGENTS.md`, recipes, decision records, one reference feature to copy.
+5. **Prove, then extract.** Anything new is built inside a real app first and moves
+   into the kit only when a second use appears.
+6. **AI-friendly.** `AGENTS.md`, recipes, decision records, one reference feature.
 
-## 3. Decisions
+## 3. Locked decisions
 
-### Locked
+### Foundation
 
 | Area | Choice | Notes |
 |---|---|---|
-| Package manager | pnpm workspaces | |
+| Repo | One `qlastakit` repo | Engine and CLI join this repo later. Qlastabase is separate |
+| Runtime | Current Node LTS + pnpm workspaces | Pinned in mise |
 | Build orchestration | Turborepo | TS tasks only |
-| Web app | TanStack Start | Next.js at most for marketing |
-| Main API | **NestJS** | Only framework shipped. Hono/Express added per project when wanted |
-| Business logic | **Framework-free core** | `packages/ts/core`, see rules below |
-| Database | **Postgres only** | MongoDB dropped for now, may revisit later |
-| ORM | **Drizzle** | |
-| Contract | OpenAPI, generated from the API | Hey API for the TS client |
-| Linter | **oxlint** | Replaces Biome. Type-aware rules via tsgolint |
-| Formatter | **oxfmt** | Replaces Biome. Pre-1.0, see note below |
-| Shared code layout | `packages/<language>/<name>` | |
-| Schema source of truth | Plain SQL migrations in `db/migrations` | Postgres only |
-| Toolchain versions | mise | |
-| Task runner | **mise tasks** | Replaces `just`. One tool for versions and tasks |
-| Local infra | Docker Compose | |
-| Build process | **potato-eng** | See section 3a |
+| Versions and tasks | mise | Replaces `just` |
+| Lint and format | oxlint (type-aware) + oxfmt | oxfmt is pre-1.0: pin it. Fallback: Prettier |
+| Package scope | `@qlastakit/*` | Same scope in every project made from the kit |
+| Git flow | Branch per phase, one PR at the phase gate | CI runs on the PR |
+| Build process | potato-eng, tier `full` | Friction logged in `docs/potato-eng-notes.md` |
 
-**Why oxlint + oxfmt over Biome** (checked Nov 2026: oxlint 1.93, oxfmt 0.78):
-- oxlint covers far more ESLint rules (typescript, react, import, unicorn, jest ports) and
-  has type-aware rules such as `no-floating-promises`, which matter in async NestJS code.
-- oxfmt passes Prettier's JS/TS conformance tests, also formats Markdown, YAML, TOML and
-  CSS, and sorts Tailwind classes without a plugin.
-- Same Oxc/VoidZero ecosystem as Vite, which TanStack Start runs on.
-- Cost: two tools instead of one, and oxfmt is still pre-1.0, so pin its version in mise
-  and expect occasional config changes. Formatting is easy to redo, so the risk is low.
-  Fallback if oxfmt causes trouble: Prettier.
+### Backend
 
-**Framework-free core (Q2).** Business logic, zod schemas, database access and error
-types live in `packages/ts/core`, shared by any JS/TS framework (NestJS, Hono, Express).
-- No framework imports inside core: no decorators, no `Request`/`Context` objects.
-- Dependencies are passed in (e.g. a `db` argument or plain constructor), not injected by
-  the framework. NestJS wraps core in providers; Hono and Express call it directly.
-- Per framework, only the thin adapter is written: routing, middleware/guards, error to
-  HTTP mapping, OpenAPI generation.
-- Only NestJS ships. A second adapter is added only when a real project wants it.
+| Area | Choice | Notes |
+|---|---|---|
+| API | NestJS | Only framework shipped. Hono/Express adapters only when a project wants one |
+| Business logic | `packages/ts/core` | No decorators, no request objects. Dependencies passed in |
+| Contract | OpenAPI from `nestjs-zod` | Reuses the zod schemas in core. Hey API generates the TS client |
+| Database | Postgres only | MongoDB dropped. Revisit only if a project needs it |
+| ORM | Drizzle | Mirrors the SQL. Never generates migrations |
+| Schema source of truth | Plain SQL in `db/migrations` | Usable from any language |
+| Background jobs | pg-boss | Queue lives in Postgres. No Redis |
+| Redis | Not in v1 | Sessions and rate limits in Postgres. Optional module later |
+| Logs | pino, structured JSON with request IDs | |
 
-## 3a. potato-eng
+### Accounts
 
-This kit is built with potato-eng and doubles as its test bed.
+| Area | Choice | Notes |
+|---|---|---|
+| Auth | Better Auth | NestJS adapter is community-maintained (one maintainer). Small enough to own if abandoned |
+| Login methods | Email + password, Google | With email verification and password reset |
+| Tenancy | Organizations from v1 | Better Auth organization plugin |
+| Personal org | Every new user gets one automatically | Every row belongs to an org. One code path |
+| Data isolation | Scoped queries in core | Every table has `org_id`. Core functions take an org context. No RLS |
+| Org admin | Routes inside the web app | Members, invites, roles, billing |
+| Super admin | Separate app, separate deploy (later phase) | Platform owner only: bans, moderation, site settings, SEO. Shares the API and database, so it survives a web outage, not an API outage |
 
-- This PRD is the input. Run potato-eng's PRD review once the open questions are closed.
-- The reviewed PRD becomes `docs/TASKS.md`, worked one task per fresh session.
-- Anything awkward about potato-eng found while building the kit goes in
-  `docs/potato-eng-notes.md`, to feed back into potato-eng itself.
-- Later: the kit can ship potato-eng config so every project made from it uses the same
-  loop.
+### Modules
 
-### Open questions
+| Module | Choice | In v1? |
+|---|---|---|
+| Email | Resend + React Email behind one `sendEmail` | Yes |
+| Payments interface | One provider-agnostic interface with adapters | Yes |
+| Payments: Stripe | First adapter (existing account, international customers) | Yes |
+| Payments: Paystack | Local cards and M-Pesa. Subscriptions renew on cards only | Next phase |
+| Payments: Polar | Merchant of record | Next phase. Confirm payout route first |
+| Billing models | Subscriptions + one-time | Yes |
+| Usage credits | Ledger of grants and spends | Later. Data model leaves room |
+| File storage | S3 API, signed-URL uploads. R2 in production, MinIO locally | Yes |
+| AI | Vercel AI SDK, provider set by env, streaming. Tested against OpenRouter | Yes |
+| i18n | All UI text through message files from day one. English only shipped | Yes |
+| Analytics | PostHog as an opt-in module | Later |
 
-Resolved: Q1 (mise tasks), Q2 (framework-free core), Q3 (Postgres only), Q4 (oxlint + oxfmt).
+### Frontend
 
-- **Q5. NestJS OpenAPI style.** `@nestjs/swagger` with DTO classes, or zod schemas via
-  `nestjs-zod`. Zod keeps schemas closer to the rest of the TS code.
+| Area | Choice | Notes |
+|---|---|---|
+| Web app | TanStack Start + Tailwind v4 | The only app in v1 |
+| UI package | shadcn/ui base in `@qlastakit/ui` | Port pieces of the old RR7 kit only when missed |
+| Data layer | TanStack Query + generated client | Same pattern reused by Expo later |
+| Home page in v1 | A plain route in the web app | Until the marketing site exists |
+| Mobile (later) | Expo. Shares client, schemas, query hooks, tokens. Not UI | |
+| Marketing (later) | Separate Astro site | |
+| Desktop (later) | Tauri wrapping the web app | First Rust in the repo |
 
-- **Q6. Auth.** Better Auth inside the API, issuing JWTs verifiable by any language via
-  JWKS? Confirm it works well with NestJS.
+### Operations
 
-- **Q7. Payments.** Which providers first (Stripe, Paystack, M-Pesa)?
+| Area | Choice | Notes |
+|---|---|---|
+| Packaging | A Dockerfile per app and service | Runs anywhere. The unit Qlastabase hosts later |
+| Reference deploy | One VPS running Coolify | Git push deploys, SSL |
+| Production Postgres | Same VPS, in Docker | Scheduled backups to R2. Restore must be rehearsed once |
+| Testing | Vitest for core, API tests on a real Postgres, one Playwright smoke test | Smoke: sign up, log in, create something |
+| CI | GitHub Actions | Lint, typecheck, tests, contract-drift check |
+| Errors | Sentry (web and API) | |
 
-- **Q8. Scaffolding.** Template repo you copy and trim, or a CLI later? Recommendation:
-  template first, CLI only after 2 or 3 projects show what repeats.
+### Defaults assumed without asking (veto any)
 
-- **Q9. Which apps ship in v1.** web only, or also mobile (Expo), desktop (Tauri),
-  admin, marketing, extension (WXT)?
+UUID primary keys. Env vars validated with zod at boot. Rate limiting on auth routes.
+Security headers and a CORS allowlist. API docs UI served at `/docs`. Light and dark
+theme via CSS variables. No websockets in v1 (SSE for AI streaming only). One JSON
+error shape: `{ error: { code, message } }`, with codes (not text) so clients can
+translate them.
 
-- **Q10. UI kit.** Port the existing React Router 7 UI kit into `packages/ts/ui`, or start
-  from shadcn/ui?
+## 4. Open questions (settle in `/grill`)
 
-## 4. Current state of the skeleton
+- **Q1. i18n library.** Paraglide or i18next. Must work in TanStack Start now and Expo
+  later. Check current docs before choosing.
+- **Q2. Polar.** Does it pay out to the entity that will own the account? Verify on
+  polar.sh before the Polar phase is scheduled.
+- **Q3. Tokens for other languages.** Better Auth JWT + JWKS plugin so Rust/Go/Python
+  services can verify logins. Cookie sessions for web, bearer tokens for mobile.
+- **Q4. VPS provider and region.** Latency for Kenyan users against price.
+- **Q5. Kit updates.** How do fixes in the kit reach projects already copied from it?
+  Manual for now. Known gap until the CLI exists.
+- **Q6. First idea app.** Its name, scope and its own PRD. Needs from the kit are
+  already known: auth, orgs, email, payments, uploads, AI.
+- **Q7. Domains.** App domain, email sending domain, DNS host.
 
-What exists today (verified working end to end against Postgres):
+## 5. Not in v1
 
-- `apps/web`: TanStack Start + Tailwind v4, notes page using the generated client
-- `services/api`: **Hono** + zod-openapi, reference `notes` feature, JSON error shape
-- `contracts/`: generated `openapi.json` and `@kit/api-client`
+Mobile, marketing site, super admin app, desktop, Paystack, Polar, credits, analytics,
+Redis, a second API framework, any non-TS service, the engine/CLI, Qlastabase.
+All of these are ordered in section 7 or `docs/VISION.md`.
+
+Built inside the first idea app, not the kit (extract only on second use): the rich
+notes editor and Postgres full-text search.
+
+## 6. Current state of the skeleton
+
+Verified working end to end against Postgres (install, typecheck, lint, contract
+generation, create and list a note through web, client, API, database):
+
+- `apps/web`: TanStack Start + Tailwind v4, notes page on the generated client
+- `services/api`: **Hono** + zod-openapi, reference `notes` feature
+- `contracts/`: generated `openapi.json` and `@qlastakit/api-client`
 - `db/migrations` + `db/migrate.sh`
-- `packages/ts`: `ui`, `db` (Drizzle), `config`; `auth`, `email`, `payments` are README
-  plans only
-- `packages/rust`, `go`, `python`: README with setup steps only
-- Linting with **Biome**, tasks with **just**
-- `AGENTS.md`, `CLAUDE.md`, recipes, decision records, `/new-feature` command
+- `packages/ts`: `ui`, `db`, `config`. `auth`, `email`, `payments` are README plans
+- `packages/rust`, `go`, `python`: README setup steps only
+- Biome for lint, `just` for tasks
+- `AGENTS.md`, recipes, decision records, `/new-feature` command
 
-Gaps against the locked decisions: API is Hono not NestJS, Biome instead of
-oxlint + oxfmt, `just` instead of mise tasks. Untested here: `just` recipes and Docker Compose.
+Gaps against section 3: Hono not NestJS, no `core` package, Biome not oxlint + oxfmt,
+`just` not mise tasks, no TanStack Query, no tests, no CI. Never run here: the `just`
+recipes and Docker Compose.
 
-## 5. Roadmap
+## 7. Roadmap
 
-### Phase 0: Finish fleshing out (current)
-- [x] Q1 task runner, Q2 shared logic, Q3 database, Q4 linter/formatter
-- [ ] Answer Q5 to Q10 and move each into "Locked"
-- [ ] Update decision records in `docs/decisions` to match
-- [ ] Run potato-eng PRD review, then generate `docs/TASKS.md`
-
-### Phase 1: Align the skeleton with decisions
-- [ ] Replace Hono API with NestJS (Drizzle module, OpenAPI per Q5, same JSON error shape)
-- [ ] Create `packages/ts/core` and move the `notes` logic and schemas there (Q2)
-- [ ] NestJS `notes` controller as a thin adapter over core
-- [ ] Swap Biome for oxlint (type-aware) + oxfmt, versions pinned in mise
-- [ ] Replace `justfile` with mise tasks in `mise.toml`
+### Phase 0: Align the skeleton
+- [ ] `/potato-eng setup`, tier full
+- [ ] Close section 4 with `/grill`, then `/prd`, `scripts/prd-review.sh`, `/tasks`
+- [ ] Create `packages/ts/core`. Move `notes` logic and zod schemas into it
+- [ ] Replace the Hono API with NestJS + `nestjs-zod`. `notes` controller as a thin adapter
+- [ ] Swap Biome for oxlint + oxfmt. Replace `justfile` with mise tasks
+- [ ] Add TanStack Query to the web app
+- [ ] Test harness: Vitest, API tests on real Postgres, Playwright smoke
+- [ ] GitHub Actions workflow with the contract-drift check
 - [ ] Verify `mise run check` and Docker Compose locally
-- [ ] Update `AGENTS.md`, recipes and `services/api/AGENTS.md` for NestJS
+- [ ] Update `AGENTS.md`, recipes and decision records to match
 
-### Phase 2: Core modules (one at a time, each with a test)
-- [ ] Auth (Q6), including JWKS for other languages
-- [ ] Email
-- [ ] Payments (Q7)
-- [ ] UI kit (Q10)
+### Phase 1: Accounts
+- [ ] shadcn/ui base and app shell in `@qlastakit/ui`
+- [ ] i18n wiring (Q1). All shell text through message files
+- [ ] Email module (Resend + React Email)
+- [ ] Better Auth: email + password, Google, verification, reset
+- [ ] Organizations: personal org on signup, members, invites, roles, org switcher
+- [ ] Org context in core. `org_id` on every table. A test proving one org cannot read another's rows
+- [ ] `notes` reference feature made org-scoped
 
-### Phase 3: More apps (only the ones Q9 picks)
-- [ ] Mobile (Expo) using the generated client
-- [ ] Desktop (Tauri)
-- [ ] Admin / marketing / extension
+### Phase 2: Modules the first app needs
+- [ ] pg-boss jobs: email sending and webhook processing run through it
+- [ ] File storage: signed-URL upload flow, MinIO in Compose
+- [ ] Payments interface + Stripe adapter: subscriptions, one-time, webhooks, org billing page
+- [ ] AI module: AI SDK, OpenRouter, a streaming endpoint and a web hook to consume it
 
-### Phase 4: First real project
-- [ ] Build idea management app 1 on the kit
-- [ ] Feed back anything that repeated into the kit
+### Phase 3: Ship it
+- [ ] Dockerfile per app and service
+- [ ] Coolify reference deploy, documented as a recipe
+- [ ] Postgres backups to R2 and one rehearsed restore
+- [ ] Sentry in web and API
 
-### Later
-- [ ] Hono adapter option
-- [ ] Revisit MongoDB if a project needs it (Drizzle does not support it)
-- [ ] First Rust, Go or Python service + shared package (via `docs/recipes/add-service.md`)
-- [ ] Deployment adapters and CI
-- [ ] Scaffolding CLI (Q8)
+### Phase 4: First idea app (its own repo and PRD)
+- [ ] Copy the kit, build the app with potato-eng, deploy it
+- [ ] Retro: every "wish the kit had X" becomes a kit task or is rejected
+- [ ] Tag qlastakit v1.0
 
-## 6. Change log
-- 2026-11-12: Draft created. Skeleton built and verified. Locked NestJS, Drizzle,
-  Postgres, oxlint. Mongo optional.
-- 2026-11-12: Locked mise tasks, Postgres only (Mongo dropped for now), oxlint + oxfmt.
-  Added potato-eng as the build process.
-- 2026-11-13: Locked Q2: framework-free `packages/ts/core`, NestJS only adapter shipped.
+### After v1 (in this order unless a project forces another)
+1. Paystack adapter
+2. Polar adapter
+3. Usage credits
+4. Mobile app (Expo)
+5. Marketing site (Astro)
+6. Super admin app
+7. Desktop (Tauri)
+8. Analytics module
+9. Engine + CLI (own PRD, see `docs/VISION.md`)
+
+## 8. Change log
+- 2026-11-12: First draft. Skeleton built and verified.
+- 2026-11-13: Framework-free core locked.
+- 2026-11-15: Renamed to qlastakit, scope `@qlastakit/*`. Full design grill: scope, apps,
+  auth and orgs, payments, storage, jobs, AI, i18n, hosting, testing, CI, monitoring.
+  Roadmap rewritten into phases 0 to 4.

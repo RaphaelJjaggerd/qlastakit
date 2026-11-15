@@ -1,6 +1,6 @@
 // Example page: talks to the API only through the generated client.
-import { createNote, listNotes } from "@kit/api-client";
-import { Button, Input } from "@kit/ui";
+import { createNote, listNotes } from "@qlastakit/api-client";
+import { Button, Input } from "@qlastakit/ui";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 

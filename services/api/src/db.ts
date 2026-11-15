@@ -1,4 +1,4 @@
-import { createDb, type Db } from "@kit/db";
+import { createDb, type Db } from "@qlastakit/db";
 
 // Created lazily so the API (and openapi export) works without a database.
 let db: Db | undefined;

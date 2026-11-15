@@ -1,5 +1,5 @@
 {
-  "extends": "@kit/config/tsconfig.base.json",
+  "extends": "@qlastakit/config/tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2022"],
     "types": ["node"]

@@ -20,10 +20,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@kit/api-client':
+      '@qlastakit/api-client':
         specifier: workspace:*
         version: link:../../contracts/clients/ts
-      '@kit/ui':
+      '@qlastakit/ui':
         specifier: workspace:*
         version: link:../../packages/ts/ui
       '@tanstack/react-router':
@@ -39,7 +39,7 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
     devDependencies:
-      '@kit/config':
+      '@qlastakit/config':
         specifier: workspace:*
         version: link:../../packages/ts/config
       '@tailwindcss/vite':
@@ -69,7 +69,7 @@ importers:
       '@hey-api/openapi-ts':
         specifier: ^0.99.0
         version: 0.99.0(typescript@5.9.3)
-      '@kit/config':
+      '@qlastakit/config':
         specifier: workspace:*
         version: link:../../../packages/ts/config
       typescript:
@@ -87,7 +87,7 @@ importers:
         specifier: ^3.4.7
         version: 3.4.9
     devDependencies:
-      '@kit/config':
+      '@qlastakit/config':
         specifier: workspace:*
         version: link:../config
       drizzle-kit:
@@ -106,7 +106,7 @@ importers:
         specifier: ^3.3.0
         version: 3.7.0
     devDependencies:
-      '@kit/config':
+      '@qlastakit/config':
         specifier: workspace:*
         version: link:../config
       '@types/react':
@@ -127,7 +127,7 @@ importers:
       '@hono/zod-openapi':
         specifier: ^1.6.3
         version: 1.6.3(hono@4.13.18)(zod@4.6.7)
-      '@kit/db':
+      '@qlastakit/db':
         specifier: workspace:*
         version: link:../../packages/ts/db
       drizzle-orm:
@@ -140,7 +140,7 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
-      '@kit/config':
+      '@qlastakit/config':
         specifier: workspace:*
         version: link:../../packages/ts/config
       '@types/node':

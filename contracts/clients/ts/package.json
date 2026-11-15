@@ -1,5 +1,5 @@
 {
-  "name": "@kit/api-client",
+  "name": "@qlastakit/api-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",
-    "@kit/config": "workspace:*",
+    "@qlastakit/config": "workspace:*",
     "typescript": "^5.9.0"
   }
 }

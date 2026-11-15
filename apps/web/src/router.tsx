@@ -1,4 +1,4 @@
-import { configureApi } from "@kit/api-client";
+import { configureApi } from "@qlastakit/api-client";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 

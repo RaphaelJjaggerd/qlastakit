@@ -1,5 +1,5 @@
 {
-  "name": "@kit/api",
+  "name": "@qlastakit/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,13 +12,13 @@
   "dependencies": {
     "@hono/node-server": "^2.1.8",
     "@hono/zod-openapi": "^1.6.3",
-    "@kit/db": "workspace:*",
+    "@qlastakit/db": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.18",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@kit/config": "workspace:*",
+    "@qlastakit/config": "workspace:*",
     "@types/node": "^22.0.0",
     "tsx": "^4.23.15",
     "typescript": "^5.9.0"

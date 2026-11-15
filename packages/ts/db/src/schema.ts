@@ -1,5 +1,5 @@
 // TypeScript view of the tables. The SQL in /db/migrations is the source of truth:
-// change the SQL first, then mirror it here (or run `pnpm --filter @kit/db pull`).
+// change the SQL first, then mirror it here (or run `pnpm --filter @qlastakit/db pull`).
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const notes = pgTable("notes", {

@@ -2,14 +2,15 @@
 
 Guide for AI agents (and humans) working in this repo. Read this first.
 
-> **Status: draft.** The kit is still being designed. Read `docs/PRD.md` for locked
-> decisions, open questions and the roadmap. Where this file and the PRD disagree (e.g.
-> the PRD locks NestJS and oxlint, the skeleton still uses Hono and Biome), the PRD wins.
-> Do not build product features until the PRD says Phase 1 is done.
+> **Status: draft.** The kit is still being aligned with its PRD. Read `docs/PRD.md`
+> for locked decisions, open questions and the roadmap, and `docs/VISION.md` for where
+> this is heading. Where this file and the PRD disagree (the PRD locks NestJS, a
+> framework-free core, oxlint + oxfmt and mise tasks; the skeleton still uses Hono,
+> Biome and `just`), the PRD wins. Do not build product features until Phase 0 is done.
 
 ## What this repo is
 
-A foundation monorepo. The infrastructure (UI kit, API plumbing, database, contracts,
+qlastakit: the monorepo every project starts from. The infrastructure (UI kit, API plumbing, database, contracts,
 tooling) is already done. Your job is almost always **business logic for one project**:
 add features to `services/api` and screens to `apps/*`.
 
@@ -22,9 +23,9 @@ add features to `services/api` and screens to `apps/*`.
 | `services/api` | Main HTTP API, Hono + zod-openapi. **All business logic lives here.** | TS |
 | `services/*` | Other services, any language, each self-contained | any |
 | `contracts/openapi.json` | The API contract. **Generated, never edit by hand.** | none |
-| `contracts/clients/ts` | Generated TS client (`@kit/api-client`) | TS |
+| `contracts/clients/ts` | Generated TS client (`@qlastakit/api-client`) | TS |
 | `db/migrations` | Plain SQL migrations. **Source of truth for the schema.** | SQL |
-| `packages/ts/*` | Shared TS code (`@kit/ui`, `@kit/db`, `@kit/config`, ...) | TS |
+| `packages/ts/*` | Shared TS code (`@qlastakit/ui`, `@qlastakit/db`, `@qlastakit/config`, ...) | TS |
 | `packages/rust`, `go`, `python` | Shared code for those languages (empty until needed) | each |
 | `infra/` | Docker Compose for local Postgres | none |
 | `docs/recipes` | Step-by-step guides for common tasks | |

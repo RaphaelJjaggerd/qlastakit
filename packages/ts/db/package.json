@@ -1,5 +1,5 @@
 {
-  "name": "@kit/db",
+  "name": "@qlastakit/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,7 +15,7 @@
     "postgres": "^3.4.7"
   },
   "devDependencies": {
-    "@kit/config": "workspace:*",
+    "@qlastakit/config": "workspace:*",
     "drizzle-kit": "^0.31.11",
     "typescript": "^5.9.0"
   }
