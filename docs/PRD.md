@@ -94,6 +94,7 @@ developer (human or AI agent) writes only the idea and its business logic.
 |---|---|---|
 | Web app | TanStack Start + Tailwind v4 | The only app in v1 |
 | UI package | Raphael's existing "Tactile" kit moved into `@qlastakit/ui` | It is already shadcn (base-vega style, Base UI primitives, Tailwind v4, CSS variables). See section 6a |
+| Theming | Multi-theme by design, one theme shipped | Every color, shadow, border, surface and effect comes from a semantic token. A theme is a set of token values under `[data-theme="name"]`. v1 ships only the default look. More themes and a theme editor come later, named and designed by Raphael |
 | Data layer | TanStack Query + generated client | Same pattern reused by Expo later |
 | Home page in v1 | A plain route in the web app | Until the marketing site exists |
 | Mobile (later) | Expo. Shares client, schemas, query hooks, tokens. Not UI | |
@@ -204,6 +205,7 @@ and `DESIGN.md`.
 ### Phase 1: Accounts
 Reference first: supastarter `packages/auth`, `packages/mail`, organizations routes and UI.
 - [ ] Move the 24 Tactile components and `theme.css` into `@qlastakit/ui` (after the design session signs off)
+- [ ] No hardcoded shadows, borders or surfaces left in components (the current kit hardcodes shadows). Proven by a throwaway test theme that changes the whole look without editing a component file
 - [ ] Pick one default app shell and one auth layout for v1. Other variants move only when used
 - [ ] Rewrite routing, guards and navigation for TanStack Router
 - [ ] Rebuild auth and settings screens on Better Auth and the generated client (drop the mock API and auth store)
@@ -241,7 +243,8 @@ Reference first: supastarter `packages/payments`, `packages/storage`, `packages/
 6. Super admin app
 7. Desktop (Tauri)
 8. Analytics module
-9. Engine + CLI (own PRD, see `docs/VISION.md`)
+9. More themes, then a theme editor (saves token values per user or org)
+10. Engine + CLI (own PRD, see `docs/VISION.md`)
 
 ## 8. Change log
 - 2026-11-12: First draft. Skeleton built and verified.
@@ -251,3 +254,4 @@ Reference first: supastarter `packages/payments`, `packages/storage`, `packages/
   Roadmap rewritten into phases 0 to 4.
 - 2026-11-17: Added supastarter and SaasRock as read-only references with a module map.
   Audited the existing UI kit: already shadcn, so it becomes `@qlastakit/ui` directly.
+  Theming: token-driven and multi-theme capable, only the default look ships in v1.
