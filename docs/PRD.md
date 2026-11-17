@@ -93,7 +93,7 @@ developer (human or AI agent) writes only the idea and its business logic.
 | Area | Choice | Notes |
 |---|---|---|
 | Web app | TanStack Start + Tailwind v4 | The only app in v1 |
-| UI package | shadcn/ui base in `@qlastakit/ui` | Port pieces of the old RR7 kit only when missed |
+| UI package | Raphael's existing "Tactile" kit moved into `@qlastakit/ui` | It is already shadcn (base-vega style, Base UI primitives, Tailwind v4, CSS variables). See section 6a |
 | Data layer | TanStack Query + generated client | Same pattern reused by Expo later |
 | Home page in v1 | A plain route in the web app | Until the marketing site exists |
 | Mobile (later) | Expo. Shares client, schemas, query hooks, tokens. Not UI | |
@@ -121,8 +121,8 @@ translate them.
 
 ## 4. Open questions (settle in `/grill`)
 
-- **Q1. i18n library.** Paraglide or i18next. Must work in TanStack Start now and Expo
-  later. Check current docs before choosing.
+- **Q1. i18n library.** Recommendation: i18next. The existing UI kit already uses it and
+  it runs in Expo. Confirm, then lock.
 - **Q2. Polar.** Does it pay out to the entity that will own the account? Verify on
   polar.sh before the Polar phase is scheduled.
 - **Q3. Tokens for other languages.** Better Auth JWT + JWKS plugin so Rust/Go/Python
@@ -161,6 +161,31 @@ Gaps against section 3: Hono not NestJS, no `core` package, Biome not oxlint + o
 `just` not mise tasks, no TanStack Query, no tests, no CI. Never run here: the `just`
 recipes and Docker Compose.
 
+## 6a. The existing UI kit (audited 2026-11-17)
+
+Source: the `react-starter-nue` project (React Router 7, Vite, mock API).
+
+- **Already shadcn.** shadcn CLI v4, style `base-vega`, Base UI primitives, Tailwind v4,
+  zinc base, Tabler icons, RTL enabled. No conversion needed.
+- **24 UI components**, none of which import React Router. They move as they are.
+- **"Tactile" design language** on top of the shadcn tokens: about 30 extra tokens
+  (raised and recessed shadow scales, surfaces, glow, etched lines, success, warning).
+  Partly documented in its `docs/ui-spec.md`. Some of it still lives in a
+  `tactile.ts` helper instead of inside the components.
+- **Layouts:** 6 app shells (collapsible, floating, frameless and stacked sidebars, top
+  bar, blank) and 4 auth layouts.
+- **Screens:** sign in, sign up, forgot and reset password, OTP, settings (profile,
+  security, notifications, billing, integrations), roles and permissions, access denied.
+- **Needs rewriting (about 20 files):** routing, route guards and navigation use
+  React Router. Auth is a mock (axios + zustand store).
+- **i18n:** already uses i18next with one `en.json`.
+- **Loose ends:** both Lucide and Tabler icons are installed; Activity Log and Pricing
+  pages are stubs.
+
+The design system (tokens, component inventory, rules) is being finalized in a separate
+design session. Its outputs land in `@qlastakit/ui`: `theme.css`, a component inventory
+and `DESIGN.md`.
+
 ## 7. Roadmap
 
 ### Phase 0: Align the skeleton
@@ -178,7 +203,10 @@ recipes and Docker Compose.
 
 ### Phase 1: Accounts
 Reference first: supastarter `packages/auth`, `packages/mail`, organizations routes and UI.
-- [ ] shadcn/ui base and app shell in `@qlastakit/ui`
+- [ ] Move the 24 Tactile components and `theme.css` into `@qlastakit/ui` (after the design session signs off)
+- [ ] Pick one default app shell and one auth layout for v1. Other variants move only when used
+- [ ] Rewrite routing, guards and navigation for TanStack Router
+- [ ] Rebuild auth and settings screens on Better Auth and the generated client (drop the mock API and auth store)
 - [ ] i18n wiring (Q1). All shell text through message files
 - [ ] Email module (Resend + React Email)
 - [ ] Better Auth: email + password, Google, verification, reset
@@ -222,3 +250,4 @@ Reference first: supastarter `packages/payments`, `packages/storage`, `packages/
   auth and orgs, payments, storage, jobs, AI, i18n, hosting, testing, CI, monitoring.
   Roadmap rewritten into phases 0 to 4.
 - 2026-11-17: Added supastarter and SaasRock as read-only references with a module map.
+  Audited the existing UI kit: already shadcn, so it becomes `@qlastakit/ui` directly.
