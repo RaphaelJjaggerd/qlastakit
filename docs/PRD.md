@@ -204,7 +204,9 @@ and `DESIGN.md`.
 
 ### Phase 1: Accounts
 Reference first: supastarter `packages/auth`, `packages/mail`, organizations routes and UI.
-- [ ] Move the 24 Tactile components and `theme.css` into `@qlastakit/ui` (after the design session signs off)
+- [ ] Unpack the finished UI project into `references/ui-kit/` (mapping in `docs/REFERENCES.md`)
+- [ ] Move its components, `theme.css` and `DESIGN.md` into `@qlastakit/ui`. They need no conversion
+- [ ] Component preview page as a dev-only route in the web app
 - [ ] No hardcoded shadows, borders or surfaces left in components (the current kit hardcodes shadows). Proven by a throwaway test theme that changes the whole look without editing a component file
 - [ ] Pick one default app shell and one auth layout for v1. Other variants move only when used
 - [ ] Rewrite routing, guards and navigation for TanStack Router

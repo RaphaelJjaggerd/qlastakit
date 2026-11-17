@@ -11,6 +11,7 @@ Unpack them into a `references/` folder at the repo root. It is gitignored.
 references/
   supastarter/   contents of supastarter-nextjs-main (the newest of the three copies)
   saasrock/      contents of the SaasRock folder
+  ui-kit/        the finished Tactile UI project from the design session (step 4 zip)
 ```
 
 ## Rules for agents
@@ -76,3 +77,17 @@ useful as a list of features and edge cases a mature SaaS ends up needing.
 
 Ignore for qlastakit: the entity builder, CRM, email marketing, knowledge base, page
 blocks and workflow modules. They are products, not kit plumbing.
+
+## Where to look: ui-kit (the source of `@qlastakit/ui`)
+
+Unlike the two kits above, this one is Raphael's own code and is meant to be moved in,
+not just read. It is a React Router 7 + Vite project, already tokenized.
+
+| Take | From `references/ui-kit/` | To |
+|---|---|---|
+| Tokens | `theme.css` | `packages/ts/ui/src/theme.css`, imported by each app |
+| Design rules | `DESIGN.md`, the component inventory | `packages/ts/ui/DESIGN.md`. Agents read it before any UI work |
+| UI components | `src/components/shared/ui/*` | `packages/ts/ui/src/components/`. They have no router imports, so they move unchanged |
+| Custom components | Logo, Icon tile, Setting row | `packages/ts/ui/src/components/` |
+| Preview page | the plain component preview page | A route in `apps/web` (dev only) |
+| Shell and screens | layouts, navigation, auth and settings pages | Rebuilt in `apps/web` on TanStack Router, Better Auth and the generated client. Copy the markup and classes, not the routing, guards, mock API or auth store |
