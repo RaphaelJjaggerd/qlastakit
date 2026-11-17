@@ -92,6 +92,12 @@ Without `just`: `pnpm install`, `pnpm dev`, `pnpm contract`, `pnpm typecheck`, `
 Local URLs: web `http://localhost:3000`, API `http://localhost:8787`,
 spec `http://localhost:8787/openapi.json`.
 
+## Windows
+
+- Shell scripts (`scripts/*.sh`, `db/migrate.sh`, hooks) run in Git Bash.
+- Docker Desktop is required for Postgres (`just db-up`).
+- Line endings are LF everywhere (`.gitattributes`). Do not commit CRLF.
+
 ## Common tasks
 
 - New feature end to end: `docs/recipes/add-feature.md`
