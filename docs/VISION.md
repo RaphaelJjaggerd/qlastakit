@@ -38,7 +38,8 @@ Light shape, get managed Postgres and realtime already wired.
 
 ## Stages
 
-1. **qlastakit v1** (see `docs/PRD.md`). The kit, proven by 2 or 3 real projects.
+1. **qlastakit v1** (see `docs/PRD.md`). The kit, proven by its live reference deploy,
+   then hardened by real projects built from it.
 2. **Engine + CLI.** Lives in this repo. Templates are extracted from the kit:
    a base plus additive modules, each with a small `module.json` (dependencies, env
    vars, migrations, tasks, an AGENTS.md section). `npx create-qlastakit` asks

@@ -26,12 +26,14 @@ This grill closes PRD section 4 (open questions Q1-Q7) and whatever branches off
 - Roadmap: Phase 4 is removed from the PRD and replaced by one line: "The idea app is built afterwards in its own repo, with its own PRD. Problems it finds come back here as kit v1.x tasks."
 - Reference feature: `notes` stays small. It is only the example new features copy their shape from.
 - VISION: "Two shapes of project" section added to `docs/VISION.md` (Full and Light, same core, manifest `"api": "nestjs" | "none"`, only Full in v1). Nothing in v1 changes.
+- Q11 Demo-only screens: only the AI chat page, under a `/demo/` route prefix. The kit's `AGENTS.md` says "delete `/demo/*` in a project". Every other screen is a project's real shell.
+- Q12 Stripe on the reference deploy: test mode. Proof is a test-card checkout plus managing that subscription in the customer portal. Live keys are a per-project setting.
+- Q13 Plans: Free, Pro (monthly and yearly), one one-time purchase. Plans in a typed config file, Stripe price IDs in env vars.
+- Q14 AI chat demo: no persistence (streaming only), signed-in users only, per-user daily message cap set by env, cheap model by default.
+- Q15 Signup: open on the reference deploy, no invitation-only switch in v1. Harm is capped by auth rate limits, Stripe test mode and the AI cap.
+- Q15 Email abuse cap: the auth rate limits also cap how many verification and password reset emails a single email address and a single IP can trigger, so the public deploy cannot spam people from the sending subdomain.
+- Q16 Avatar and org logo: PNG, JPEG or WebP, max 2 MB, no server-side resizing. Signed-URL upload, public-URL read.
+- Q17 VISION stage 1: now "proven by its live reference deploy, then hardened by real projects built from it".
 
 ## Open
-- Q11 Which kit screens are demo-only (deleted by a project) and how they are marked.
-- Q12 Stripe mode on the reference deploy: test or live.
-- Q13 Plans shown on the billing screen.
-- Q14 AI chat demo: persistence and cost cap.
-- Q15 Signup on the public reference deploy: open or restricted.
-- Q16 Avatar and logo uploads: types, size, how they are read.
-- Q17 VISION stage 1 line ("proven by 2 or 3 real projects") vs the new v1-done definition.
+- Q18 Email abuse cap: limits, window, and what the caller sees when a cap is hit.

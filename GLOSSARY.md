@@ -12,6 +12,7 @@ conflicts with a line here.
 **Module**: one capability the kit ships (email, payments, storage, jobs, AI, i18n).
 **Org**: the tenant that owns every row of data.
 **Personal org**: the org every user gets automatically at signup.
+**Reference deploy**: the kit's own live deploy, where every kit feature works end to end. v1 is done when it does.
 **Reference feature**: `notes`, the small feature new features copy their shape from.
 **Theme**: a named set of token values under `[data-theme="name"]`. Changing theme never edits a component.
 **Tactile**: the default theme, the kit's current look.
