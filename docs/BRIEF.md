@@ -34,7 +34,6 @@ This grill closes PRD section 4 (open questions Q1-Q7) and whatever branches off
 - Q15 Email abuse cap: the auth rate limits also cap how many verification and password reset emails a single email address and a single IP can trigger, so the public deploy cannot spam people from the sending subdomain.
 - Q16 Avatar and org logo: PNG, JPEG or WebP, max 2 MB, no server-side resizing. Signed-URL upload, public-URL read.
 - Q17 VISION stage 1: now "proven by its live reference deploy, then hardened by real projects built from it".
-
 - Q18 Email abuse cap limits: per email address, at most 3 verification and 3 reset emails per hour (counted per type); per IP, at most 10 auth emails per hour of any type. Both are env vars with these defaults. Counters live in Postgres.
 - Q18 Email abuse cap behaviour: an address cap hit returns the normal success response and logs the suppressed send (no account enumeration). An IP cap hit returns 429 with error code `rate_limited`. The card checks whether Better Auth's limiter can count per address; if not, the cap sits in core in front of `sendEmail`, so it covers every auth email.
 
