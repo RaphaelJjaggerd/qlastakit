@@ -1,0 +1,3 @@
+# Bash breaks on CRLF; keep shell scripts and sourced env files LF on every checkout.
+*.sh text eol=lf
+scripts/models.env text eol=lf

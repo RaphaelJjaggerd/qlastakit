@@ -92,3 +92,28 @@ not just read. It is a React Router 7 + Vite project, already tokenized.
 | Preview page | the plain component preview page | A route in `apps/web` (dev only) |
 | Architecture | `CLAUDE.md`, `src/shared/configs/`, `src/components/route/` | The philosophy to preserve. Read PRD section 6b first: it lists what stays and the only approved changes |
 | Shell and screens | layouts, navigation, auth and settings pages | Rebuilt in `apps/web` on TanStack Router, Better Auth and the generated client. Keep the structure, markup and classes. Replace routing internals, guards, mock API and auth store as section 6b says |
+
+## potato-eng reference blocks
+
+The tables above say where to look. These blocks give each kit its mode for `/task`
+and `/review`; `/vet` fills in Vetted. Modes follow the rules above: the two vendor kits
+are `study` (rule 3), the UI kit is `reuse` (it is moved in, PRD section 6b lists the
+only approved changes).
+
+## supastarter
+- Path: references/supastarter/
+- Mode: study
+- Scope: the paths listed under "Where to look: supastarter"
+- Vetted:
+
+## saasrock
+- Path: references/saasrock/
+- Mode: study
+- Scope: the paths listed under "Where to look: SaasRock" (feature catalog only)
+- Vetted:
+
+## ui-kit
+- Path: references/ui-kit/
+- Mode: reuse
+- Scope: `theme.css`, `DESIGN.md`, `src/components/shared/ui/*`, the custom components, `src/shared/configs/`, layouts and screens (rebuilt per PRD section 6b)
+- Vetted:

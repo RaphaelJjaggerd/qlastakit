@@ -8,6 +8,28 @@ Guide for AI agents (and humans) working in this repo. Read this first.
 > framework-free core, oxlint + oxfmt and mise tasks; the skeleton still uses Hono,
 > Biome and `just`), the PRD wins. Do not build product features until Phase 0 is done.
 
+Tier: full
+<!-- jam | full. jam skips PRD review rounds, /review, gates and the scout. -->
+
+## Working method (potato-eng)
+
+One task per session. `/task` picks the first `todo` card in `docs/TASKS.md`, reads
+only the PRD sections the card lists, does that task, runs `scripts/verify.sh`,
+commits, stops. `/review` on the checker model follows. Two returns wake `/advise` on
+the advisor model. Phase gates run the retro. Loop: `scripts/run-tasks.sh`. Plan
+review: `scripts/prd-review.sh`. Models: `scripts/models.env`.
+
+- Read the PRD by section, never whole.
+- Prefer Grep and targeted Read; a `scout` agent for anything over five files.
+- Build only the card. Stub later work behind an interface and log it.
+- A card with `Ref:` follows that reference's mode in `docs/REFERENCES.md`. `reuse`
+  means copy the vetted code and change only what is wrong; never rewrite it for taste.
+- A locked PRD decision is never worked around. Set the card `blocked` and say why.
+- Mechanical rules are checks in `scripts/verify.sh`; judgement calls are lines in
+  `docs/STANDARDS.md`. Do not add rules here.
+- Every closed card logs: built, open decisions taken, stubs, wishes.
+- ADRs (`/decide`) go in `docs/adr/`.
+
 ## What this repo is
 
 qlastakit: the monorepo every project starts from. The infrastructure (UI kit, API plumbing, database, contracts,
@@ -29,8 +51,12 @@ add features to `services/api` and screens to `apps/*`.
 | `packages/rust`, `go`, `python` | Shared code for those languages (empty until needed) | each |
 | `infra/` | Docker Compose for local Postgres | none |
 | `docs/recipes` | Step-by-step guides for common tasks | |
-| `docs/decisions` | Why things are the way they are (read before changing structure) | |
-| `docs/REFERENCES.md` | Map of two reference kits in `references/` (gitignored, read-only) | |
+| `docs/adr` | Why things are the way they are (read before changing structure) | |
+| `docs/REFERENCES.md` | Map of the reference kits in `references/` (gitignored, read-only) | |
+| `docs/TASKS.md` | Task cards: the state of the work (`/tasks` writes it) | |
+| `docs/STANDARDS.md` | Judgement rules, read at review only | |
+| `GLOSSARY.md` | Project terms, one line each | |
+| `scripts/` | potato-eng loop: `verify.sh`, `run-tasks.sh`, `prd-review.sh`, `models.env` | bash |
 
 ## Golden rules
 
@@ -58,6 +84,7 @@ just db-migrate   # apply SQL migrations
 just dev          # run all apps and services
 just contract     # regenerate openapi.json and clients
 just check        # typecheck + lint every language
+scripts/verify.sh # potato-eng gate: typecheck, lint, tests, contract drift
 ```
 
 Without `just`: `pnpm install`, `pnpm dev`, `pnpm contract`, `pnpm typecheck`, `pnpm lint`.
@@ -73,5 +100,6 @@ spec `http://localhost:8787/openapi.json`.
 
 ## Definition of done
 
-`just check` passes, `just contract` was run if routes changed, and the change is covered
-by the recipe it followed. Do not leave TODO stubs without telling the user.
+`scripts/verify.sh` passes (it runs typecheck, lint, tests and the contract-drift check),
+the card's "Done when" is met, and the change is covered by the recipe it followed.
+Do not leave TODO stubs without telling the user.

@@ -24,7 +24,12 @@
             "format": "date-time"
           }
         },
-        "required": ["id", "title", "body", "createdAt"]
+        "required": [
+          "id",
+          "title",
+          "body",
+          "createdAt"
+        ]
       },
       "CreateNote": {
         "type": "object",
@@ -40,7 +45,9 @@
             "default": ""
           }
         },
-        "required": ["title"]
+        "required": [
+          "title"
+        ]
       }
     },
     "parameters": {}
@@ -49,7 +56,9 @@
     "/health": {
       "get": {
         "operationId": "getHealth",
-        "tags": ["system"],
+        "tags": [
+          "system"
+        ],
         "responses": {
           "200": {
             "description": "Service is up",
@@ -62,7 +71,9 @@
                       "type": "boolean"
                     }
                   },
-                  "required": ["ok"]
+                  "required": [
+                    "ok"
+                  ]
                 }
               }
             }
@@ -73,7 +84,9 @@
     "/notes": {
       "get": {
         "operationId": "listNotes",
-        "tags": ["notes"],
+        "tags": [
+          "notes"
+        ],
         "responses": {
           "200": {
             "description": "Latest notes",
@@ -92,7 +105,9 @@
       },
       "post": {
         "operationId": "createNote",
-        "tags": ["notes"],
+        "tags": [
+          "notes"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
