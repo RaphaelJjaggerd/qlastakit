@@ -187,6 +187,47 @@ The design system (tokens, component inventory, rules) is being finalized in a s
 design session. Its outputs land in `@qlastakit/ui`: `theme.css`, a component inventory
 and `DESIGN.md`.
 
+## 6b. UI architecture: keep the kit's philosophy
+
+The web app is a rewrite onto TanStack Start, not a redesign. The existing kit's
+architecture (described in its own `CLAUDE.md`) carries over. Agents may deviate only
+where listed below, or where they can show the kit's approach is worse, and then they
+say so before doing it.
+
+**Kept as designed**
+
+- **Config is the control panel.** `app.config`, `navigation.config` and `theme.config`
+  stay the place where product work is wired. Most features are "add a page, register
+  it", never router or layout surgery.
+- **One navigation tree drives every nav surface** (side, stacked, top), with `key`,
+  `translateKey`, `icon` key and `authority` per item.
+- **Thin pages, real work in features.** Route files stay thin wrappers; implementation
+  lives in `features/<name>/`.
+- **Layout by config, override per route.** The default shell comes from `theme.config`;
+  a single route can ask for another.
+- **Page chrome is declared, not hand-built.** A route declares its header, footer,
+  container type and background; `PageContainer` renders them.
+- **Access is declared per route** with `authority`, plus `AuthorityCheck` for
+  conditional UI.
+- **Prime directives:** be additive, reuse the building blocks, never hardcode colours
+  or shadows, keep it typed. These move into `apps/web/AGENTS.md` with the recipes.
+
+**Changed, with the reason**
+
+| Kit today | In qlastakit | Why |
+|---|---|---|
+| Central `routes.config` array with lazy imports | One file per route. The same `key`, `authority` and `meta` live in that route's `staticData` | TanStack Router is file-based. A parallel array would lose typed links and params, and code splitting is already automatic. Adding a page drops from three steps to two |
+| Guard components that redirect after render | Checks in `beforeLoad` on the route | Runs before anything renders, on the server too, so protected content never flashes |
+| Layout switched by an effect writing to a store | Layout derived during render from the matched route, else the config default | Removes a wrong-layout frame, a store and a disabled lint rule |
+| Current route key kept in a store | Read from the matched route | Same information, no state to keep in sync |
+| Auth store, token strategy, axios, mock API | Better Auth session, generated client, TanStack Query | Real backend. Session lives in an httpOnly cookie |
+| `ADMIN` / `USER` roles | Organization roles (owner, admin, member) | Tenancy is by organization |
+| `app.config` copied from another kit, with flags for features that do not exist | Trimmed to flags the kit implements. Flags that restrict behavior are enforced by the API, not only hidden in the UI | A flag checked only in the browser is cosmetic |
+| Fourteen path aliases | `@/` plus package imports | Most of `shared/` moves into `@qlastakit/*` packages |
+| Titles as plain strings | Translation keys | i18n from v1 |
+
+Check current TanStack Router docs for `staticData` and `beforeLoad` before building.
+
 ## 7. Roadmap
 
 ### Phase 0: Align the skeleton
@@ -209,7 +250,8 @@ Reference first: supastarter `packages/auth`, `packages/mail`, organizations rou
 - [ ] Component preview page as a dev-only route in the web app
 - [ ] No hardcoded shadows, borders or surfaces left in components (the current kit hardcodes shadows). Proven by a throwaway test theme that changes the whole look without editing a component file
 - [ ] Pick one default app shell and one auth layout for v1. Other variants move only when used
-- [ ] Rewrite routing, guards and navigation for TanStack Router
+- [ ] Rebuild routing, guards and navigation on TanStack Router following section 6b: config-driven, same philosophy, only the listed changes
+- [ ] Move the kit's prime directives and recipes (from its `CLAUDE.md`) into `apps/web/AGENTS.md`, updated for the new recipes
 - [ ] Rebuild auth and settings screens on Better Auth and the generated client (drop the mock API and auth store)
 - [ ] i18n wiring (Q1). All shell text through message files
 - [ ] Email module (Resend + React Email)
@@ -257,3 +299,4 @@ Reference first: supastarter `packages/payments`, `packages/storage`, `packages/
 - 2026-11-17: Added supastarter and SaasRock as read-only references with a module map.
   Audited the existing UI kit: already shadcn, so it becomes `@qlastakit/ui` directly.
   Theming: token-driven and multi-theme capable, only the default look ships in v1.
+  UI architecture: the kit's config-driven philosophy is kept; deviations listed in 6b.

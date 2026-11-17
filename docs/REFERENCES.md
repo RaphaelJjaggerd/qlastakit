@@ -90,4 +90,5 @@ not just read. It is a React Router 7 + Vite project, already tokenized.
 | UI components | `src/components/shared/ui/*` | `packages/ts/ui/src/components/`. They have no router imports, so they move unchanged |
 | Custom components | Logo, Icon tile, Setting row | `packages/ts/ui/src/components/` |
 | Preview page | the plain component preview page | A route in `apps/web` (dev only) |
-| Shell and screens | layouts, navigation, auth and settings pages | Rebuilt in `apps/web` on TanStack Router, Better Auth and the generated client. Copy the markup and classes, not the routing, guards, mock API or auth store |
+| Architecture | `CLAUDE.md`, `src/shared/configs/`, `src/components/route/` | The philosophy to preserve. Read PRD section 6b first: it lists what stays and the only approved changes |
+| Shell and screens | layouts, navigation, auth and settings pages | Rebuilt in `apps/web` on TanStack Router, Better Auth and the generated client. Keep the structure, markup and classes. Replace routing internals, guards, mock API and auth store as section 6b says |
