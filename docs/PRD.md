@@ -27,6 +27,9 @@ developer (human or AI agent) writes only the idea and its business logic.
 5. **Prove, then extract.** Anything new is built inside a real app first and moves
    into the kit only when a second use appears.
 6. **AI-friendly.** `AGENTS.md`, recipes, decision records, one reference feature.
+7. **Stand on existing kits.** supastarter and SaasRock are reading material (see
+   `docs/REFERENCES.md`). Agents study how they solved a module before building ours,
+   then write qlastakit's own implementation.
 
 ## 3. Locked decisions
 
@@ -162,6 +165,7 @@ recipes and Docker Compose.
 
 ### Phase 0: Align the skeleton
 - [ ] `/potato-eng setup`, tier full
+- [ ] Unpack the reference kits into `references/` (see `docs/REFERENCES.md`)
 - [ ] Close section 4 with `/grill`, then `/prd`, `scripts/prd-review.sh`, `/tasks`
 - [ ] Create `packages/ts/core`. Move `notes` logic and zod schemas into it
 - [ ] Replace the Hono API with NestJS + `nestjs-zod`. `notes` controller as a thin adapter
@@ -173,6 +177,7 @@ recipes and Docker Compose.
 - [ ] Update `AGENTS.md`, recipes and decision records to match
 
 ### Phase 1: Accounts
+Reference first: supastarter `packages/auth`, `packages/mail`, organizations routes and UI.
 - [ ] shadcn/ui base and app shell in `@qlastakit/ui`
 - [ ] i18n wiring (Q1). All shell text through message files
 - [ ] Email module (Resend + React Email)
@@ -182,6 +187,7 @@ recipes and Docker Compose.
 - [ ] `notes` reference feature made org-scoped
 
 ### Phase 2: Modules the first app needs
+Reference first: supastarter `packages/payments`, `packages/storage`, `packages/ai`.
 - [ ] pg-boss jobs: email sending and webhook processing run through it
 - [ ] File storage: signed-URL upload flow, MinIO in Compose
 - [ ] Payments interface + Stripe adapter: subscriptions, one-time, webhooks, org billing page
@@ -215,3 +221,4 @@ recipes and Docker Compose.
 - 2026-11-15: Renamed to qlastakit, scope `@qlastakit/*`. Full design grill: scope, apps,
   auth and orgs, payments, storage, jobs, AI, i18n, hosting, testing, CI, monitoring.
   Roadmap rewritten into phases 0 to 4.
+- 2026-11-17: Added supastarter and SaasRock as read-only references with a module map.

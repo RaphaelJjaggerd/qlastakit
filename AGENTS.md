@@ -30,6 +30,7 @@ add features to `services/api` and screens to `apps/*`.
 | `infra/` | Docker Compose for local Postgres | none |
 | `docs/recipes` | Step-by-step guides for common tasks | |
 | `docs/decisions` | Why things are the way they are (read before changing structure) | |
+| `docs/REFERENCES.md` | Map of two reference kits in `references/` (gitignored, read-only) | |
 
 ## Golden rules
 
@@ -44,6 +45,9 @@ add features to `services/api` and screens to `apps/*`.
    `packages/rust/*`, never TS packages.
 6. **Keep it simple.** Do not add a library, layer or abstraction the task does not need.
    Prefer editing an existing file over creating a new pattern.
+7. **References are for reading.** Before building a module, check `docs/REFERENCES.md`
+   and send a scout to the listed paths. Learn the shape, write our own code, and follow
+   current library docs over the reference. Never run anything inside `references/`.
 
 ## Commands
 
