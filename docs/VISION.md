@@ -18,6 +18,24 @@ that manifest into a project.
 }
 ```
 
+## Two shapes of project
+
+Both shapes use the same `packages/ts/core`. The manifest says which one a project is.
+
+- **Full** (`"api": "nestjs"`): apps call the NestJS API through the generated client.
+  For SaaS with orgs, billing, mobile apps or non-TS services.
+- **Light** (`"api": "none"`): the web app calls core directly from TanStack Start
+  server functions. No API service. For small apps that need a database but no backend
+  of their own.
+
+Only Full is built in v1. To keep Light possible: no business logic in NestJS
+controllers, and core never assumes it runs inside NestJS.
+
+Use case: Made In, a Wordle-like game where you pin on a map where a company's products
+are made. It needed only server functions, a database and maybe realtime, but still
+took setting up a VPS, a database and hosting by hand. Qlastabase solves that: pick the
+Light shape, get managed Postgres and realtime already wired.
+
 ## Stages
 
 1. **qlastakit v1** (see `docs/PRD.md`). The kit, proven by 2 or 3 real projects.
