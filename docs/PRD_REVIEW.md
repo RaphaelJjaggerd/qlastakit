@@ -304,3 +304,186 @@ Applied to `docs/PRD.md`. No `[must]` disputed.
 32. applied (trivial): status line updated.
 
 Owner questions Q1 to Q7 left untouched for the owner (OQ1 to OQ4 in the PRD still await answers).
+
+## Round 2 (reviewer, 2026-11-18)
+
+Read: the PRD whole (v2, round 1 applied), round 1, `scripts/verify.sh`,
+`db/migrate.sh`, `infra/docker-compose.yml`, the root `package.json`. Facts checked on
+the web where marked (sources at the end). Round 1's findings were all applied and are
+not repeated. Round 1's Q2 to Q7 are still open; Q1 is re-asked wider below.
+
+### Must
+
+1. `[must]` **The API's path prefix and base URLs are not decided, and the contract
+   depends on them from 0.4.** §2.6 routes `/api/*` on the deploy to the API, but does
+   not say whether the proxy strips the prefix. Locally the API is on its own port with
+   no prefix. Better Auth's default base path is `/api/auth`. So every path in
+   `contracts/openapi.json`, the generated client's base URL, Better Auth's base URL
+   and the Google redirect URI differ between local and deploy unless one rule is
+   stated, and 0.4, 0.6, 2.3a, 2.5 and 4.3 would each guess. Changing it later changes
+   every path in the contract. Fix, in §2.6 and §3.3: the API serves everything under
+   `/api` in every environment (Nest global prefix; Better Auth at `/api/auth`; the
+   proxy never strips). Locally the web dev server proxies `/api` to the API port, so
+   the browser sees one origin locally too and the client's base URL is always `/api`.
+   Server-side code in the web app (the before-load session check) reaches the API
+   through a separate internal URL env var. The CORS allowlist stays as a default but
+   is empty in v1. 0.4 sets the prefix; 0.6 adds the dev proxy.
+
+### Should
+
+2. `[should]` **`db/migrate.sh` needs `psql` on the host, and three tasks lean on it.**
+   0.4's precondition is "`db/migrate.sh` applies"; a Windows machine with only Docker
+   Desktop has no `psql`. §6's "migrated once" test database and CI need a runner too,
+   and 4.1 is told to choose a second one for the deploy. Fix: choose once, in 0.4: a
+   small Node migrate script with the same behaviour (ordered files, the
+   `schema_migrations` table, one transaction per file), used by local dev, the test
+   setup, CI and the deploy. Delete `db/migrate.sh` in 0.4 and drop the choice from 4.1.
+
+3. `[should]` **The agent guide is wrong from 0.1 until 0.9.** `AGENTS.md` tells every
+   session to use `just`, Hono and Biome. After 0.1 `just` is gone; after 0.4 Hono is
+   gone; cards 0.2 to 0.8 read a guide that names commands that no longer exist. Fix:
+   one line in §7: a card that removes or renames something the agent guide names
+   fixes those lines in the same task. 0.9 becomes the sweep (recipes, ADRs,
+   `docs/REFERENCES.md`), not the first correction.
+
+4. `[should]` **0.7's "Compose stack" has only Postgres in it.** Dockerfiles arrive in
+   4.1, so there are no app containers to test against in Phase 0. Fix: 0.7 says the
+   smoke script starts Compose Postgres, migrates, starts the API and web app with
+   `pnpm`, runs Playwright and stops them. 0.8 runs the same script. In 4.1 the
+   production-like run mounts the console email folder as a volume so the smoke test
+   can read the verification link from the API container.
+
+5. `[should]` **API tests share one database but nothing says they run one at a time.**
+   §6 truncates tables between tests. Vitest runs test files in parallel by default,
+   so two files truncate under each other. Fix in §6: API test files run serially (file
+   parallelism off for the API project). Core and web tests stay parallel.
+
+6. `[should]` **§6 does not say which adapters tests use, so CI may need provider
+   accounts.** 3.2a "API tests for checkout", 3.4 "delete an oversize object after
+   upload" and 3.6 "an API test proves the cap" each touch a provider. CI has only a
+   Postgres service. Fix in §6: verify and CI use the `console` email adapter and
+   in-memory fakes for payments, storage and AI, so they need no keys and no S3
+   container. The real Stripe, S3 and AI adapters are proven by the runtime criteria
+   (3.3, 3.4, 3.5). The local S3 container is needed for dev and for 3.4's runtime
+   check only.
+
+7. `[should]` **3.1's "a job running twice sends once" needs a mechanism the card
+   would invent.** Fix in §2.4: `sendEmail` takes an idempotency key (the job id); the
+   `resend` adapter passes it as Resend's `Idempotency-Key` header (supported, 24-hour
+   window, checked below); the `console` adapter names the saved file by the key, so a
+   second run overwrites. No sent-emails table.
+
+8. `[should]` **`sendEmail`'s shape crosses the core boundary and is not stated.**
+   Core may not import React (§4), and templates are React Email components in
+   `packages/ts/email`. Fix in §2.4: core calls `sendEmail` with a template name and
+   typed data; the adapter in the API renders the template. Core never imports the
+   email package.
+
+9. `[should]` **Auth rate limits (2.3b) need three facts the card would have to
+   find.** Better Auth's limiter stores in memory by default; §2.2 locks counters in
+   Postgres, so it must be set to database storage, and its `rateLimit` table is one
+   more hand-written migration (§2.2 "Tables from libraries"). It limits by IP, so the
+   trusted-header setting from §2.3 is needed in 2.3b, not first in 2.4. And sources
+   disagree on whether the limiter is on outside production, so 2.3b enables it
+   explicitly and its tests do not depend on the default. Add these to the 2.3b card.
+
+10. `[should]` **Which org is active on a new session is not stated.** §3.2 puts the
+    active org on the session; Better Auth leaves it empty at sign-in unless a hook
+    sets it. 2.6 and every org-scoped controller need a rule. Fix in §3.2: a new
+    session starts in the user's personal org; v1 does not remember the last org used.
+    A request with no active org gets a coded error, not a guess.
+
+11. `[should]` **The org logo has no screen to live on.** §1 item 5 uploads "an org
+    logo in settings"; §2.3 lists org admin routes as members, invites, roles and
+    billing; no task builds an org settings page. Fix: 2.6 adds an org general page
+    (rename the org), limited to owner and admin; 3.4 adds the logo to it. Add
+    "general" to the §2.3 org admin row.
+
+12. `[should]` **Web forms have no stated validation source.** §3.1 makes core's zod
+    schemas the single source; §4 forbids apps importing core. Fix in §3.1 (web
+    feature row): forms validate with zod schemas generated into the TS client by Hey
+    API's zod plugin (it exists; check the current docs in 0.6), or rely on the API's
+    coded errors. Never a hand-copied schema.
+
+13. `[should]` **3.3's runtime proof is a hosted Stripe page and a live webhook
+    forward.** A test-card checkout and a portal round trip run on Stripe's pages with
+    the Stripe CLI forwarding; that is the owner's hands, like Google sign-in in 2.5.
+    Fix: 3.3's done is API tests for the billing endpoints and role limits, plus the
+    owner's sign-off that checkout, the interval switch and cancel update the page.
+
+14. `[should]` **Uploads are the one open-signup harm §2.3 does not cap.** Any
+    signed-up user can put unlimited 2 MB objects in a public bucket on the owner's
+    account. Fix in §2.4: one fixed object key per user avatar and per org logo, so a
+    new upload replaces the old one and storage is bounded by accounts; the saved URL
+    carries a version query so caches refresh. Add uploads to the abuse risk row in §9.
+
+15. `[should]` **The Phase 4 branch cannot reach the reference deploy under §2.1's git
+    flow.** One PR per phase merges at the gate, but 4.3 and 4.7 must run against the
+    live deploy before 4.G. Fix in 4.3: Coolify deploys the Phase 4 branch until the
+    gate; at 4.G the owner switches it to `main`, and v1.0 is tagged on `main` after
+    the merge (move the tag from 4.7 to 4.G). Add to 4.3's precondition: Coolify has
+    read access to the private GitHub repo.
+
+16. `[should]` **4.4 assumes Coolify can back up this Postgres.** Coolify's scheduled
+    backups cover standalone database resources and databases inside its Services; a
+    database inside a git-deployed Compose application is not confirmed (below). Fix
+    in 4.3: Postgres is created as a Coolify database resource, not as part of the
+    app's Compose file.
+
+17. `[should]` **4.7's deploy-mode smoke test needs things no card provides.** Fix:
+    add to 4.7's precondition that the owner creates and verifies the test account on
+    the deploy and puts its credentials and the deploy's base URL in the local env; the
+    smoke test runs from the owner's machine or the builder's session, not CI. Also
+    align 4.7 with §1: the owner signs off the items a test does not prove (1 to 6,
+    10); 7 to 9 are proven by green tests.
+
+18. `[should]` **Sentry's TanStack Start SDK is alpha.** Sentry's docs mark
+    `@sentry/tanstackstart-react` as alpha with possible breaking changes. Fix: add a
+    §9 risk checked in 4.5: if it does not work with the installed TanStack Start,
+    use `@sentry/react` in the browser and `@sentry/node` on the server, and log why.
+
+19. `[should]` **Two smaller gaps in Phase 2 cards.** 2.2's runtime send needs a
+    Resend API key and a from address in the local env, not only the verified
+    subdomain; add both to its precondition. 2.3a should say the notes endpoints
+    require a session from here on, since the smoke test now signs in first.
+
+### Minor
+
+20. `[minor]` 3.0 is listed after 3.1. Put it first.
+21. `[minor]` Stale card numbers after the round 1 splits: §3.5 (2.3), §5 (2.3), §9
+    risks (2.3), OQ1 (2.3), OQ4 (2.8). Use 2.3a, 2.3b, 2.8b.
+22. `[minor]` OQ3 still says "4 auth layouts"; §3.4 now says three.
+23. `[minor]` §2.1 forbids domains "not even as examples"; §4 forbids "a real domain".
+    Tests need addresses. Say reserved names (`example.com`, `localhost`) are allowed.
+24. `[minor]` §9 lists OQ1 to OQ4 only. Add round 1's Q2, Q6 and Q7 and this round's
+    questions so the PRD holds every open question in one place.
+
+### Owner
+
+`[owner]` ❓ Q1 - Better Auth's client, wider (replaces round 1 Q1; needed by 2.3a, 2.6,
+2.8a, 2.8b): the web app calls Better Auth's own client for everything Better Auth
+owns: sign-in and sessions, and also organizations, invites, members, roles and
+switching the active org? Those routes stay outside the contract and outside core.
+➡️ Yes. The organization plugin already ships these endpoints with role checks;
+wrapping them in core functions and controllers rebuilds the plugin for no v1 gain.
+
+`[owner]` ❓ Q8 - Invite emails (needed by 2.8a): invites get their own caps, by env:
+at most 3 per recipient address per hour, and at most 20 per org per day, with a 429
+and code `rate_limited` when the org cap is hit?
+➡️ Yes. With open signup anyone can create an org and mail strangers from the sending
+subdomain, which is the harm the auth email caps exist to stop.
+
+`[owner]` ❓ Q9 - Changing email (needed by 2.9): v1 settings show the email read-only,
+and 2.9 covers name and password change only?
+➡️ Yes. Changing email adds a second verification flow, a template and a cap, and no
+item in the v1 done list needs it.
+
+### Sources
+
+- Better Auth rate limit storage: https://better-auth.com/docs/concepts/rate-limit.md
+- Coolify database backups: https://coolify.io/docs/databases/backups
+- Sentry TanStack Start SDK: https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react
+- Resend idempotency keys: https://resend.com/docs/dashboard/emails/idempotency-keys
+- Hey API zod plugin: https://heyapi.dev/openapi-ts/plugins/zod
+
+must: 1, should: 18, minor: 5, owner: 3
