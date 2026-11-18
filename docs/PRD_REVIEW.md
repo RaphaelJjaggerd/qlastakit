@@ -265,3 +265,42 @@ can win for a reference deploy.
 - mise tasks on Windows: https://mise.jdx.dev/tasks/toml-tasks.html
 
 must: 5, should: 21, minor: 6, owner: 7
+
+## Round 1 (author, 2026-11-18)
+
+Applied to `docs/PRD.md`. No `[must]` disputed.
+
+1. applied: §6 smoke test has local/CI and deploy modes; 4.1 uses `console` with a non-production `NODE_ENV`; §2.4 names `NODE_ENV=production` for the boot refusal.
+2. applied: Docker precondition and the first Compose run moved to 0.4; 0.7 keeps only the smoke test; §6 states the clean-state mechanism and the clear failure when Postgres is down.
+3. applied: §2.6 Origins row (one origin on the deploy); §3.3 cookie forwarding in before-load.
+4. applied: §2.2 "Tables from libraries" row.
+5. applied: MinIO replaced by "a local S3-compatible container" in §2.4, §3.2, §4; 3.4 picks one; removed from 0.7.
+6. applied: 2.3 split into 2.3a and 2.3b.
+7. applied: 2.8 split into 2.8a and 2.8b; 3.2 split into 3.2a and 3.2b; the test-card checkout moved to 3.3.
+8. applied: Stripe CLI precondition in 3.2b, portal precondition in 3.3, webhook endpoint registration in 4.3.
+9. applied: 2.1 narrowed to auth, mail, organizations, settings; new 3.0 vets payments, storage and AI.
+10. applied: §6 web test row; 0.2 installs it; named in 1.5 and 1.6.
+11. applied: 1.7 done criterion rewritten.
+12. applied: §2.4 sending path row; §3.3 and 3.1 reworded; worker in the API process.
+13. applied: trusted forwarded header in §2.3; real-IP log check and header env in 4.3.
+14. applied: §2.4 upload row and 3.4 reworded; R2 public read and CORS in 4.3.
+15. applied: org-id check allowlist in §5; Better Auth error shape and IP-cap 429 in §3.3.
+16. applied: adapters in the API (§2.4, §4); 0.3 deletes the placeholder packages.
+17. applied: 0.4 card carries Express, nestjs-zod v5, no-database spec export, decorator-metadata runner, ADR 0004.
+18. applied: mise precondition in 0.1 and one-pnpm-command rule in §2.1; oxlint risk in §9 and the fallback in 0.1.
+19. applied: one OpenAI-compatible provider in §2.4.
+20. applied: unmoved screens row in §3.5; access denied in 1.5; auth layout count corrected to three.
+21. applied: sign-off definition in §7.
+22. applied: active org row in §3.2.
+23. applied: 4.2 is a recipe; 4.4 uses Coolify's backups; 4.1 chooses a migrate step without `psql`.
+24. applied: plan-lookup function in §2.4, built in 3.2a; nothing gated.
+25. applied: OQ1 reworded.
+26. applied: 0.9 covers `docs/REFERENCES.md`.
+27. applied (trivial): Node 22 named.
+28. applied (trivial): CI triggers stated in 0.8.
+29. applied (trivial): 2.4 restores the limiter check.
+30. applied (trivial): 3.6 cap resets at 00:00 UTC.
+31. applied (trivial): 1.1 checks for the unpacked `src/` folder.
+32. applied (trivial): status line updated.
+
+Owner questions Q1 to Q7 left untouched for the owner (OQ1 to OQ4 in the PRD still await answers).
