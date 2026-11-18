@@ -160,8 +160,8 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   README-only `packages/ts/auth` and `packages/ts/payments` placeholders.
 - Done when: tests for the notes schemas and coded errors pass (the data path is proven
   in 0.4a); verify fails if core imports a framework or `better-auth`.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-18: built `@qlastakit/core` (`packages/ts/core`): `CodedError(code, message)`,
     notes zod schemas (plain zod, no `.openapi`), `listNotes(db)` / `createNote(db, input)`
@@ -182,6 +182,43 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     `packages/ts/core/src/_probe.ts`, now `export {};`, plus `services/api/src/_tmp.ts` and
     `_review_probe.ts`, are untracked and need a human to delete; the probe file is not
     committed).
+  - Review: returned 2026-11-18
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      Import ban: a throwaway probe in `packages/ts/core/src/_probe.ts` importing
+      `@nestjs/common`, `@tanstack/react-query`, `react`, `better-auth/plugins`, `express`
+      and `fastify` got six `no-restricted-imports` errors from oxlint; `zod` passed. The
+      probe is back to `export {};`. One zod copy (4.6.7) in the lockfile, so `.openapi()`
+      on core's plain zod schemas works, and the contract did not change.
+    - Spec:
+      - [must] Coded errors are not tested where they matter. `errors.test.ts:5-10` only
+        checks that the `CodedError` constructor keeps its arguments. The one coded error
+        core throws, `createNote` → `validation_error` (`notes/service.ts:18`), has no test,
+        and it needs no database: validation runs before `db` is touched. PRD §6 asks core
+        tests to cover validation and coded errors. Add a test that `createNote` rejects bad
+        input with a `CodedError` whose `code` is `validation_error` (a stub `db` is fine,
+        it is never reached).
+      - [must] Stale agent-guide lines, not fixed and not logged. The card deleted
+        `services/api/src/features/notes/service.ts` and `schema.ts`, but `AGENTS.md:64`
+        (golden rule 2) still says business logic goes in
+        `services/api/src/features/<name>/service.ts`. `docs/recipes/add-feature.md:17-18`
+        still says to copy the notes feature and adapt `schema.ts`, `service.ts` and
+        `routes.ts`. The rules at the top of this file say a card that removes something
+        the agent guide names fixes those lines in the same card. Only
+        `services/api/AGENTS.md` was updated. The next builder will be sent to a file that
+        no longer exists. Point both at `packages/ts/core` (schemas and the core function)
+        plus the API route. Recurs: 0.1 also left stale doc mentions after a removal (its
+        [minor]s on `just` in recipes and package READMEs).
+      - [minor] PRD §3.1 says a core function takes "an org context as arguments".
+        `listNotes(db)` and `createNote(db, input)` take none. That is right for now (notes
+        has no org id, and no org table exists until 2.6a), but the log does not list it as
+        a decision the PRD left open.
+    - Standards:
+      - [minor] Possible primitive obsession: `CodedError.code` (`errors.ts:8`) is a
+        `string`, and `STATUS` in `services/api/src/app.ts:10` is keyed by `string`, so a
+        mistyped code quietly becomes a 400. A union of known codes would let the compiler
+        catch it. This can wait for 0.5's error shape.
+    - Note: untracked `services/api/src/_tmp.ts`, `_review_probe.ts` and
+      `packages/ts/core/src/_probe.ts` are still there for a human to delete.
 
 ## 0.4a Postgres, migrations and API tests
 - Precondition (human): Docker Desktop is installed and running.
