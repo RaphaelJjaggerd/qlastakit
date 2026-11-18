@@ -229,6 +229,24 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     2.6a; 2.7 adds it. The `CodedError.code` union is left for 0.5's error shape. Stubs:
     none. Wish: delete permission for the three untracked probe files (human to remove;
     not committed). `verify.sh` passes.
+  - Review: approved 2026-11-18
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      `notes/service.test.ts` tests behaviour: the db stub throws a plain `Error` on any
+      access, so the test fails if `createNote` reaches the db before validating, or throws
+      anything other than a `CodedError` coded `validation_error`. Both previous [must]s are
+      fixed. `AGENTS.md` golden rule 2 and `docs/recipes/add-feature.md` step 3 point at
+      files that exist (`packages/ts/core/src/notes/{schema,service}.ts`, `index.ts`, the API
+      `routes.ts`). `services/api/AGENTS.md` matches. The org-context [minor] is now logged.
+    - Spec:
+      - [minor] `AGENTS.md:107` still says "`services/api/src/features/notes` is the
+        reference feature. Copy its shape." That folder now holds only `routes.ts`; the
+        reference feature is `packages/ts/core/src/notes` plus that route. Same in
+        `.claude/commands/new-feature.md:8` (edits to `.claude/` are denied, so 0.9). Point
+        both at the pair. Recurs: the third card in a row with a stale guide pointer after
+        a move (0.1, 0.3 twice). The 0.G gate should weigh a check or a standard for it.
+    - Standards: no findings.
+    - Note: untracked `services/api/src/_tmp.ts`, `_review_probe.ts` and
+      `packages/ts/core/src/_probe.ts` are still there for a human to delete.
 
 ## 0.4a Postgres, migrations and API tests
 - Precondition (human): Docker Desktop is installed and running.
