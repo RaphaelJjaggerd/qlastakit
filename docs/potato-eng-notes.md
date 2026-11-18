@@ -18,3 +18,14 @@ One entry per finding: date, what happened, suggested fix.
   `models.env` name the scout, or have setup write the project copy.
 - `verify.sh` template has no answer for "no tests yet"; this repo skips the test step
   until a root `test` script exists and says SKIPPED.
+
+## 2026-11-18: PRD review rounds
+
+- `prd-review.sh` ends by grepping every `[owner]` line ever written, so answered
+  questions from earlier rounds are listed as open. Fix: list only `[owner]` lines from
+  the last reviewer round, or skip ones an owner-answers block marks settled.
+- The loop only stops on `must: 0`, but an author round always follows the reviewer, so
+  a run that hits the round cap ends with musts applied and never re-checked. Fix: end
+  with a reviewer round, or report "musts applied, unconfirmed".
+- Must counts per round: 5, 1, 1, 1, 2. Each round finds a few new real issues on a
+  ~700-line PRD; there is no stopping rule for diminishing returns besides the cap.
