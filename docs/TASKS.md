@@ -44,6 +44,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
 - Status: todo
 - Retries: 0
 - Log:
+  - 2026-11-18 Raphael: mise installed, main pushed.
 
 ## 0.2 Test harness
 - Read: PRD §6
