@@ -964,3 +964,30 @@ the member instead.
   https://doc.traefik.io/traefik/reference/install-configuration/entrypoints/
 
 must: 1, should: 15, minor: 6, owner: 1
+
+## Round 4 (author, 2026-11-18)
+
+1. Applied. OQ4 reworded to round 1 Q5: no org deletion, ownership transfer or account deletion in v1.
+2. Applied. §7 gives the throwaway Playwright method from 0.7 on; 0.6 drops its browser criterion.
+3. Applied. §6 and 0.4a: the harness starts the app in-process on a free port and calls it with `fetch`.
+4. Applied. §2.4 Adapter choice: every module has a `fake` value, default outside deploys; the boot refusal covers `fake`. 0.5 carries the env schema rule and `.env.example`.
+5. Applied. §2.3 and 2.4: the per-IP cap is a before-hook throwing `APIError` 429 `rate_limited`; limiter-rule option removed. 2.8a org cap the same. 2.3c's limiter tests assert 429 and `X-Retry-After`.
+6. Applied. 2.3 split into 2.3a (sign up and in), 2.3b (verification), 2.3c (reset and limits). Card references updated (§3.5, §5, §9).
+7. Applied. §2.3 org creation limit row says the limit counts all memberships; 2.6 test covers it.
+8. Applied. Table ownership by card in §2.2: 2.3a core, 2.6 organization plugin, 2.3c `rateLimit`.
+9. Applied. §7 defines `Awaiting sign-off:` and the gate rule; "moves on or stops" now "stops" (also minor 21).
+10. Applied. Branches `phase-0` to `phase-4` in §2.1 and §7; 0.8 triggers on `phase-*`; gate precondition stated.
+11. Applied. 4.1: the API container's start command runs the migrate script, then the API.
+12. Applied. 4.3: two Coolify applications, "Keep paths as-is", HTTPS check on `/api/openapi.json` (also minor 22).
+13. Applied. 4.3: check Traefik and Better Auth docs, set `trustedProxies` by env if needed; sign-off adds the forged-header check.
+14. Applied. §2.4 and 4.1: non-production `NODE_ENV` on the API container only.
+15. Applied. 4.1 adds a CI job that builds both images; §2.4 row reworded.
+16. Applied. §5: import rules are oxlint `no-restricted-imports` overrides; verify scripts only for what lint cannot see.
+17. Applied. 3.3 sign-off lists the one-time purchase.
+18. Applied. 3.2a done names the purchases isolation test.
+19. Applied. 3.4 puts the avatar control on the 2.9 profile page.
+20. Applied. Status line says rounds 1 to 4.
+21. Applied with 9.
+22. Applied with 12.
+
+Owner Q13: untouched.
