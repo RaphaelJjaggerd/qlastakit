@@ -133,7 +133,7 @@ it; it never works around it.
 | Payments | One provider-agnostic interface with adapters. Stripe is the first | Existing account, international customers |
 | Adapters | Adapters (Resend, Stripe, S3, AI) live in the API service under one adapters folder and are passed into core. Core holds only the interfaces. Exception, AI: the adapter is a function in the API returning an AI SDK language model chosen by env, the `fake` is the AI SDK's mock model, and core holds no AI interface, only the daily-cap function (3.7) | Core stays framework- and provider-free |
 | Billing models | Subscriptions and one-time purchases, owned by an org | Both are needed by most projects |
-| Plans | Free, Pro (monthly and yearly), one one-time purchase. The plan config is a typed file in core and includes the display amount and currency; the billing page reads plans from a billing endpoint through the generated client (apps may not import core). Stripe price IDs stay in env vars | Smallest set covering both models, upgrade, downgrade and the interval switch. Core exposes one function returning an org's current plan; v1 gates nothing with it |
+| Plans | Free, Pro (monthly and yearly), one one-time purchase. The plan config is a typed file in core and includes the display amount and currency; the billing page reads plans from a billing endpoint through the generated client (apps may not import core). Stripe price IDs stay in env vars. An org can buy the one-time product more than once; each purchase is its own row on the billing page, with no already-bought check | Smallest set covering both models, upgrade, downgrade and the interval switch. Core exposes one function returning an org's current plan; v1 gates nothing with it |
 | Stripe customer | One customer per org, stored in a product table of ours keyed by org id (not a column on Better Auth's organization table), created on first checkout | 3.2a, 3.2b and the portal all need the id, and Better Auth owns the org table |
 | Stripe on the reference deploy | Test mode | Proves the same code paths without charging strangers. Live keys are a per-project setting |
 | Paystack, Polar | After v1 | Polar's payout to the owning entity is unconfirmed; it is a hands-on precondition on the first Polar task |
@@ -538,13 +538,13 @@ Ref: supastarter (study): payments, storage, AI.
 - **3.2a Payments and checkout.** The payments interface, the Stripe adapter, the
   purchases table owned by the org, a checkout endpoint for Pro and the one-time product,
   the Stripe customer table (one customer per org, created on first checkout, §2.4) and
-  the plan-lookup function. Read §2.4, §3.2. Ref: supastarter. The checkout endpoint refuses with a coded error when the org already has an active Pro subscription (the page sends that org to the portal). Done: API tests for
-  checkout and purchases (on fakes), including role limits (owner and admin allowed, member refused), the already-subscribed refusal, and the org isolation test for purchases (§6).
+  the plan-lookup function. Read §2.4, §3.2. Ref: supastarter. The checkout endpoint refuses with a coded error when the org already has an active Pro subscription (the page sends that org to the portal). The one-time product has no already-bought check (§2.4). Done: API tests for
+  checkout and purchases (on fakes), including role limits (owner and admin allowed, member refused), the already-subscribed refusal, a second one-time purchase by the same org succeeding as its own row, and the org isolation test for purchases (§6).
 - **3.2b Stripe webhooks.** Webhooks verified and queued as jobs that call core. Read
   §2.4, §3.3. Ref: supastarter. Done: API tests with signed webhook fixtures, and the same event delivered twice changes nothing.
 - **3.3 Billing page.** Plans from a billing endpoint (the plan config lives in core,
   §2.4), the current plan, the customer portal (switch interval, cancel), one-time
-  purchases shown; limited by role (§2.3). Read §2.4. Precondition (human): Stripe
+  purchases shown, one row each; limited by role (§2.3). Read §2.4. Precondition (human): Stripe
   test-mode keys and prices exist and their IDs are in the local env; the Stripe CLI is
   installed to forward webhooks locally; the test-mode customer portal allows switching
   between the two Pro prices and cancelling. Done: API tests for the billing endpoints and the
@@ -679,8 +679,8 @@ forces another.
 
 ### Open questions
 
-None open. The owner answered review rounds 1 to 4 on 2026-11-18; the answers are
-folded into §2.3, §2.5, §2.6, §3.3 and the tasks.
+None open. The owner answered review rounds 1 to 5 on 2026-11-18; the answers are
+folded into §2.3, §2.4, §2.5, §2.6, §3.3 and the tasks.
 
 ---
 
@@ -692,7 +692,8 @@ closed, email adapters and caps, plans, uploads, AI demo limits. 2026-11-18 revi
 rounds 1 to 5 and the owner's answers: Better Auth client and AI chat hook as the two
 client exceptions, Tabler, stacked-side shell and side auth layout, roles and the
 one-owner rule, invite caps and undo, read-only email, org limit 5, personal org is
-ordinary, Google account linking, VPS at 200 ms, notes kept; Google sign-in and
+ordinary, Google links only onto a verified password account, the one-time product
+can be bought more than once, VPS at 200 ms, notes kept; Google sign-in and
 settings moved to Phase 3.
 
 Tier: full. Next: `scripts/prd-review.sh`.

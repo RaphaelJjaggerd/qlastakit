@@ -1210,3 +1210,12 @@ must: 2, should: 10, minor: 6, owner: 2
 16. applied: §6 now points to the Webhooks row below.
 17. applied: §9 abuse row adds invite caps, 2.5b and 2.7a.
 18. skipped: no PRD change required, as the reviewer said.
+
+## Owner answers to round 5 (2026-11-18)
+
+Applied to `docs/PRD.md` by hand. Settled; do not re-ask.
+
+- Q15 One-time product can be bought more than once, each purchase its own row: yes.
+  In §2.4 Plans, 3.2a (no already-bought check, tested) and 3.3.
+- Q16 Google links only onto a verified password account; otherwise `account_not_linked`
+  with a message to verify or reset first: yes. Already applied by the round 5 author.
