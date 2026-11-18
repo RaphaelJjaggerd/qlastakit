@@ -123,9 +123,20 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   for the web app, and a root test script.
 - Done when: `scripts/verify.sh` runs tests (no longer skipped) with at least one
   passing test.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-18: built Vitest 4 at the root (`vitest.config.ts` with `test.projects`:
+    `apps/web`, `services/api`), root `pnpm test` = `vitest run`. Web project: jsdom,
+    Testing Library (react, jest-dom, user-event), `src/test-setup.ts` (jest-dom matchers,
+    cleanup), its own `vitest.config.ts` (react plugin only, no TanStack Start plugin).
+    One passing test (`apps/web/src/harness.test.tsx`: renders the UI `Button`, clicks
+    it). API project is a node env with `passWithNoTests`, no tests yet. `scripts/verify.sh`
+    now runs tests (1 passed). Decisions the PRD left open: the API project's config sits
+    in `services/api/vitest.config.ts` and is not typechecked (outside `src`). Stubs: 0.3
+    adds the core project to the root list, 0.4a adds API Postgres setup and serial files.
+    Wish: none. The untracked `services/api/src/_tmp.ts` and `_review_probe.ts` are still
+    there for a human to delete.
 
 ## 0.3 Core package
 - Read: PRD §2.2, §3.1, §4, §6

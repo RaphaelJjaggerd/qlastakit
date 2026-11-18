@@ -11,6 +11,7 @@
     "db:migrate": "bash db/migrate.sh",
     "lint": "oxlint --type-aware . && oxfmt --check .",
     "format": "oxfmt .",
+    "test": "vitest run",
     "contract": "pnpm --filter @qlastakit/api openapi:export && pnpm --filter @qlastakit/api-client generate"
   },
   "devDependencies": {
@@ -18,7 +19,8 @@
     "oxlint": "1.94.0",
     "oxlint-tsgolint": "7.0.2007",
     "turbo": "^2.11.11",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.12"
   },
   "engines": {
     "node": ">=22"
