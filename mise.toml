@@ -9,6 +9,10 @@ pnpm = "10"
 # python = "3.13"
 # uv = "latest"
 
+[env]
+# Loads .env for every task (db/migrate.sh reads DATABASE_URL from the environment).
+_.file = ".env"
+
 [tasks.setup]
 description = "Install all dependencies"
 run = "pnpm install"

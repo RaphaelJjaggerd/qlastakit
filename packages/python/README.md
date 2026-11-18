@@ -21,5 +21,6 @@ requires-python = ">=3.12"
 members = ["packages/python/*", "services/api-py"]
 ```
 
-`just setup` and `just check` pick up Python automatically once that file exists.
+`mise run setup` and `mise run check` do not cover Python yet. Once that file exists, add
+the Python steps (`uv sync`, `ruff`) to those mise tasks (0.1 dropped them with `just`).
 Suggested libs: FastAPI (built-in OpenAPI), psycopg, pyjwt, ruff.

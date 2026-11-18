@@ -16,5 +16,6 @@ resolver = "2"
 members = ["packages/rust/*", "services/api-rs"]
 ```
 
-`just setup` and `just check` pick up Rust automatically once that file exists.
+`mise run setup` and `mise run check` do not cover Rust yet. Once that file exists, add
+the Rust steps (`cargo fetch`, `cargo check`) to those mise tasks (0.1 dropped them with `just`).
 Suggested crates: axum or rocket, sqlx (Postgres), jsonwebtoken, utoipa (OpenAPI).

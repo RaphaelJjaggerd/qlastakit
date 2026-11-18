@@ -8,4 +8,4 @@ Rust, Go or Python, and any app can go native (Kotlin, Swift), without changing 
 side, as long as the contract holds. TS-only coupling (tRPC, shared server imports) would
 lock everything into TypeScript.
 
-**Consequence.** One extra step after changing routes: `just contract`.
+**Consequence.** One extra step after changing routes: `mise run contract`.

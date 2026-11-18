@@ -14,5 +14,6 @@ Then from the repo root:
 go work init ./packages/go/auth ./services/api-go
 ```
 
-`just setup` and `just check` pick up Go automatically once `go.work` exists.
+`mise run setup` and `mise run check` do not cover Go yet. Once `go.work` exists, add the
+Go steps (`go work sync`, `go vet`) to those mise tasks (0.1 dropped them with `just`).
 Suggested libs: gin or chi, pgx + sqlc, golang-jwt, huma (OpenAPI).

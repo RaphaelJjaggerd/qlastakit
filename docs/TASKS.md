@@ -41,7 +41,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   type-aware oxlint does not accept this workspace, ship oxlint without it and log why.
 - Done when: `mise run check` passes, no Biome config or justfile remains,
   `scripts/verify.sh` passes.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-18 Raphael: mise installed, main pushed.
@@ -85,6 +85,21 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     - Note: deleting files is blocked for the reviewer too. Untracked
       `services/api/src/_review_probe.ts` (now just `export {};`) needs a human to delete
       it, along with `_tmp.ts`.
+  - 2026-11-18 (retry 1): fixed the [must]: `mise.toml` now has `[env] _.file = ".env"`,
+    so every task (including `db-migrate`) loads `.env`, replacing the justfile's
+    `set dotenv-load`. Proof is partial: `mise run check` still passes with no `.env`
+    present (a missing file is tolerated), but I could not create a `.env` here (writes to
+    it are denied), so the "DATABASE_URL is set" path is not run; the owner should run
+    `cp .env.example .env && mise run db-migrate` once. Minors: the Go, Python and Rust
+    package READMEs now say mise does not cover those languages yet and name the steps
+    the justfile had (`go work sync`/`go vet`, `uv sync`/`ruff`, `cargo fetch`/`cargo
+    check`); those steps were dropped on purpose in 0.1 (no such code exists yet) and
+    this was missing from the first log. Swept the remaining `just` mentions early
+    (`docs/recipes/add-feature.md`, `add-service.md`, `docs/adr/0001-contract-first.md`),
+    left for 0.9: `.claude/commands/new-feature.md:10` (edit to `.claude/` denied).
+    Stubs: none. Wish: write access to `.claude/` and to `.env`, and the ability to
+    delete `services/api/src/_tmp.ts` and `_review_probe.ts` (still untracked, human to
+    remove).
 
 ## 0.2 Test harness
 - Read: PRD §6
