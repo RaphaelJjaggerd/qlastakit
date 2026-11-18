@@ -9,9 +9,6 @@
   "scripts": {
     "typecheck": "tsc -p ."
   },
-  "peerDependencies": {
-    "react": "^19.0.0"
-  },
   "dependencies": {
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.3.0"
@@ -21,5 +18,8 @@
     "@types/react": "^19.0.0",
     "react": "^19.3.1",
     "typescript": "^5.9.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   }
 }

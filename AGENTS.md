@@ -5,8 +5,8 @@ Guide for AI agents (and humans) working in this repo. Read this first.
 > **Status: draft.** The kit is still being aligned with its PRD. Read `docs/PRD.md`
 > for locked decisions, open questions and the roadmap, and `docs/VISION.md` for where
 > this is heading. Where this file and the PRD disagree (the PRD locks NestJS, a
-> framework-free core, oxlint + oxfmt and mise tasks; the skeleton still uses Hono,
-> Biome and `just`), the PRD wins. Do not build product features until Phase 0 is done.
+> framework-free core, oxlint + oxfmt and mise tasks; the skeleton still uses Hono),
+> the PRD wins. Do not build product features until Phase 0 is done.
 
 Tier: full
 <!-- jam | full. jam skips PRD review rounds, /review, gates and the scout. -->
@@ -66,7 +66,7 @@ add features to `services/api` and screens to `apps/*`.
    not in the web app, not in TanStack Start server functions.
 3. **Schema changes start in SQL.** Add `db/migrations/NNNN_name.sql`, then mirror it in
    `packages/ts/db/src/schema.ts`. Never edit an applied migration.
-4. **After changing any API route, run `just contract`** so the spec and clients update.
+4. **After changing any API route, run `mise run contract`** so the spec and clients update.
 5. **Packages are per language.** `packages/ts/*` is only for TS code. A Rust service uses
    `packages/rust/*`, never TS packages.
 6. **Keep it simple.** Do not add a library, layer or abstraction the task does not need.
@@ -78,16 +78,17 @@ add features to `services/api` and screens to `apps/*`.
 ## Commands
 
 ```sh
-just setup        # install everything
-just db-up        # start Postgres (Docker)
-just db-migrate   # apply SQL migrations
-just dev          # run all apps and services
-just contract     # regenerate openapi.json and clients
-just check        # typecheck + lint every language
-scripts/verify.sh # potato-eng gate: typecheck, lint, tests, contract drift
+mise run setup       # install everything
+mise run db-up       # start Postgres (Docker)
+mise run db-migrate  # apply SQL migrations
+mise run dev         # run all apps and services
+mise run contract    # regenerate openapi.json and clients
+mise run check       # typecheck + lint (oxlint type-aware + oxfmt check)
+scripts/verify.sh    # potato-eng gate: typecheck, lint, tests, contract drift
 ```
 
-Without `just`: `pnpm install`, `pnpm dev`, `pnpm contract`, `pnpm typecheck`, `pnpm lint`.
+Each mise task is one `pnpm` command: `pnpm install`, `pnpm dev`, `pnpm contract`,
+`pnpm check`, `pnpm format` (oxfmt, writes).
 
 Local URLs: web `http://localhost:3000`, API `http://localhost:8787`,
 spec `http://localhost:8787/openapi.json`.
@@ -95,7 +96,7 @@ spec `http://localhost:8787/openapi.json`.
 ## Windows
 
 - Shell scripts (`scripts/*.sh`, `db/migrate.sh`, hooks) run in Git Bash.
-- Docker Desktop is required for Postgres (`just db-up`).
+- Docker Desktop is required for Postgres (`mise run db-up`).
 - Line endings are LF everywhere (`.gitattributes`). Do not commit CRLF.
 
 ## Common tasks

@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react"],
+  "categories": { "correctness": "error" },
+  "ignorePatterns": [
+    "**/dist",
+    "**/.output",
+    "**/routeTree.gen.ts",
+    "contracts/clients/ts/src/gen",
+    "references"
+  ]
+}

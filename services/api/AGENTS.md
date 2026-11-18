@@ -21,4 +21,4 @@ Register the feature in `src/app.ts` with `app.route("/", <name>Routes)`.
 - Throw `new AppError(code, message, status)` from services for expected failures.
   Validation errors and crashes are already turned into JSON by `src/app.ts`.
 - Get the database with `getDb()` from `src/db.ts`.
-- Run `just contract` after changing any route or schema.
+- Run `mise run contract` after changing any route or schema.

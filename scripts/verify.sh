@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Project verification for qlastakit: typecheck, lint, tests, contract drift.
-# Calls the root pnpm scripts, so it survives the Phase 0 swaps (Biome to
-# oxlint + oxfmt, just to mise): those change what `pnpm lint` runs, not this.
+# Calls the root pnpm scripts, so tooling swaps change what `pnpm lint` runs, not this.
 #   - exits non-zero on any failure
 #   - full output goes to Logs/, only errors and a one-line summary print
 set -euo pipefail

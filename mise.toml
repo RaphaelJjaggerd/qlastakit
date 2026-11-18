@@ -1,10 +1,42 @@
-# Pins toolchain versions for this repo. `mise install` installs them.
-# Uncomment a language when you start using it.
+# Pins toolchain versions and defines tasks. `mise install` installs the tools,
+# `mise tasks` lists the tasks. Every task is one pnpm command (no shell syntax),
+# so it runs the same on Windows (cmd) and elsewhere.
 [tools]
 node = "22"
 pnpm = "10"
-just = "latest"
 # rust = "stable"
 # go = "1.25"
 # python = "3.13"
 # uv = "latest"
+
+[tasks.setup]
+description = "Install all dependencies"
+run = "pnpm install"
+
+[tasks.dev]
+description = "Run every app and service in dev mode"
+run = "pnpm dev"
+
+[tasks.contract]
+description = "Regenerate contracts/openapi.json and every generated client"
+run = "pnpm contract"
+
+[tasks.check]
+description = "Typecheck and lint"
+run = "pnpm check"
+
+[tasks.db-up]
+description = "Start Postgres (Docker)"
+run = "pnpm db:up"
+
+[tasks.db-down]
+description = "Stop Postgres"
+run = "pnpm db:down"
+
+[tasks.db-migrate]
+description = "Apply SQL migrations in db/migrations"
+run = "pnpm db:migrate"
+
+[tasks.build]
+description = "Build every app and service"
+run = "pnpm build"

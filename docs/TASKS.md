@@ -41,10 +41,25 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   type-aware oxlint does not accept this workspace, ship oxlint without it and log why.
 - Done when: `mise run check` passes, no Biome config or justfile remains,
   `scripts/verify.sh` passes.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-18 Raphael: mise installed, main pushed.
+  - 2026-11-18: built mise tasks (setup, dev, contract, check, build, db-up, db-down,
+    db-migrate; each one `pnpm` command, long ones are root scripts), pinned oxlint
+    1.94.0, oxfmt 0.79.0 and oxlint-tsgolint 7.0.2007, `.oxlintrc.json` (correctness
+    errors, typescript and react plugins), `.oxfmtrc.json` (same style as the old Biome
+    config); `pnpm lint` = `oxlint --type-aware . && oxfmt --check .`. Removed Biome,
+    justfile and `just` from mise.toml. Type-aware oxlint works on this workspace
+    (proved with a throwaway `no-floating-promises` case). Fixed `just` lines in
+    AGENTS.md, README, verify.sh, api AGENTS.md and two code comments. Decisions the PRD
+    left open: db tasks call `docker compose` / `bash db/migrate.sh` through root pnpm
+    scripts until 0.4a replaces the shell script; oxfmt reformatted two package.json
+    files (key order). Stubs: none. Wish: the agent could delete or edit files under
+    `.claude/` and delete its own throwaway files; `.claude/commands/new-feature.md`
+    still says `just contract`/`just check` (left for 0.9), and a stray
+    `services/api/src/_tmp.ts` (contents `export {};`, uncommitted) needs a human to
+    delete it.
 
 ## 0.2 Test harness
 - Read: PRD §6

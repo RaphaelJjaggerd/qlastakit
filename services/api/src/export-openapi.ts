@@ -1,5 +1,5 @@
 // Writes the OpenAPI spec to /contracts/openapi.json without starting a server.
-// Run via `just contract`. Never edit contracts/openapi.json by hand.
+// Run via `mise run contract`. Never edit contracts/openapi.json by hand.
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createApp } from "./app";

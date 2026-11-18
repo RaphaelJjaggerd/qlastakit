@@ -1,5 +1,5 @@
 // Hand-written entry point. Everything under ./gen is generated: do not edit it.
-// Regenerate with `just contract` after changing any API route.
+// Regenerate with `mise run contract` after changing any API route.
 import { client } from "./gen/client.gen";
 
 export * from "./gen";

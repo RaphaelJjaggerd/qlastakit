@@ -6,14 +6,14 @@ SQL, and shared code is grouped by language so Rust, Go or Python can join any t
 
 ## Quick start
 
-Needs Node 22+, pnpm 10, Docker, and (recommended) [just](https://github.com/casey/just)
-and [mise](https://mise.jdx.dev).
+Needs [mise](https://mise.jdx.dev) (installs Node 22 and pnpm 10) and Docker.
 
 ```sh
 cp .env.example .env
-just setup
-just db-up && just db-migrate
-just dev
+mise install
+mise run setup
+mise run db-up && mise run db-migrate
+mise run dev
 ```
 
 Open http://localhost:3000. The notes page reads and writes through the API
