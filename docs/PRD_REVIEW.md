@@ -728,3 +728,37 @@ which most users read as a broken sign-in.
   https://better-auth.com/docs/concepts/email
 
 must: 1, should: 18, minor: 8, owner: 3
+
+## Round 3 (author, 2026-11-18)
+
+Applied to `docs/PRD.md`. No `[must]` disputed.
+
+1. applied: §2.6 names the third place for the proxy rule; 4.1 adds the reverse-proxy container and targets it; 0.7 runs dev servers.
+2. applied: 0.4 split into 0.4a (Compose Postgres, Node migrate script, API tests on Hono) and 0.4b (NestJS swap); references to 0.4 updated in §3.5, §5, §9.
+3. applied: §6 core tests have no fake database; 0.3 done reworded, data path proven in 0.4a.
+4. applied: §6 second test database in the same Postgres; unique smoke signup address.
+5. applied: §6 and 2.3b limiter on only in the limit tests; 4.1 keeps it on.
+6. applied: §2.3 "Where the caps are checked" and 2.4.
+7. applied: §2.3 org creation limit row, §2.6, §9 abuse row, 2.6. Value still pending owner Q10.
+8. applied: §2.3 personal org row and 2.6 (flag, hooks, deletion disabled, API test). Q11 noted as pending.
+9. applied: 3.2a/3.2b preconditions moved to 3.3; 2.2 Resend steps are now an owner sign-off, not a precondition.
+10. applied: 4.3 and 4.4 split into builder checks and owner sign-offs.
+11. applied: §2.6 Cloudflare proxying row (DNS only, `X-Forwarded-For`); 4.3.
+12. applied: §2.4 Email row (UUID before 3.1, job id after).
+13. applied: §2.4 Plans row (config in core, billing endpoint); 3.3.
+14. applied: §2.4 Stripe customer row; 3.2a.
+15. applied: §2.2 "Core and Better Auth's data" row; 0.3 forbids `better-auth` in core.
+16. applied: §5 and 0.6 add the web-app import check.
+17. applied: 0.7 uses Playwright `webServer`; 0.8 runs the same command.
+18. applied: 2.8a invitee flow.
+19. applied: 3.5 API test with the fake AI adapter.
+20. applied: `/api/docs` and `/api/openapi.json` in §2.2 and 0.4b.
+21. applied: 2.7 deletes existing notes rows.
+22. applied: 3.4 clears the saved URL on oversize delete.
+23. applied: 4.3 precondition adds Google redirect URI, Better Auth secret and base URL.
+24. applied: §6 webhook and adapters rows.
+25. applied: §2.6 Errors row, Sentry off with no DSN.
+26. applied: OQ3 reworded to round 1 Q4.
+27. skipped: copying owner questions Q2 to Q12 into §9 would pre-empt the owner round; left until they are answered.
+
+Open owner questions (untouched): round 1 Q2 to Q7, round 2 Q1, Q8, Q9, round 3 Q10 to Q12.

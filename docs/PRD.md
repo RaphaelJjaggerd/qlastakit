@@ -1,7 +1,7 @@
 # qlastakit v1: PRD
 
 **Status:** v2, written 2026-11-18 from the brief (grill closed 2026-11-17), the
-glossary and ADRs 0001-0003. In PRD review (rounds 1 and 2 applied).
+glossary and ADRs 0001-0003. In PRD review (rounds 1 to 3 applied).
 **Scope:** the kit only. The idea app, the engine, the CLI and Qlastabase each get their
 own PRD (see the vision doc).
 
@@ -86,6 +86,7 @@ it; it never works around it.
 |---|---|---|
 | API | NestJS, the only framework shipped | Structure for a growing API. Other adapters only when a project asks |
 | Business logic | Core package: no decorators, no request objects, dependencies passed in | Testable, and core never assumes it runs inside NestJS |
+| Core and Better Auth's data | Core reads and writes Better Auth's tables through the Drizzle mirror only where it must (membership checks, avatar URL, logo URL) and never imports Better Auth. The verify check's forbidden core imports include `better-auth` | The Better Auth instance lives in the API, and core still has to check membership and save image URLs |
 | Contract | OpenAPI from nestjs-zod, reusing core's zod schemas. Hey API generates the TS client | Language-agnostic seams (ADR 0001) |
 | Database | Postgres only | One database to run, back up and reason about |
 | ORM | Drizzle, mirrors the SQL, never generates migrations | ADR 0002 |
@@ -95,7 +96,7 @@ it; it never works around it.
 | Redis | None in v1 | Sessions, rate limits, counters and the queue all live in Postgres |
 | Logs | pino, structured JSON, request IDs | One log shape everywhere |
 | Error shape | One JSON shape, `error` with `code` and `message`. Codes, not text | Clients translate codes |
-| Defaults | UUID primary keys. Env vars validated with zod at boot. Security headers and a CORS allowlist. API docs UI at `/docs`. No websockets; SSE for AI streaming only | Assumed in the design grill, never vetoed |
+| Defaults | UUID primary keys. Env vars validated with zod at boot. Security headers and a CORS allowlist. API docs UI at `/api/docs`, spec at `/api/openapi.json`. No websockets; SSE for AI streaming only | Assumed in the design grill, never vetoed |
 
 ### 2.3 Accounts
 
@@ -105,7 +106,8 @@ it; it never works around it.
 | Login methods | Email + password, Google. Email verification and password reset | What every SaaS needs first |
 | Sessions | Cookie sessions only | JWT/JWKS and bearer tokens wait for the first non-TS service or the Expo app |
 | Tenancy | Organizations from v1, via the Better Auth organization plugin | Adding tenancy later rewrites every query |
-| Personal org | Every new user gets one automatically | Every row belongs to an org: one code path |
+| Personal org | Every new user gets one automatically. The organization table gets a `personal` boolean (in the hand-written migration, declared to Better Auth as an additional field; if a boolean is not supported, a text flag). A user-create hook makes the org; a session-create hook sets it active. `disableOrganizationDeletion` is on in v1. Better Auth has no personal-org notion, creates none at signup and leaves the active org null at sign-in, so these hooks are needed. Pending Q11: a personal org is otherwise an ordinary org (invites, rename) | Every row belongs to an org: one code path, and every session finds an org |
+| Org creation limit | Any signed-in user can create orgs, up to `organizationLimit` set from an env var (pending Q10, recommended default 5) | Bounds logo storage and per-org invite quotas under open signup |
 | Data isolation | Every product table has an org id. Core functions take an org context. No RLS. Better Auth's own tables are exempt | Isolation is visible in code and testable |
 | Roles | Owner, admin, member | Tenancy is by org, not by global role |
 | Org admin | Routes inside the web app: general (rename, logo), members, invites, roles, billing | No second app for it in v1 |
@@ -113,13 +115,14 @@ it; it never works around it.
 | Auth rate limits | Rate limiting on every auth route | Default |
 | Auth email caps | Per email address: at most 3 verification and 3 reset emails per hour, counted per type. Per IP: at most 10 auth emails per hour, any type. Env vars with these defaults. Counters in Postgres. The client IP is read from a trusted forwarded header whose name is set by env, since behind the proxies every request otherwise arrives from the proxy's address | The public deploy must not spam people from the sending subdomain |
 | Cap behaviour | Address cap hit: the normal success response, and the suppressed send is logged. IP cap hit: 429 with code `rate_limited` | No account enumeration |
+| Where the caps are checked | The per-IP cap is checked before the route runs (a Better Auth before-hook or a custom limiter rule on the email-sending paths) and returns the 429; Better Auth's docs say not to await the send inside its email callbacks, and after 3.1 the send is a queued job, so nothing thrown there reaches the response. The per-address cap is checked where the send is requested and suppresses silently. Both counters stay in Postgres | The 429 cannot come from inside `sendEmail` |
 | Super admin | Separate app, after v1 | Platform owner only. Not needed to prove the kit |
 
 ### 2.4 Modules
 
 | Decision | Choice | Why |
 |---|---|---|
-| Email | One `sendEmail`, React Email templates, two adapters: `console` and `resend`. Core calls `sendEmail` with a template name, typed data and an idempotency key (the job id); the adapter in the API renders the template from `packages/ts/email`. Core never imports the email package. The `resend` adapter passes the key as Resend's `Idempotency-Key` header; the `console` adapter names the saved file by the key, so a second run overwrites. No sent-emails table | Local dev and tests need no account. Core stays React-free |
+| Email | One `sendEmail`, React Email templates, two adapters: `console` and `resend`. Core calls `sendEmail` with a template name, typed data and an idempotency key (the caller always passes one: a fresh UUID per send before 3.1, the job id from 3.1 on); the adapter in the API renders the template from `packages/ts/email`. Core never imports the email package. The `resend` adapter passes the key as Resend's `Idempotency-Key` header; the `console` adapter names the saved file by the key, so a second run overwrites. No sent-emails table | Local dev and tests need no account. Core stays React-free |
 | Adapter choice | `console` is the default in local dev and tests. `resend` in deploys | |
 | Sending path | Every send is a pg-boss job, in every environment, from 3.1 on. Tests wait for the console file rather than assume it exists | One path, not two |
 | Console output | Prints one line (to, subject, every link) and saves the full email as HTML in a gitignored folder | Humans open it in a browser; tests read the newest file |
@@ -127,7 +130,8 @@ it; it never works around it.
 | Payments | One provider-agnostic interface with adapters. Stripe is the first | Existing account, international customers |
 | Adapters | Adapters (Resend, Stripe, S3, AI) live in the API service under one adapters folder and are passed into core. Core holds only the interfaces | Core stays framework- and provider-free |
 | Billing models | Subscriptions and one-time purchases, owned by an org | Both are needed by most projects |
-| Plans | Free, Pro (monthly and yearly), one one-time purchase. Plans in a typed config file, Stripe price IDs in env vars | Smallest set covering both models, upgrade, downgrade and the interval switch. Core exposes one function returning an org's current plan; v1 gates nothing with it |
+| Plans | Free, Pro (monthly and yearly), one one-time purchase. The plan config is a typed file in core and includes the display amount and currency; the billing page reads plans from a billing endpoint through the generated client (apps may not import core). Stripe price IDs stay in env vars | Smallest set covering both models, upgrade, downgrade and the interval switch. Core exposes one function returning an org's current plan; v1 gates nothing with it |
+| Stripe customer | One customer per org, stored in a product table of ours keyed by org id (not a column on Better Auth's organization table), created on first checkout | 3.2a, 3.2b and the portal all need the id, and Better Auth owns the org table |
 | Stripe on the reference deploy | Test mode | Proves the same code paths without charging strangers. Live keys are a per-project setting |
 | Paystack, Polar | After v1 | Polar's payout to the owning entity is unconfirmed; it is a hands-on precondition on the first Polar task |
 | Usage credits | After v1. The data model leaves room | No v1 proof needs them |
@@ -156,14 +160,16 @@ it; it never works around it.
 | Decision | Choice | Why |
 |---|---|---|
 | Packaging | A Dockerfile per app and service | Runs anywhere. The unit Qlastabase hosts later |
-| Origins and paths | The API serves everything under `/api` in every environment (Nest global prefix; Better Auth at `/api/auth`; no proxy ever strips the prefix). On the deploy the web app is served on the subdomain and `/api/*` on the same subdomain is routed to the API (a proxy rule in Coolify). Locally the web dev server proxies `/api` to the API port, so the browser sees one origin everywhere and the generated client's base URL is always `/api`. Server-side web code (the before-load session check) reaches the API through a separate internal URL env var. The CORS allowlist stays as a default and is empty in v1 | Cookie sessions need no cross-subdomain cookie or credentialed CORS, and every path in the contract, the Better Auth base URL and the Google redirect URI is the same in every environment |
+| Origins and paths | The API serves everything under `/api` in every environment (Nest global prefix; Better Auth at `/api/auth`; no proxy ever strips the prefix). On the deploy the web app is served on the subdomain and `/api/*` on the same subdomain is routed to the API (a proxy rule in Coolify). The rule (`/api/*` to the API, everything else to the web app, no prefix stripping) lives in three places: Coolify on the deploy, the Vite dev proxy locally, and one small reverse-proxy container in 4.1's production-like Compose run. Locally the web dev server proxies `/api` to the API port, so the browser sees one origin everywhere and the generated client's base URL is always `/api`. Server-side web code (the before-load session check) reaches the API through a separate internal URL env var. The CORS allowlist stays as a default and is empty in v1 | Cookie sessions need no cross-subdomain cookie or credentialed CORS, and every path in the contract, the Better Auth base URL and the Google redirect URI is the same in every environment |
 | Reference deploy | One VPS running Coolify, on a subdomain. Git push deploys, SSL | Cheap, and close to what Qlastabase will wrap |
+| Cloudflare proxying | DNS only (not proxied) for the app subdomain in v1. Coolify's proxy issues the certificate and sets `X-Forwarded-For`, which is the trusted client-IP header; SSE needs no buffering exception. Proxying is a per-project choice later (then the header is `CF-Connecting-IP` and the origin must refuse non-Cloudflare traffic) | A proxied subdomain terminates SSL twice and lets the header be forged unless the origin is locked |
+| Org-level abuse limits | `organizationLimit` from env (pending Q10), and the personal-org rules in §2.3 | See the abuse row in §9 |
 | VPS provider | Chosen in Phase 4 by measured latency from Nairobi to three candidates: a Nairobi provider, a Johannesburg region, Hetzner EU. The cheapest one that is fast enough wins | Docker and Coolify make the host easy to change; measure, don't guess |
 | DNS | Cloudflare | R2 lives there too: DNS, storage and SSL in one account |
 | Production Postgres | Same VPS, in Docker. Scheduled backups to R2. A restore is rehearsed once | |
 | Testing | Vitest for core, API tests on a real Postgres, one Playwright smoke test | See section 6 |
 | CI | GitHub Actions: lint, typecheck, tests, contract-drift check | |
-| Errors | Sentry in web and API | |
+| Errors | Sentry in web and API. Off when no DSN is set (local, CI) | |
 
 ## 3. Architecture
 
@@ -261,7 +267,7 @@ named check.
 
 | Reference | Defect | Avoided in | Proven by |
 |---|---|---|---|
-| supastarter | Business logic inside API route handlers | 0.4 and every API task | Verify check: controllers never import the database package |
+| supastarter | Business logic inside API route handlers | 0.4b and every API task | Verify check: controllers never import the database package |
 | supastarter | Prisma schema and generated migrations | 0.3 | Verify check: no Prisma dependency; migrations are hand-written SQL |
 | supastarter | Library calls from early 2025 (Better Auth 1.1, AI SDK 4, Tailwind 3) | 2.3a, 3.5 | Task log cites the current docs used; typecheck against current versions |
 | supastarter | Redis for rate limits | 2.4 | No Redis dependency; cap tests run on Postgres only |
@@ -317,7 +323,7 @@ scripts/               potato-eng loop and verify
 
 | Kind | Where | What |
 |---|---|---|
-| Checked by a tool | The verify script, run by every task and by CI | Typecheck. oxlint. oxfmt check. Tests. Contract drift (regenerate, fail if it changed). Added during v1: core has no framework imports (0.3); controllers never import db (0.4); one icon dependency and no axios or zustand in the web app (1.2, 2.3b); token purity in UI components (1.4); every product table in a migration has an org id, read against an allowlist of non-product tables with one reason per table, kept beside the migrations (2.7) |
+| Checked by a tool | The verify script, run by every task and by CI | Typecheck. oxlint. oxfmt check. Tests. Contract drift (regenerate, fail if it changed). Added during v1: core has no framework imports (0.3); controllers never import db (0.4b); the web app imports no core, db or service code (0.6); one icon dependency and no axios or zustand in the web app (1.2, 2.3b); token purity in UI components (1.4); every product table in a migration has an org id, read against an allowlist of non-product tables with one reason per table, kept beside the migrations (2.7) |
 | Judgement, checked at review | The standards doc | Smell baseline plus project standards added by phase gates |
 | Convention | Agent guides and recipes | Recipe steps, naming, where a feature's files go |
 
@@ -328,13 +334,13 @@ at the next phase gate.
 
 | What | Kind | Where it runs |
 |---|---|---|
-| Core functions | Vitest unit tests, dependencies passed in as fakes | Verify, CI |
-| API endpoints | Vitest API tests against a real Postgres in Docker. One test database, migrated once, tables truncated between tests. API test files run serially (file parallelism off for the API project); core and web tests stay parallel. Verify fails with a clear message when Postgres is not reachable | Verify, CI |
-| Adapters in tests | Verify and CI use the `console` email adapter and in-memory fakes for payments, storage and AI, so they need no keys, no provider accounts and no S3 container. The real Stripe, S3 and AI adapters are proven by the runtime criteria (3.3, 3.4, 3.5). The local S3 container is needed for dev and 3.4's runtime check only | Verify, CI |
+| Core functions | Vitest unit tests for validation, coded errors and logic, with fake adapters and a fake clock. There is no fake database: queries are proven by the API tests on real Postgres | Verify, CI |
+| API endpoints | Vitest API tests against a real Postgres in Docker. Tests and the smoke script use a second database in the same Compose Postgres (name by env, separate from the dev database `app`), created and migrated by the test setup, tables truncated between tests; the smoke test signs up with a unique address per run. Better Auth's rate limiter is on in the tests that prove the limits and off (by env) in the rest of the test run and in the local smoke run, since every test arrives from one IP and sign-in allows 3 requests per 10 seconds; the production-like run in 4.1 and the deploy keep it on. API test files run serially (file parallelism off for the API project); core and web tests stay parallel. Verify fails with a clear message when Postgres is not reachable | Verify, CI |
+| Adapters in tests | Verify and CI use the `console` email adapter and in-memory fakes for payments, storage and AI (webhook signature checks are the exception, above), so they need no keys, no provider accounts and no S3 container. The real Stripe, S3 and AI adapters are proven by the runtime criteria (3.3, 3.4, 3.5). The local S3 container is needed for dev and 3.4's runtime check only | Verify, CI |
 | Web routes and shell | Vitest with a DOM environment and Testing Library, rendering the router in memory | Verify, CI |
 | Org isolation | An API test proving one org cannot read another's rows, for every org-scoped feature | Verify, CI |
 | Auth email caps, AI cap, upload limits | API tests | Verify, CI |
-| Webhooks | API tests with signed Stripe event fixtures | Verify, CI |
+| Webhooks | API tests with signed Stripe event fixtures; the real adapter's signature check runs offline with a test secret | Verify, CI |
 | The whole kit | One Playwright smoke test with two modes. Local and CI: sign up, read the verification link from the console email, verify, sign in, create a note. Deploy (4.7): sign in with an already verified test account whose credentials come from env, then create a note; signup and verification on the deploy are covered by the owner's sign-off on section 1 item 1 | Locally after the first runtime task, CI, and against the reference deploy at the end |
 | UI theming | A throwaway test theme that changes the whole look with no component edit | Once in 1.4, then the token-purity check guards it |
 | i18n | A pseudo-locale test proving every shell string comes from message files | 1.6, then CI |
@@ -363,32 +369,41 @@ CI. Docker Compose and the `just` recipes have never been run.
 - **0.2 Test harness.** Vitest across the workspace, including a DOM environment with Testing Library for the web app, and a root test script. Read §6.
   Done: verify runs tests (no longer skipped) with at least one passing test.
 - **0.3 Core package.** Move notes logic and its zod schemas into core, with unit tests. Delete the README-only `packages/ts/auth` and `packages/ts/payments` placeholders.
-  Read §2.2, §3.1, §4. Done: notes core tests pass; verify fails if core imports a
-  framework.
-- **0.4 NestJS API.** Replace Hono with NestJS (on Express: the Better Auth adapter's
+  Read §2.2, §3.1, §4, §6. Done: tests for the notes schemas and coded errors pass (the
+  data path is proven in 0.4a); verify fails if core imports a framework or `better-auth`.
+- **0.4a Postgres, migrations and API tests.** Compose Postgres, the Node migrate script,
+  the API test harness on real Postgres (second test database, §6), and API tests that
+  create and list notes against the existing Hono API. Replace `db/migrate.sh` with a
+  small Node migrate script of the same behaviour (ordered files, the `schema_migrations`
+  table, one transaction per file), used by local dev, the test setup, CI and the deploy;
+  delete the shell script. Precondition (human): Docker Desktop installed and running.
+  Read §6. Done: the API tests pass on real Postgres; verify fails with a clear message
+  when Postgres is unreachable.
+- **0.4b NestJS API.** Replace Hono with NestJS (on Express: the Better Auth adapter's
   Fastify support is beta and Better Auth needs Nest's body parser off) + nestjs-zod v5
   for zod 4 with its `cleanupOpenApiDoc` step; notes controller as a thin adapter. The
   spec export must not need a database. NestJS needs decorator metadata, which the
   skeleton's `tsx` runner does not emit, so pick a runner that does and log it. Write
-  ADR 0004 (NestJS replaces Hono). Set the global prefix `/api` (§2.6). Replace
-  `db/migrate.sh` with a small Node migrate script of the same behaviour (ordered files,
-  the `schema_migrations` table, one transaction per file), used by local dev, the test
-  setup, CI and the deploy; delete the shell script. Precondition (human): Docker Desktop installed and
-  running; the card confirms Compose Postgres starts and the migrate script applies. Read
-  §2.2, §2.6, §3.1, §3.3, §6. Done: API tests create and list notes on real Postgres;
-  the regenerated client keeps the same notes operations; verify fails if a controller
-  imports db. Runtime: the API boots and serves the spec and `/docs`.
+  ADR 0004 (NestJS replaces Hono). Set the global prefix `/api` (§2.6). Read
+  §2.2, §2.6, §3.1, §3.3, §6. Done: the 0.4a API tests pass unchanged apart from the
+  `/api` paths (the tests written before the swap prove it); the regenerated client keeps
+  the same notes operations; verify fails if a controller imports db. Runtime: the API
+  boots and serves the spec at `/api/openapi.json` and the docs UI at `/api/docs`.
 - **0.5 API baseline.** Env validation at boot, the error shape, security headers, CORS
   allowlist, pino logs with request IDs. Read §2.2. Done: API tests prove each one,
   including a refused boot on a bad env.
 - **0.6 TanStack Query.** The web notes page uses the generated client through query
   hooks, base URL `/api`; the web dev server proxies `/api` to the API port and the
-  internal API URL env var is added. Check Hey API's zod plugin docs. Read §2.5, §2.6, §3.3. Done, runtime: create and list a note in the browser.
-- **0.7 Smoke test.** The Playwright smoke test (create a note for now) and a smoke
-  script that starts Compose Postgres, migrates, starts the API and web app with `pnpm`,
-  runs Playwright and stops them. Read §6. Done, runtime: the smoke script passes.
+  internal API URL env var is added. Check Hey API's zod plugin docs. Add a verify check
+  that the web app imports no core, db or service code (§4). Read §2.5, §2.6, §3.3, §4, §5.
+  Done: the check passes; runtime: create and list a note in the browser.
+- **0.7 Smoke test.** The Playwright smoke test (create a note for now). Playwright's
+  `webServer` setting starts and stops both dev servers (the API and the web app, so the
+  Vite proxy applies; not a build); the only pre-step is the migrate script, run on the
+  test database. No start-and-stop shell script, so one `pnpm` command runs it. Read §6.
+  Done, runtime: the smoke command passes.
 - **0.8 CI.** GitHub Actions runs the verify steps and the same smoke script with a Postgres
-  service. Read §6. The workflow triggers on pushes to phase branches and on PRs.
+  service. Read §6. The workflow triggers on pushes to phase branches and on PRs, and runs the 0.7 smoke command.
   Precondition (human): the owner pushes the phase branch and signs off that CI ran green. Done: the workflow runs the same checks as verify.
 - **0.9 Docs match the code.** Agent guide, recipes, ADRs and `docs/REFERENCES.md`
   (stale pointers to "section 6b", "PRD Q1", next-intl; point at §3.4 and §3.5) describe
@@ -430,9 +445,10 @@ Ref: supastarter (study): auth, mail, organizations.
   organizations and settings paths the references doc lists.
 - **2.2 Email module.** `sendEmail`, React Email, `console` and `resend` adapters,
   console output to a gitignored folder, boot refused in production with `console`.
-  Read §2.4. Precondition (human): the sending subdomain is verified on Resend, signed
-  off by the owner; a Resend API key and a from address are in the local env. Done: unit tests for the console output; a boot test for the
-  production refusal; runtime: one real email sent through `resend`.
+  Read §2.4. Done: unit tests for the console output; a boot test for the production
+  refusal. Owner sign-off (not a precondition for starting): the sending subdomain is
+  verified on Resend, a Resend API key and a from address are in the local env, and one
+  real email was sent through `resend`.
 - **2.3a Email and password auth.** Better Auth mounted in NestJS, its tables as SQL
   migrations, sign up, verification, sign in and out, those auth screens rebuilt on it;
   the session replaces the 1.5 stub. Better Auth sits at `/api/auth` (§2.6). Read §2.2, §2.3, §2.6, §3.3, §3.5. Ref: supastarter.
@@ -441,25 +457,36 @@ Ref: supastarter (study): auth, mail, organizations.
 - **2.3b Password reset and auth limits.** Reset flow and its screens, rate limits on
   auth routes, verify check: no axios or zustand in the web app. Better Auth's limiter
   is set to database storage (its `rateLimit` table is one more hand-written migration),
-  enabled explicitly so tests do not depend on the default, and it needs the trusted
-  client-IP header setting from §2.3 now. Read §2.3, §3.5.
+  enabled explicitly so tests do not depend on the default (on in the tests that prove
+  the limits, off by env elsewhere, §6), and it needs the trusted client-IP header
+  setting from §2.3 now. Read §2.3, §3.5, §6.
   Ref: supastarter. Done: API tests for reset and the limits; the check passes.
 - **2.4 Auth email caps.** Per-address and per-IP caps with the agreed behaviour. Read
-  §2.3. Check whether Better Auth's limiter can count per address; if not, the caps sit in core in front of `sendEmail`. Done: API tests prove both caps, the silent address cap and the 429.
+  §2.3. The per-IP cap is checked before the route runs and returns the 429; the
+  per-address cap is checked where the send is requested and suppresses silently; both
+  counters in Postgres (§2.3 "Where the caps are checked"). Done: API tests prove both caps, the silent address cap and the 429.
 - **2.5 Google sign-in.** Read §2.3. Precondition (human): a Google OAuth client exists
   and its credentials are in the local env. Done: the owner signs off that Google sign-in
   works locally.
-- **2.6 Organizations.** Personal org on signup (a new session starts in it, §3.2),
-  create an org, org switcher, and an org general page (rename), limited to owner and
-  admin. The web app calls Better Auth's own client for organization actions (OQ1). Read
-  §2.3, §3.2. Ref: supastarter. Done, runtime: a new user lands in a personal org,
-  creates a second one, switches, and renames it.
+- **2.6 Organizations.** Personal org on signup (a new session starts in it, §3.2): the
+  `personal` boolean on the organization table (hand-written migration, declared to
+  Better Auth as an additional field; confirm a boolean works, else a text flag), a
+  user-create hook that makes the org, a session-create hook that sets it active,
+  `disableOrganizationDeletion` on, and `organizationLimit` from an env var (pending
+  Q10). Create an org, org switcher, and an org general page (rename), limited to owner
+  and admin. The web app calls Better Auth's own client for organization actions (OQ1).
+  Read §2.3, §3.2. Ref: supastarter. Done: an API test that a new user has exactly one
+  personal org and a new session is active in it; runtime: a new user lands in a
+  personal org, creates a second one, switches, and renames it.
 - **2.7 Org scoping.** Org context in core, an org id on every product table, notes
-  scoped. Read §2.3, §3.1. Done: the isolation test passes; verify fails on a product
+  scoped; the migration deletes existing notes rows (no deploy exists yet). Read §2.3, §3.1. Done: the isolation test passes; verify fails on a product
   table without an org id.
 - **2.8a Invites.** Invite by email and accept. Invite caps (pending owner answer to Q8,
   to be set in this card): at most 3 per recipient address per hour and 20 per org per
-  day, by env, 429 with code `rate_limited` at the org cap. Read §2.3. Ref: supastarter. Done:
+  day, by env, 429 with code `rate_limited` at the org cap. The invite link leads to sign
+  in or sign up with the invited address, the normal email verification applies, then
+  the invite is accepted; the API tests cover an existing user and a new one. Read §2.3.
+  Ref: supastarter. Done:
   API tests for invite and accept; runtime: an invite accepted through the console email.
 - **2.8b Members and roles.** Members screen, role changes, owner/admin/member limits
   enforced by the API (OQ4). Read §2.3. Done: API tests for each role's limits; runtime:
@@ -478,16 +505,17 @@ Ref: supastarter (study): payments, storage, AI.
   the queue with retries. Read §2.2, §2.4, §3.3. Done: tests prove a failed send is retried and a job running twice sends once (the idempotency key, §2.4).
 - **3.2a Payments and checkout.** The payments interface, the Stripe adapter, the
   purchases table owned by the org, a checkout endpoint for Pro and the one-time product,
-  and the plan-lookup function. Read §2.4, §3.2. Ref: supastarter. Precondition
-  (human): Stripe test-mode keys and prices exist and their IDs are in the local env.
-  Done: API tests for checkout and purchases.
+  the Stripe customer table (one customer per org, created on first checkout, §2.4) and
+  the plan-lookup function. Read §2.4, §3.2. Ref: supastarter. Done: API tests for
+  checkout and purchases (on fakes).
 - **3.2b Stripe webhooks.** Webhooks verified and queued as jobs that call core. Read
-  §2.4, §3.3. Ref: supastarter. Precondition (human): the Stripe CLI is installed to
-  forward webhooks locally. Done: API tests with signed webhook fixtures.
-- **3.3 Billing page.** Plans from the config file, the current plan, the customer
-  portal (switch interval, cancel), one-time purchases shown; limited by role (OQ4). Read
-  §2.4. Precondition (human): the test-mode customer portal allows switching between
-  the two Pro prices and cancelling. Done: API tests for the billing endpoints and the
+  §2.4, §3.3. Ref: supastarter. Done: API tests with signed webhook fixtures.
+- **3.3 Billing page.** Plans from a billing endpoint (the plan config lives in core,
+  §2.4), the current plan, the customer portal (switch interval, cancel), one-time
+  purchases shown; limited by role (OQ4). Read §2.4. Precondition (human): Stripe
+  test-mode keys and prices exist and their IDs are in the local env; the Stripe CLI is
+  installed to forward webhooks locally; the test-mode customer portal allows switching
+  between the two Pro prices and cancelling. Done: API tests for the billing endpoints and the
   role limits; the owner signs off that a test-card checkout, the interval switch and
   cancel update the page (hosted Stripe pages, with the Stripe CLI forwarding).
 - **3.4 Uploads.** Signed-URL uploads, a local S3-compatible container in Compose (pick a
@@ -496,11 +524,13 @@ Ref: supastarter (study): payments, storage, AI.
   limits, public-URL reads, one fixed key per avatar and per org logo, and the logo on
   the 2.6 org general page. Read §2.4. Ref: supastarter. Done: API tests reject a wrong
   type at signing and delete an oversize object after upload; runtime: both images
-  upload and display.
+  upload and display. If an oversize object is deleted, the saved URL is cleared (one
+  fixed key means the previous image goes too).
 - **3.5 AI chat demo.** AI SDK, provider by env, an SSE endpoint, the chat page under
   `/demo/`, signed-in users only. Read §2.4, §3.3. Ref: supastarter. Precondition
-  (human): an OpenRouter key in the local env. Done, runtime: a reply streams into the
-  page.
+  (human): an OpenRouter key in the local env. Done: an API test with the fake AI
+  adapter shows the endpoint refuses a request with no session and streams the fake's
+  reply as SSE; runtime: a reply streams into the page.
 - **3.6 AI cap.** The per-user daily cap, a cheap default model, and the agent-guide line
   telling projects to delete `/demo/*`. Read §2.4. The cap resets at 00:00 UTC. Done: an API test proves the cap.
 - **3.G Phase 3 gate.**
@@ -510,24 +540,32 @@ Ref: supastarter (study): payments, storage, AI.
 - **4.1 Dockerfiles.** One per app and service, plus a production-like Compose run using
   the `console` adapter with a non-production `NODE_ENV`, and the console email folder
   mounted as a volume so the smoke test can read the verification link from the API
-  container. Migrations on the deploy run the Node migrate script from 0.4. Read §2.6. Done, runtime: the smoke test passes against the containers.
+  container. The Compose file includes one small reverse-proxy container with the §2.6
+  rule (`/api/*` to the API, everything else to the web app, no prefix stripping), and
+  the smoke test targets the proxy. The auth rate limiter stays on in this run. Migrations
+  on the deploy run the Node migrate script from 0.4a. Read §2.6. Done, runtime: the
+  smoke test passes against the containers through the proxy.
 - **4.2 Pick the VPS.** A recipe with the commands and a results table; the card looks up
   one test endpoint per candidate. Read §2.6. Precondition (human): the owner runs it
   from Nairobi and picks the provider. Done: the measurements and the choice are logged.
-- **4.3 Coolify deploy.** A deploy recipe and the live reference deploy on its
-  subdomain. Coolify deploys the Phase 4 branch until the gate; at 4.G the owner
-  switches it to `main`. Postgres is created as a Coolify database resource, not in the
-  app's Compose file. Read §2.6. Precondition (human): a VPS running Coolify with read
-  access to the private GitHub repo, Cloudflare DNS for
-  the subdomain, production env set (Resend, Stripe test mode, Google, OpenRouter, R2, the trusted
-  client-IP header); the Stripe webhook endpoint is registered and its signing secret is
-  in the production env; the R2 bucket has public read on its own subdomain and a CORS
-  rule for the web origin. Done, runtime: web and API answer over HTTPS, and the API logs
+- **4.3 Coolify deploy.** The card writes the deploy recipe and any repo-side config; the
+  owner performs the Coolify steps and signs off. The deploy is on its subdomain, DNS
+  only (§2.6); the trusted client-IP header is `X-Forwarded-For`. Coolify deploys the
+  Phase 4 branch until the gate; at 4.G the owner switches it to `main`. Postgres is
+  created as a Coolify database resource, not in the app's Compose file. Read §2.6.
+  Precondition (human): a VPS running Coolify with read access to the private GitHub
+  repo, Cloudflare DNS for the subdomain, production env set (Resend, Stripe test mode,
+  Google, OpenRouter, R2, the trusted client-IP header, the Better Auth secret and public
+  base URL); the Google OAuth client lists the deploy's redirect URI; the Stripe webhook
+  endpoint is registered and its signing secret is in the production env; the R2 bucket
+  has public read on its own subdomain and a CORS rule for the web origin. Done: the
+  public URLs answer over HTTPS (the builder checks this). Owner sign-off: the API logs
   the real client IP for a request through the public URL.
-- **4.4 Backups.** Configure Coolify's scheduled Postgres backups to R2 (no backup code)
-  and write the restore recipe. Read §2.6.
-  Precondition (human): an R2 bucket and keys; the owner rehearses one restore and signs
-  off. Done: a backup file appears in R2 on schedule.
+- **4.4 Backups.** The card writes the restore recipe (every command named) and any
+  repo-side config; the owner configures Coolify's scheduled Postgres backups to R2 (no
+  backup code). Read §2.6. Precondition (human): an R2 bucket and keys. Done: the restore
+  recipe exists and names every command. Owner sign-off: a backup file appears in R2 on
+  schedule, and one restore was rehearsed.
 - **4.5 Sentry.** Web and API report errors. If `@sentry/tanstackstart-react` (alpha)
   does not work with the installed TanStack Start, use `@sentry/react` in the browser
   and `@sentry/node` on the server, and log why. Read §2.6. Precondition (human): Sentry
@@ -581,9 +619,9 @@ forces another.
 | The Better Auth NestJS adapter has one maintainer | Keep the integration thin, so the kit can own it if it is abandoned | 2.3a |
 | oxfmt is pre-1.0 | Pin it; fall back to Prettier if it breaks | 0.1 |
 | Type-aware oxlint runs on tsgolint, which tracks TypeScript 7; the repo is on 5.9 | If it does not accept this workspace, ship oxlint without it and log why | 0.1 |
-| nestjs-zod output does not suit Hey API | Prove the notes client keeps its operations before anything else is built | 0.4 |
+| nestjs-zod output does not suit Hey API | Prove the notes client keeps its operations before anything else is built | 0.4b |
 | TanStack Router's static data or before-load APIs change | Build from current docs, cite them in the task log | 1.5 |
-| The public reference deploy is abused (email spam, AI cost, junk signups) | Auth rate limits, auth email caps, AI cap, one fixed object key per avatar and logo, Stripe test mode | 2.3b, 2.4, 3.4, 3.6 |
+| The public reference deploy is abused (email spam, AI cost, junk signups) | Auth rate limits, auth email caps, AI cap, one fixed object key per avatar and logo, an org creation limit per user (`organizationLimit`), Stripe test mode | 2.3b, 2.4, 2.6, 3.4, 3.6 |
 | `@sentry/tanstackstart-react` is alpha | Fall back to `@sentry/react` and `@sentry/node` | 4.5 |
 | Windows development versus Linux CI | LF line endings everywhere; CI runs on Linux from Phase 0 | 0.8 |
 | The kit drifts into product features | The scope rule, enforced by every phase gate | Every gate |
@@ -603,8 +641,8 @@ wrapping them would rebuild the plugin for no v1 gain. Its routes are documented
 
 ❓ **OQ3 - Default shell and auth layout** (needed by 1.5): which of the 6 app shells and
 3 auth layouts move first?
-➡️ The collapsible sidebar shell, the most common SaaS layout. The owner picks the auth
-layout after seeing them in the preview page (1.3).
+➡️ The collapsible sidebar shell, the most common SaaS layout. The owner picks one of the three auth
+layouts (see round 1 Q4 in `docs/PRD_REVIEW.md`; the 1.3 preview page cannot show them).
 
 ❓ **OQ4 - What each role can do** (needed by 2.8b, 3.3):
 - Owner: everything, including deleting the org and transferring ownership.
