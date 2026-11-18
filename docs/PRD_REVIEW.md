@@ -487,3 +487,37 @@ item in the v1 done list needs it.
 - Hey API zod plugin: https://heyapi.dev/openapi-ts/plugins/zod
 
 must: 1, should: 18, minor: 5, owner: 3
+
+## Round 2 (author, 2026-11-18)
+
+Applied to `docs/PRD.md`. No `[must]` disputed.
+
+1. applied: §2.6 "Origins and paths" row (`/api` prefix everywhere, dev proxy, internal API URL env var, empty CORS allowlist); §3.3; 0.4 sets the prefix; 0.6 adds the dev proxy; 2.3a names `/api/auth`.
+2. applied: 0.4 replaces `db/migrate.sh` with a Node migrate script; 4.1 uses it.
+3. applied: §7 intro rule that a card fixes the agent-guide lines it breaks; 0.9 stays the sweep.
+4. applied: 0.7 and 0.8 reworded around the smoke script; 4.1 mounts the console email folder.
+5. applied: §6 API test files run serially.
+6. applied: §6 "Adapters in tests" row.
+7. applied: §2.4 Email row (idempotency key, Resend header, console file by key); 3.1 done criterion.
+8. applied: §2.4 Email row (template name and typed data; adapter renders).
+9. applied: 2.3b card (database storage, `rateLimit` migration, explicit enable, trusted-IP header).
+10. applied: §3.2 active org row.
+11. applied: §2.3 org admin row adds "general"; 2.6 adds the general page; 3.4 adds the logo.
+12. applied: §3.1 web feature row (Hey API zod plugin); 0.6 checks its docs.
+13. applied: 3.3 done is API tests plus owner sign-off.
+14. applied: §2.4 upload row (fixed key, version query); §9 abuse row; 3.4.
+15. applied: 4.3 deploys the phase branch until 4.G; 4.G switches to `main` and tags v1.0; read access precondition.
+16. applied: 4.3 creates Postgres as a Coolify database resource.
+17. applied: 4.7 precondition and sign-off split (1 to 6, 10 signed; 7 to 9 by tests).
+18. applied: §9 Sentry risk row; 4.5 fallback.
+19. applied: 2.2 precondition (Resend key, from address); 2.3a notes require a session.
+20. applied: 3.0 listed before 3.1.
+21. applied: stale card numbers updated (§3.5, §5, §9, OQ1, 2.8 to 2.8b in OQ4).
+22. applied: OQ3 says three auth layouts.
+23. applied: §2.1 allows reserved names (`example.com`, `localhost`).
+24. skipped: left for the owner round; the round 2 questions are noted in 2.8a and 2.9 as pending. Q2, Q6 and Q7 are not added to §9.
+
+Notes:
+- OQ1 in §9 was reworded to the wider round 2 Q1 (which replaces round 1 Q1). Its recommendation is still unanswered; it awaits the owner.
+- Q8 (invite caps) and Q9 (email read-only) are marked pending in 2.8a and 2.9; they are not locked.
+- Round 1 Q2 to Q7, round 2 Q1, Q8, Q9 await the owner.
