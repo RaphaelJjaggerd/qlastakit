@@ -1219,3 +1219,122 @@ Applied to `docs/PRD.md` by hand. Settled; do not re-ask.
   In §2.4 Plans, 3.2a (no already-bought check, tested) and 3.3.
 - Q16 Google links only onto a verified password account; otherwise `account_not_linked`
   with a message to verify or reset first: yes. Already applied by the round 5 author.
+
+## Round 6 (reviewer, 2026-11-18)
+
+Read: the PRD whole (rounds 1 to 5 and the owner answers applied), round 5 and its
+owner answers, `scripts/run-tasks.sh`, `scripts/verify.sh`, the `/task` and `/tasks`
+commands, the gate card template, `.claude/hooks/block-dangerous-git.sh`, and
+`git status` against `origin`. Rounds 1 to 5 are not repeated. The product design
+held up on this read: the three musts are all about the order of owner steps and
+branches in the loop, not about what gets built.
+
+### Must
+
+1. `[must]` **The gate card does its work after the merge, so none of it reaches
+   `main`, and the next phase can never see a signed gate.** §7: "A gate card's
+   precondition: the owner pushes the branch, opens the PR, CI is green, the owner
+   merges." `/task` blocks on a precondition until its dated sign-off exists, so the
+   gate card runs after the PR is merged. The gate template then commits to the phase
+   branch: a line in `docs/STANDARDS.md`, new cards for the next phase, its own log
+   and `done` status. The owner's sign-off lines (the gate's, and every
+   `Awaiting sign-off` in the phase) are also edits to `docs/TASKS.md`. Anything
+   committed after the merge is on a merged branch. §2.1 has the next phase's first
+   card branch from `origin/main`, where the gate card is still `todo` and unsigned:
+   the card blocks itself, or the loop runs the gate again. Fix in §2.1 and §7: a
+   gate card has no precondition. It runs its steps and closes with
+   `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`. The
+   owner adds the dated sign-off lines (the gate and every `Awaiting sign-off` in the
+   phase) as the last commit on the phase branch, pushes, then merges. The first card
+   of the next phase reads the gate's sign-off from `docs/TASKS.md` on `origin/main`
+   after `git fetch origin`, before it creates its branch. 4.G: switching Coolify to
+   `main` and tagging v1.0 stay after the merge and need no sign-off.
+
+2. `[must]` **0.8 waits for a green CI run of a workflow it has not written.** 0.8:
+   "Precondition (human): the owner pushes the phase branch and signs off that CI ran
+   green." The card blocks until that line exists, and no workflow file exists until
+   the card runs; the builder cannot push (the git hook blocks it). Same shape as
+   round 5 finding 1. Fix in 0.8: no precondition. Done: the workflow file runs the
+   verify steps and the 0.7 smoke command with a Postgres service, on pushes to
+   `phase-*` and on PRs. Owner sign-off (the §7 `Awaiting sign-off` line): the owner
+   pushed `phase-0` and the run was green.
+
+3. `[must]` **`origin/main` does not have the plan, and 0.1 branches from it.** Local
+   `main` is 20 commits ahead of `origin/main`; the remote has an older PRD, no
+   `docs/PRD_REVIEW.md` and no `docs/TASKS.md`. §2.1: the first card of a phase
+   creates its branch from `origin/main`. 0.1 would start on a tree without its own
+   card. Fix in 0.1: add to its Precondition (human) that the owner has pushed `main`
+   with the PRD and `docs/TASKS.md`. Fix in §2.1 and §7: the first card of a phase
+   sets itself `blocked` when local `main` has commits `origin/main` lacks.
+
+### Should
+
+4. `[should]` **3.2a is done by purchase rows that only 3.2b writes.** 3.2a's done
+   includes "a second one-time purchase by the same org succeeding as its own row"
+   and "the already-subscribed refusal". A checkout endpoint returns a Stripe URL; the
+   purchase or subscription row appears when the webhook arrives, and webhooks are
+   3.2b. The builder must either pull the webhook handler into 3.2a or write rows
+   from the checkout endpoint. Fix in 3.2a: the card ships the core function that
+   records a completed purchase or a subscription change, with unit tests; the API
+   tests seed rows through it. Done becomes: a second one-time checkout by the same
+   org is not refused, and a Pro checkout is refused when a seeded active subscription
+   exists. Fix in 3.2b: name the events (`checkout.session.completed`,
+   `customer.subscription.updated`, `customer.subscription.deleted`; confirm in
+   current Stripe docs) and move "two completed one-time checkouts make two rows"
+   into its done.
+
+5. `[should]` **The decorator-metadata problem 0.4b names for the dev runner also
+   applies to the test process.** §6 starts the NestJS app inside the Vitest process.
+   0.4b says `tsx` does not emit decorator metadata and tells the card to pick a
+   runner that does, but says nothing about Vitest, whose transformer is not `tsc`
+   either. Without metadata Nest injects `undefined`, and "the 0.4a API tests pass
+   unchanged" fails for a reason the card does not mention. Not checked against
+   current Vitest docs this round; the card must. Fix in 0.4b: the choice covers
+   both. Check current Vitest docs for whether its transformer emits decorator
+   metadata from the tsconfig; if not, use `unplugin-swc` in the API test project or
+   explicit `@Inject()` tokens on every constructor parameter. One choice for dev,
+   tests and the spec export, logged.
+
+6. `[should]` **"Tests read the newest file" picks the wrong email once sends are
+   asynchronous.** §2.4 (Console output): "tests read the newest file". Better Auth's
+   callbacks do not await the send, and from 3.1 every send is a job, so a send
+   started by one test can land during the next. Nearly every API test signs up a
+   user (the sign-in helper), so each one produces a verification email. The newest
+   file is then sometimes another user's, and the smoke test follows the wrong link.
+   Fix in §2.4, §6 and 2.2: the test helper polls the folder for the newest file
+   addressed to a given recipient, and every test uses its own address. The file
+   stays named by the idempotency key.
+
+### Minor
+
+7. `[minor]` 1.5 tests "the first render has the right layout" and redirects a
+   visitor without a session, but no auth screen exists until 2.3a. Say 1.5 adds a
+   placeholder sign-in route in the side auth layout, replaced in 2.3a.
+8. `[minor]` 3.5: the org logo sits on a page limited to owner and admin. Add to its
+   done an API test that a member cannot sign or save an org logo.
+9. `[minor]` 2.5a: Better Auth's organization needs a name and a unique slug. Say the
+   personal org is named after the user and its slug is generated (§3.2: no slug in
+   URLs), so the card does not invent a naming scheme.
+10. `[minor]` §2.4 Plans: "one function returning an org's current plan" needs a
+    rule for subscription status. Say Pro while the Stripe status is `active`,
+    `trialing` or `past_due`, otherwise Free.
+11. `[minor]` `/tasks` allows about 10 cards per phase, gate included, and splits a
+    phase that needs more. Phase 0 has 11, Phase 2 has 12, Phase 3 has 11, and the
+    branch names are fixed at `phase-0` to `phase-4`. Add one line to §7: these sizes
+    are accepted; `/tasks` does not split a phase.
+12. `[minor]` 0.5 says tests, CI and the smoke run "boot from the committed
+    `.env.example` alone" but not how the file is read; the skeleton loads `.env`.
+    Say the test setup, Playwright's `webServer` and the spec export load
+    `.env.example`, and dev loads `.env`, which the setup task copies from it.
+13. `[minor]` 2.3a and 2.5a: Better Auth's client is usually typed by importing the
+    server's `auth` type (`inferAdditionalFields<typeof auth>`), which is service
+    code the 0.6 rule forbids in the web app. Say the client declares the `personal`
+    field by hand.
+
+### Owner
+
+No questions this round. Every finding has a technical fix. Finding 1 changes when
+the owner writes sign-off lines (before the merge, as a commit on the phase branch),
+which is the only way they reach `main` under one PR per phase.
+
+must: 3, should: 3, minor: 7, owner: 0
