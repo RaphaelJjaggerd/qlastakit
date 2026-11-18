@@ -1010,3 +1010,182 @@ Applied to `docs/PRD.md` by hand. Settled; do not re-ask.
   is now 2.1 to 2.7b (10 cards), Phase 3 is 3.0 to 3.8 (10 cards). Old 2.6 to 2.8b
   became 2.5 to 2.7b; old 2.9 became 3.4; old 3.4 to 3.6 became 3.5 to 3.7; old 2.5
   became 3.8. Card numbers in earlier rounds use the old numbering.
+
+## Round 5 (reviewer, 2026-11-18)
+
+Read: the PRD whole (rounds 1 to 4 and the owner answers applied), round 4 and the
+owner answers, `scripts/run-tasks.sh`, `scripts/verify.sh`, `mise.toml`,
+`docs/REFERENCES.md`, the git remote. Better Auth facts were checked against its
+source and docs (sources at the end). Rounds 1 to 4 are not repeated. Card numbers
+are the current ones (after Q14's renumbering). The hand renumbering was checked
+across §2 to §9: no stale card number found.
+
+### Must
+
+1. `[must]` **4.2 and 4.3 wait for the owner to follow a recipe the card has not
+   written yet.** §7: a card whose precondition is unsigned is set `blocked` and the
+   loop stops. 4.2's precondition is "the owner runs it from Nairobi and picks", and
+   "it" is the recipe 4.2 writes. 4.3's precondition is the finished deploy (env set,
+   Stripe webhook registered, R2 CORS, Google redirect URI), which are the steps of
+   the recipe 4.3 writes; its done ("the public URLs answer over HTTPS") cannot be
+   checked in the session that writes the recipe. Fix in 4.2: no precondition. Done:
+   the recipe exists with one test endpoint per candidate and an empty results table.
+   Owner sign-off: the measurements and the choice are logged. Fix in 4.3: the
+   precondition shrinks to what must exist before a recipe can be written against it
+   (none, or the 4.2 choice signed). Done: the recipe names every Coolify setting and
+   every env var, and the repo-side config is committed. Everything now listed under
+   "Precondition (human)" moves into the recipe as its steps and into the owner
+   sign-off, together with the HTTPS check on `/api/openapi.json` and the two
+   client-IP checks. 4.7 already requires the live deploy, so nothing downstream
+   changes.
+
+2. `[must]` **§2.3 says Google links to any password account; Better Auth refuses
+   when that account is unverified, and the refusal is what stops an account
+   takeover.** §2.3 (Login methods): "Google sign-in on an address that already has a
+   password account links to that user". 2.3b makes verification required, so
+   unverified password accounts exist. Better Auth's `handleOAuthUserInfo` refuses
+   the link when the local user's `emailVerified` is false
+   (`requireLocalEmailVerified`, default true, also with `trustedProviders`), and
+   returns `account_not_linked`. Switching that off to match the PRD row lets anyone
+   who signed up with a stranger's address keep a working password on the account
+   after the real owner signs in with Google: the link sets `emailVerified` true and
+   leaves the credential account in place. Fix in §2.3 and 3.8: linking applies to a
+   verified password account only. On an unverified one the Better Auth default
+   stays, sign-in fails with `account_not_linked`, and the sign-in screen shows a
+   message for that code. 3.8 must not set `requireLocalEmailVerified: false`. Q16
+   confirms the wording with the owner.
+
+### Should
+
+3. `[should]` **An owner can invite a second owner, and 2.7a ships before the
+   one-owner test.** §2.3 locks "no one can be made owner in v1". Better Auth lets a
+   member with the creator role invite with role `owner`, and lets an owner set
+   another member's role to `owner`; neither path counts owners. 2.7b tests the role
+   change; 2.7a does not mention roles on an invite. Fix in 2.7a: an invite accepts
+   only `admin` and `member` (a `beforeCreateInvitation` organization hook), with an
+   API test. Fix in 2.7b: name the hook (`beforeUpdateMemberRole`) so the rule is not
+   rebuilt as a controller.
+
+4. `[should]` **A removed member keeps the removed org as the active org.** Better
+   Auth's `removeMember` clears `activeOrganizationId` only on the caller's own
+   session. §3.2 says a request "with no active org gets a coded error" and core
+   checks membership, but nothing says what the removed user's browser does next.
+   Fix in 2.7b: an API test that a removed member's next request gets the coded
+   not-a-member error; on that code the web app sets the personal org active and
+   reloads. One line in §3.2.
+
+5. `[should]` **Nothing says where the web app gets the org role for authority
+   checks.** §3.4 changes "admin and user roles" to org roles, and access is
+   "declared per route by authority". The Better Auth session carries the active org
+   id, not the member's role. 2.5 has the first role-limited page (org general,
+   owner and admin). Fix in 2.5 (2.5b after finding 6): the before-load step loads
+   the active member's role with the session through Better Auth's client, and a
+   route's authority is a list of org roles. Between 2.3a and 2.5 the only authority
+   is "signed in".
+
+6. `[should]` **2.5 is now the largest card.** It writes four tables and the mirror,
+   the `personal` field, two hooks, two limits, the create-org screen, the switcher,
+   the general page and (finding 5) the role source. Fix: split it. 2.5a Personal
+   org: the organization plugin's tables, the `personal` flag, both hooks,
+   `disableOrganizationDeletion`; done: the API test that a new user has exactly one
+   personal org and a new session is active in it. 2.5b Create and switch:
+   `organizationLimit`, create an org, the switcher, the general page with the role
+   limit; done: the limit API test and the runtime criterion. Update §2.2 (tables
+   in 2.5a), §9 and 3.5 (the logo goes on the 2.5b page).
+
+7. `[should]` **The per-recipient invite cap has no stated response.** §2.3 gives
+   the org cap a 429 with `rate_limited` and says nothing for "3 per recipient
+   address per hour". 2.7a would guess between a 429 and the silent success the
+   auth address cap uses. Fix in §2.3 and 2.7a: both invite caps return 429 with
+   code `rate_limited` from the same before-hook; the inviter is a signed-in admin
+   of the org, so there is no account to hide.
+
+8. `[should]` **The first card of a phase branches from a stale `main`.** §2.1: the
+   branch is created "from `main`". The gate's merge happens on GitHub (the owner
+   merges the PR), so the local `main` still lacks the whole previous phase, and a
+   squash merge makes the two diverge. Fix in §2.1 and §7: the first card runs
+   `git fetch origin` and creates the branch from `origin/main`; it sets the card
+   `blocked` if the previous phase's gate card is not signed.
+
+9. `[should]` **4.4 can put database backups in the public bucket.** 4.3's
+   precondition gives the R2 bucket "public read on its own subdomain"; 4.4's is
+   "an R2 bucket and keys". Reusing the first one makes every backup file readable
+   by URL. Fix in 4.4: a second, private bucket with its own keys, never the uploads
+   bucket; the restore recipe says so.
+
+10. `[should]` **The AI module does not fit the adapter shape, and 3.6 would guess
+    how.** §2.4 and §3.1: the interface lives in core, core imports no framework, the
+    adapter holds only provider calls, and there is a `fake`. The page uses the AI
+    SDK's chat hook, which expects the AI SDK's own stream protocol. An interface in
+    core that returns text chunks makes the controller re-encode that protocol by
+    hand. Fix in §2.4 (AI row) and 3.6: the AI adapter is a function in the API that
+    returns an AI SDK language model, chosen by env; the `fake` is the AI SDK's mock
+    model from `ai/test` (3.6 confirms the export name in current docs); the
+    controller calls `streamText` and pipes the SDK's stream response. Core holds no
+    AI interface, only the daily-cap function from 3.7. Add this as the stated
+    exception in the §2.4 Adapters row. The SSE endpoint is left out of the OpenAPI
+    spec, since no generated client calls it.
+
+11. `[should]` **Checkout and webhooks leave three cases to guess.** (a) An org that
+    already has an active Pro subscription can start a second Pro checkout and end
+    with two subscriptions. Fix in 3.2a: the checkout endpoint refuses with a coded
+    error; the page sends that org to the portal. (b) The role limit on checkout is
+    only tested in 3.3, one card after the endpoint ships. Fix: 3.2a's API tests
+    include owner and admin allowed, member refused. (c) Stripe redelivers events
+    and §3.1 says jobs are idempotent, but 3.2b's done has no test for it. Fix: add
+    "the same event delivered twice changes nothing".
+
+12. `[should]` **Settings screens now come after the no-axios check.** Q14 moved
+    settings to 3.4; the verify check "no axios or zustand in the web app" lands in
+    2.3c. If 1.2 or 1.5 copies the settings screens in with the mock API, 2.3c
+    cannot pass without rebuilding them. Fix in 1.2: a screen enters the web app
+    only in the card that rebuilds it (auth screens in 2.3a to 2.3c, settings in
+    3.4, billing in 3.3); 1.2 moves tokens, components and design rules only.
+
+### Minor
+
+13. `[minor]` §2.3 (Org admin) lists a "roles" route. No card builds one and §3.5
+    does not move the roles and permissions screen. Role changes live on the
+    members screen (2.7b); drop "roles" from the row.
+14. `[minor]` 3.4 has no `Ref:` though 2.1 vets the supastarter settings paths. Add
+    `Ref: supastarter`.
+15. `[minor]` Read lists: 2.5 writes migrations and cites §3.3, so add §2.2 and
+    §3.3; 2.3c writes the `rateLimit` migration, so add §2.2.
+16. `[minor]` §6 (Adapters in tests) says the webhook exception is "above"; the
+    Webhooks row is below it.
+17. `[minor]` §9 abuse row: add the invite caps and 2.7a.
+18. `[minor]` `references/ui-kit/` holds the zip, `theme.css` and two docs, no
+    `src/` yet. 1.1's precondition and its check already cover it. No PRD change.
+
+### Owner
+
+Closed without a question: round 4's waiting item (a new session when the user is no
+longer a member of their personal org). It cannot happen. The user owns the personal
+org, the one-owner rule forbids removing or demoting the owner, org deletion is off,
+and Better Auth refuses `leave` for the only owner.
+
+`[owner]` ❓ Q15 - One-time product (needed by 3.2a): an org can buy the one-time
+product more than once, each purchase its own row on the billing page?
+➡️ Yes. It is the simplest rule, it needs no "already bought" check, and a project
+that sells a single lifetime licence adds that check itself.
+
+`[owner]` ❓ Q16 - Google sign-in on an unverified password account (needed by 3.8;
+narrows Q12): linking happens only when the password account's email is verified;
+on an unverified one Google sign-in is refused with a message to verify the address
+or reset the password first?
+➡️ Yes. It is Better Auth's default, and the alternative lets someone who signed up
+with another person's address keep a working password on that person's account.
+
+### Sources
+
+- Better Auth OAuth linking conditions (`requireLocalEmailVerified`, `emailVerified`
+  set on link):
+  https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/oauth2/link-account.ts ,
+  https://better-auth.com/docs/concepts/users-accounts
+- Better Auth invite role check, accept sets the active org:
+  https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/plugins/organization/routes/crud-invites.ts
+- Better Auth role update, leave and remove member:
+  https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/plugins/organization/routes/crud-members.ts
+- Better Auth organization hooks: https://better-auth.com/docs/plugins/organization
+
+must: 2, should: 10, minor: 6, owner: 2
