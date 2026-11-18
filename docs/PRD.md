@@ -74,7 +74,7 @@ it; it never works around it.
 | Lint and format | oxlint (type-aware) + oxfmt, oxfmt pinned | Fast. oxfmt is pre-1.0; fallback is Prettier |
 | Package scope | `@qlastakit/*` in every project | Projects copy the kit without renaming packages |
 | Shared packages | Grouped by language | A package is only importable from its own language (ADR 0003) |
-| Git flow | Branch per phase, named `phase-0` to `phase-4`. The first card of a phase runs `git fetch origin` and creates its branch from `origin/main` if it does not exist (the previous phase's PR is merged on GitHub, so local `main` can be stale); it sets itself `blocked` if the previous phase's gate card is not signed. One PR at the phase gate, CI on the PR | One review point per phase |
+| Git flow | Branch per phase, named `phase-0` to `phase-4`. The first card of a phase runs `git fetch origin` and creates its branch from `origin/main` if it does not exist (the previous phase's PR is merged on GitHub, so local `main` can be stale); it sets itself `blocked` if the previous phase's gate card is not signed in `docs/TASKS.md` on `origin/main` (read after the fetch, before creating the branch), or if local `main` has commits `origin/main` lacks. One PR at the phase gate, CI on the PR | One review point per phase |
 | Build process | potato-eng, tier full | Friction goes to the potato-eng notes |
 | Kit updates | Manual in v1. Each project records the kit commit it was copied from as one line in its agent guide | The minimum that makes a later diff or CLI possible |
 | Branding | The kit carries no company brand | Every project gets its own |
@@ -128,12 +128,12 @@ it; it never works around it.
 | Email | One `sendEmail`, React Email templates, two adapters: `console` and `resend`. Core calls `sendEmail` with a template name, typed data and an idempotency key (the caller always passes one: a fresh UUID per send before 3.1, the job id from 3.1 on); the adapter in the API renders the template from `packages/ts/email`. Core never imports the email package. The `resend` adapter passes the key as Resend's `Idempotency-Key` header; the `console` adapter names the saved file by the key, so a second run overwrites. No sent-emails table | Local dev and tests need no account. Core stays React-free |
 | Adapter choice | Every module follows the email pattern. Email has `console` and `resend`; payments, storage and AI each have a `fake` adapter value. The fake (`console` for email) is the default in local dev, tests and CI; the real one is chosen by env in deploys. The env schema requires a provider's keys only when its adapter is selected, so tests, CI, the smoke run and the spec export boot from the committed `.env.example` values alone | |
 | Sending path | Every send is a pg-boss job, in every environment, from 3.1 on. Tests wait for the console file rather than assume it exists | One path, not two |
-| Console output | Prints one line (to, subject, every link) and saves the full email as HTML in a gitignored folder | Humans open it in a browser; tests read the newest file |
+| Console output | Prints one line (to, subject, every link) and saves the full email as HTML in a gitignored folder | Humans open it in a browser; tests poll the folder for the newest file addressed to their own recipient (every test uses its own address) |
 | Console in production | The API refuses to boot when `NODE_ENV=production` and any adapter is `console` or `fake`. Production-like container runs use a non-production `NODE_ENV` for the API container only; the web container runs with `NODE_ENV=production` | Otherwise verification and reset emails vanish without an error |
 | Payments | One provider-agnostic interface with adapters. Stripe is the first | Existing account, international customers |
 | Adapters | Adapters (Resend, Stripe, S3, AI) live in the API service under one adapters folder and are passed into core. Core holds only the interfaces. Exception, AI: the adapter is a function in the API returning an AI SDK language model chosen by env, the `fake` is the AI SDK's mock model, and core holds no AI interface, only the daily-cap function (3.7) | Core stays framework- and provider-free |
 | Billing models | Subscriptions and one-time purchases, owned by an org | Both are needed by most projects |
-| Plans | Free, Pro (monthly and yearly), one one-time purchase. The plan config is a typed file in core and includes the display amount and currency; the billing page reads plans from a billing endpoint through the generated client (apps may not import core). Stripe price IDs stay in env vars. An org can buy the one-time product more than once; each purchase is its own row on the billing page, with no already-bought check | Smallest set covering both models, upgrade, downgrade and the interval switch. Core exposes one function returning an org's current plan; v1 gates nothing with it |
+| Plans | Free, Pro (monthly and yearly), one one-time purchase. The plan config is a typed file in core and includes the display amount and currency; the billing page reads plans from a billing endpoint through the generated client (apps may not import core). Stripe price IDs stay in env vars. An org can buy the one-time product more than once; each purchase is its own row on the billing page, with no already-bought check | Smallest set covering both models, upgrade, downgrade and the interval switch. Core exposes one function returning an org's current plan (Pro while the Stripe status is `active`, `trialing` or `past_due`, otherwise Free); v1 gates nothing with it |
 | Stripe customer | One customer per org, stored in a product table of ours keyed by org id (not a column on Better Auth's organization table), created on first checkout | 3.2a, 3.2b and the portal all need the id, and Better Auth owns the org table |
 | Stripe on the reference deploy | Test mode | Proves the same code paths without charging strangers. Live keys are a per-project setting |
 | Paystack, Polar | After v1 | Polar's payout to the owning entity is unconfirmed; it is a hands-on precondition on the first Polar task |
@@ -369,7 +369,7 @@ contract-drift check and the smoke test.
 Each task is one vertical slice for one fresh session. "Read" lists the PRD sections to
 read. **Runtime** marks a criterion proven by running the thing. **Precondition
 (human)** marks a step only the owner can do; the task waits for the owner's dated
-sign-off. A sign-off is a dated line the owner adds to the card in `docs/TASKS.md`; a card whose precondition is unsigned is set `blocked` with the step the owner must do, and the loop stops. A card whose builder checks pass but whose owner sign-off is missing is closed with a line `Awaiting sign-off: <what the owner does>`; the phase gate does not pass while any card in the phase has that line unsigned. A browser runtime criterion is, from 0.7 on, proven by a throwaway Playwright script run against the dev servers, not committed, with the steps and result written in the task log. Phase branches are `phase-0` to `phase-4`; the first card of a phase runs `git fetch origin` and creates the branch from `origin/main` if it does not exist, and is set `blocked` if the previous phase's gate card is not signed. A gate card's precondition: the owner pushes the branch, opens the PR, CI is green, the owner merges. A task with **Ref** follows that reference's mode, and the reference is vetted
+sign-off. A sign-off is a dated line the owner adds to the card in `docs/TASKS.md`; a card whose precondition is unsigned is set `blocked` with the step the owner must do, and the loop stops. A card whose builder checks pass but whose owner sign-off is missing is closed with a line `Awaiting sign-off: <what the owner does>`; the phase gate does not pass while any card in the phase has that line unsigned. A browser runtime criterion is, from 0.7 on, proven by a throwaway Playwright script run against the dev servers, not committed, with the steps and result written in the task log. Phase branches are `phase-0` to `phase-4`; the first card of a phase runs `git fetch origin` and creates the branch from `origin/main` if it does not exist, and is set `blocked` if the previous phase's gate card is not signed in `docs/TASKS.md` on `origin/main` (read after the fetch, before the branch is created) or if local `main` has commits `origin/main` lacks. A gate card has no precondition: it runs its steps and closes with `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`. The owner adds the dated sign-off lines (the gate's and every `Awaiting sign-off` in the phase) as the last commit on the phase branch, pushes, then merges; the sign-offs reach `main` in that PR. Phase sizes (11, 12 and 11 cards in phases 0, 2 and 3) are accepted; `/tasks` does not split a phase. A task with **Ref** follows that reference's mode, and the reference is vetted
 before its first use. A card that removes or renames something the agent guide names (`just`, Hono, Biome) fixes those lines in the same task; 0.9 is the final sweep.
 
 ### Phase 0: Align the skeleton
@@ -378,7 +378,7 @@ Starting point: the skeleton works end to end (web, client, API, database) on Ho
 Biome and `just`, with a notes feature. No core package, no TanStack Query, no tests, no
 CI. Docker Compose and the `just` recipes have never been run.
 
-- **0.1 mise and oxc.** Precondition (human): mise is installed. Replace `just` with mise tasks and Biome with oxlint + oxfmt
+- **0.1 mise and oxc.** Precondition (human): mise is installed, and the owner has pushed `main` with the PRD and `docs/TASKS.md`. Replace `just` with mise tasks and Biome with oxlint + oxfmt
   (pinned). Read §2.1, §5. Done: `mise run check` passes, no Biome config or justfile
   remains, verify passes. If type-aware oxlint does not accept this workspace, ship oxlint
   without it and log why.
@@ -401,7 +401,7 @@ CI. Docker Compose and the `just` recipes have never been run.
   Fastify support is beta and Better Auth needs Nest's body parser off) + nestjs-zod v5
   for zod 4 with its `cleanupOpenApiDoc` step; notes controller as a thin adapter. The
   spec export must not need a database. NestJS needs decorator metadata, which the
-  skeleton's `tsx` runner does not emit, so pick a runner that does and log it. Write
+  skeleton's `tsx` runner does not emit, so pick a runner that does and log it. The same applies to the Vitest process that boots the app (§6): check current Vitest docs for whether its transformer emits decorator metadata from the tsconfig; if not, use `unplugin-swc` in the API test project or explicit `@Inject()` tokens on every constructor parameter. One choice for dev, tests and the spec export, logged. Write
   ADR 0004 (NestJS replaces Hono). Set the global prefix `/api` (§2.6). Read
   §2.2, §2.6, §3.1, §3.3, §6. Done: the 0.4a API tests pass unchanged apart from the
   `/api` paths (the tests written before the swap prove it); the regenerated client keeps
@@ -410,7 +410,7 @@ CI. Docker Compose and the `just` recipes have never been run.
 - **0.5 API baseline.** Env validation at boot, the error shape, security headers, CORS
   allowlist, pino logs with request IDs. Read §2.2, §2.4. The env schema requires a provider's keys only when that
   provider's adapter is selected, so tests, CI, the smoke run and the spec export boot
-  from the committed `.env.example` alone; each card that adds an env var adds it to
+  from the committed `.env.example` alone (the test setup, Playwright's `webServer` and the spec export load `.env.example`; dev loads `.env`, which the setup task copies from it); each card that adds an env var adds it to
   `.env.example`. Done: API tests prove each one, including a refused boot on a bad env.
 - **0.6 TanStack Query.** The web notes page uses the generated client through query
   hooks, base URL `/api`; the web dev server proxies `/api` to the API port and the
@@ -425,7 +425,7 @@ CI. Docker Compose and the `just` recipes have never been run.
   Done, runtime: the smoke command passes.
 - **0.8 CI.** GitHub Actions runs the verify steps and the same smoke script with a Postgres
   service. Read §6. The workflow triggers on pushes to `phase-*` branches and on PRs, and runs the 0.7 smoke command.
-  Precondition (human): the owner pushes the phase branch and signs off that CI ran green. Done: the workflow runs the same checks as verify.
+  Done: the workflow file runs the verify steps and the 0.7 smoke command with a Postgres service. Owner sign-off (`Awaiting sign-off`): the owner pushed `phase-0` and the run was green.
 - **0.9 Docs match the code.** Agent guide, recipes, ADRs and `docs/REFERENCES.md`
   (stale pointers to "section 6b", "PRD Q1", next-intl; point at §3.4 and §3.5) describe
   NestJS, core and mise. Read §3, §4, §5. Done: no doc mentions Hono, Biome or `just` except as history;
@@ -449,7 +449,7 @@ Ref: ui-kit (reuse).
   theme changes the whole preview page without editing a component.
 - **1.5 Shell and routing.** The stacked-side app shell and the side auth layout (§2.5), config-driven
   navigation, access checks before render, layout derived from the route. The session
-  is a stub behind an interface until 2.3a. Read §3.1, §3.4, §3.5. Includes the access denied screen. Ref: ui-kit. Done:
+  is a stub behind an interface until 2.3a; a placeholder sign-in route in the side auth layout is replaced in 2.3a. Read §3.1, §3.4, §3.5. Includes the access denied screen. Ref: ui-kit. Done:
   web tests (§6) prove a protected route never renders without a session and the first render
   has the right layout.
 - **1.6 i18n.** i18next wired; all shell text through message files. Read §2.4. Done: the
@@ -474,7 +474,7 @@ Ref: supastarter (study): auth, mail, organizations.
   session, account, verification) as SQL migrations with the Drizzle mirror, sign up,
   sign in and out, those auth screens rebuilt on it; the session replaces the 1.5 stub.
   Better Auth sits at `/api/auth` (§2.6). Read §2.2, §2.3, §2.6, §3.3, §3.5. Ref: supastarter.
-  The notes endpoints require a session from here on, and the API tests get a sign-in
+  The web auth client declares the `personal` field by hand, never importing the server's `auth` type (§4). The notes endpoints require a session from here on, and the API tests get a sign-in
   helper. Done, runtime: the smoke test signs up, signs in and creates a note.
 - **2.3b Email verification.** Verification required before sign in, the verification
   template and screen. Read §2.3, §2.4. Ref: supastarter. Done, runtime: the smoke test
@@ -496,7 +496,7 @@ Ref: supastarter (study): auth, mail, organizations.
   invitation, the active-org column on session) as hand-written SQL with the Drizzle
   mirror, and the `personal` boolean on the organization table (declared to Better Auth as
   an additional field; confirm a boolean works, else a text flag). A user-create hook makes
-  the org, a session-create hook sets it active (§3.2), `disableOrganizationDeletion` on.
+  the org (named after the user, slug generated; no slug in URLs, §3.2), a session-create hook sets it active (§3.2), `disableOrganizationDeletion` on.
   Read §2.2, §2.3, §3.2, §3.3. Ref: supastarter. Done: an API test that a new user has
   exactly one personal org and a new session is active in it.
 - **2.5b Create and switch.** `organizationLimit` from an env var (default 5; counts all
@@ -539,9 +539,9 @@ Ref: supastarter (study): payments, storage, AI.
   purchases table owned by the org, a checkout endpoint for Pro and the one-time product,
   the Stripe customer table (one customer per org, created on first checkout, §2.4) and
   the plan-lookup function. Read §2.4, §3.2. Ref: supastarter. The checkout endpoint refuses with a coded error when the org already has an active Pro subscription (the page sends that org to the portal). The one-time product has no already-bought check (§2.4). Done: API tests for
-  checkout and purchases (on fakes), including role limits (owner and admin allowed, member refused), the already-subscribed refusal, a second one-time purchase by the same org succeeding as its own row, and the org isolation test for purchases (§6).
-- **3.2b Stripe webhooks.** Webhooks verified and queued as jobs that call core. Read
-  §2.4, §3.3. Ref: supastarter. Done: API tests with signed webhook fixtures, and the same event delivered twice changes nothing.
+  checkout and purchases (on fakes), including role limits (owner and admin allowed, member refused), a Pro checkout refused when a seeded active subscription exists, a second one-time checkout by the same org not refused, and the org isolation test for purchases (§6). The card also ships the core function that records a completed purchase or a subscription change, with unit tests; the API tests seed rows through it.
+- **3.2b Stripe webhooks.** Webhooks verified and queued as jobs that call core, handling `checkout.session.completed`, `customer.subscription.updated` and `customer.subscription.deleted` (confirm in current Stripe docs). Read
+  §2.4, §3.3. Ref: supastarter. Done: API tests with signed webhook fixtures, the same event delivered twice changes nothing, and two completed one-time checkouts make two rows.
 - **3.3 Billing page.** Plans from a billing endpoint (the plan config lives in core,
   §2.4), the current plan, the customer portal (switch interval, cancel), one-time
   purchases shown, one row each; limited by role (§2.3). Read §2.4. Precondition (human): Stripe
@@ -557,7 +557,7 @@ Ref: supastarter (study): payments, storage, AI.
   candidates RustFS, Garage, SeaweedFS), avatar and org logo with the type and size
   limits, public-URL reads, one fixed key per avatar and per org logo, the avatar control on
   the 3.4 profile page, and the logo on the 2.5b org general page. Read §2.4. Ref: supastarter. Done: API tests reject a wrong
-  type at signing and delete an oversize object after upload; runtime: both images
+  type at signing and delete an oversize object after upload, and a member cannot sign or save an org logo; runtime: both images
   upload and display. If an oversize object is deleted, the saved URL is cleared (one
   fixed key means the previous image goes too).
 - **3.6 AI chat demo.** AI SDK, provider by env (an adapter function returning a language model, the `fake` the AI SDK's mock model from `ai/test`; confirm the export name in current docs, §2.4), an SSE endpoint where the controller calls `streamText` and pipes the SDK's stream response, left out of the OpenAPI spec, the chat page under

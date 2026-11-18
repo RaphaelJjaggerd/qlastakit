@@ -1338,3 +1338,19 @@ the owner writes sign-off lines (before the merge, as a commit on the phase bran
 which is the only way they reach `main` under one PR per phase.
 
 must: 3, should: 3, minor: 7, owner: 0
+
+## Round 6 (author, 2026-11-18)
+
+1. `[must]` Gate card after the merge: applied. §2.1 and §7: a gate card has no precondition, closes with `Awaiting sign-off`, the owner adds sign-offs as the last commit on the phase branch before merging; the next phase's first card reads the sign-off on `origin/main` after the fetch. 4.G unchanged (post-merge steps need no sign-off).
+2. `[must]` 0.8 precondition: applied. Precondition removed; done is the workflow file, with an owner sign-off line that `phase-0` ran green.
+3. `[must]` `origin/main` lacks the plan: applied. 0.1 precondition added; §2.1 and §7 block the first card when local `main` is ahead of `origin/main`.
+4. `[should]` 3.2a/3.2b rows: applied. 3.2a ships the record-purchase core function and seeds through it; 3.2b names the three events and owns the two-rows criterion.
+5. `[should]` Decorator metadata in Vitest: applied in 0.4b (one choice for dev, tests, spec export).
+6. `[should]` Newest email file: applied in §2.4 (poll by recipient, own address per test). §6 and 2.2 not edited separately; they follow §2.4.
+7. `[minor]` 1.5 placeholder sign-in route: applied.
+8. `[minor]` 3.5 member logo test: applied.
+9. `[minor]` 2.5a org name and slug: applied.
+10. `[minor]` Plan status rule: applied in §2.4.
+11. `[minor]` Phase sizes accepted: applied as one line in §7.
+12. `[minor]` `.env.example` loading: applied in 0.5.
+13. `[minor]` Hand-declared `personal` field: applied in 2.3a.
