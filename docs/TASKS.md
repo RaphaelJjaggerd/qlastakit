@@ -160,7 +160,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   README-only `packages/ts/auth` and `packages/ts/payments` placeholders.
 - Done when: tests for the notes schemas and coded errors pass (the data path is proven
   in 0.4a); verify fails if core imports a framework or `better-auth`.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-18: built `@qlastakit/core` (`packages/ts/core`): `CodedError(code, message)`,
@@ -219,6 +219,16 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
         catch it. This can wait for 0.5's error shape.
     - Note: untracked `services/api/src/_tmp.ts`, `_review_probe.ts` and
       `packages/ts/core/src/_probe.ts` are still there for a human to delete.
+  - 2026-11-18 (retry 1): fixed both [must]s. Added `notes/service.test.ts`: `createNote`
+    rejects `{}`, empty title, `null` and a string with a `CodedError` coded
+    `validation_error`, using a throwing db stub (never reached). Fixed the stale guide
+    lines: `AGENTS.md` golden rule 2 now points at `packages/ts/core` with the API route as
+    a thin adapter, and `docs/recipes/add-feature.md` step 3 now copies the core notes
+    folder plus the API `routes.ts`. Decision the PRD left open (the [minor]): core
+    functions take no org context yet, as notes has no org id and no org table exists until
+    2.6a; 2.7 adds it. The `CodedError.code` union is left for 0.5's error shape. Stubs:
+    none. Wish: delete permission for the three untracked probe files (human to remove;
+    not committed). `verify.sh` passes.
 
 ## 0.4a Postgres, migrations and API tests
 - Precondition (human): Docker Desktop is installed and running.

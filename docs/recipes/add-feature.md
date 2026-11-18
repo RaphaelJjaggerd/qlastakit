@@ -14,8 +14,11 @@ Example: a `projects` feature with list and create.
 
 2. **TS table.** Add the matching `pgTable` to `packages/ts/db/src/schema.ts`.
 
-3. **API feature.** Copy `services/api/src/features/notes` to `features/projects` and
-   adapt `schema.ts`, `service.ts`, `routes.ts`. Give each route a unique `operationId`.
+3. **Core + API feature.** Copy `packages/ts/core/src/notes` to `projects` (adapt
+   `schema.ts` and `service.ts`, export from `packages/ts/core/src/index.ts`), then copy
+   `services/api/src/features/notes/routes.ts` to `features/projects` and adapt it as a thin
+   adapter over core, naming schemas with `.openapi(...)`. Give each route a unique
+   `operationId`.
 
 4. **Register** it in `services/api/src/app.ts`:
    `app.route("/", projectsRoutes);`

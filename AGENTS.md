@@ -62,8 +62,9 @@ add features to `services/api` and screens to `apps/*`.
 
 1. **Apps talk to services only through the generated client.** Never import server code
    into an app. Never call `fetch` on the API by hand.
-2. **Business logic goes in `services/api/src/features/<name>/service.ts`.** Not in routes,
-   not in the web app, not in TanStack Start server functions.
+2. **Business logic goes in `packages/ts/core`** (zod schemas and plain functions that take
+   the db as an argument). The API route is a thin adapter. Not in routes, not in the web
+   app, not in TanStack Start server functions.
 3. **Schema changes start in SQL.** Add `db/migrations/NNNN_name.sql`, then mirror it in
    `packages/ts/db/src/schema.ts`. Never edit an applied migration.
 4. **After changing any API route, run `mise run contract`** so the spec and clients update.
