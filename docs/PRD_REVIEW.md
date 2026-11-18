@@ -991,3 +991,22 @@ must: 1, should: 15, minor: 6, owner: 1
 22. Applied with 12.
 
 Owner Q13: untouched.
+
+## Owner answers (2026-11-18)
+
+Applied to `docs/PRD.md` by hand. Settled; do not re-ask.
+
+- Q1 (wider, round 2) Better Auth's client for everything Better Auth owns: yes.
+- Q2 AI SDK chat hook as the second client exception, limited to `/demo/*`: yes.
+- Q3 Tabler only: yes.
+- Q4 Default shell and auth layout: **no**. The stacked-side shell and the `side` auth
+  layout, the UI kit's theme config defaults and the owner's chosen look. Collapsible
+  only if a project wants it.
+- Q5 Roles: yes, plus: an org always has exactly one owner. Admins cannot remove or
+  demote the owner, and the owner cannot remove themselves. Enforced in the API, with
+  a test.
+- Q6 to Q13: yes.
+- Q14 (from the owner check) Google sign-in and settings move to Phase 3: yes. Phase 2
+  is now 2.1 to 2.7b (10 cards), Phase 3 is 3.0 to 3.8 (10 cards). Old 2.6 to 2.8b
+  became 2.5 to 2.7b; old 2.9 became 3.4; old 3.4 to 3.6 became 3.5 to 3.7; old 2.5
+  became 3.8. Card numbers in earlier rounds use the old numbering.
