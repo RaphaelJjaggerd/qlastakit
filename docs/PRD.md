@@ -91,7 +91,7 @@ it; it never works around it.
 | Database | Postgres only | One database to run, back up and reason about |
 | ORM | Drizzle, mirrors the SQL, never generates migrations | ADR 0002 |
 | Schema source of truth | Plain SQL migrations | Usable from any language (ADR 0002) |
-| Tables from libraries | Better Auth's tables are hand-written SQL migrations, written by the card that needs them: core tables (user, session, account, verification) in 2.3a; the organization plugin's (organization, member, invitation, the active-org column on session) with the `personal` flag in 2.5a; `rateLimit` in 2.3c. The Better Auth CLI output is used only as a reference; the tables are mirrored in Drizzle, and Better Auth is set to generate UUID ids. pg-boss's own schema is the one exemption: pg-boss creates it. Product tables reference the Better Auth organization table for their org id | Keeps one schema source and UUID keys |
+| Tables from libraries | Better Auth's tables are hand-written SQL migrations, written by the card that needs them: core tables (user, session, account, verification) in 2.4a; the organization plugin's (organization, member, invitation, the active-org column on session) with the `personal` flag in 2.6a; `rateLimit` in 2.4c. The Better Auth CLI output is used only as a reference; the tables are mirrored in Drizzle, and Better Auth is set to generate UUID ids. pg-boss's own schema is the one exemption: pg-boss creates it. Product tables reference the Better Auth organization table for their org id | Keeps one schema source and UUID keys |
 | Background jobs | pg-boss | The queue lives in Postgres |
 | Redis | None in v1 | Sessions, rate limits, counters and the queue all live in Postgres |
 | Logs | pino, structured JSON, request IDs | One log shape everywhere |
@@ -118,27 +118,27 @@ it; it never works around it.
 | Auth rate limits | Rate limiting on every auth route | Default |
 | Auth email caps | Per email address: at most 3 verification and 3 reset emails per hour, counted per type. Per IP: at most 10 auth emails per hour, any type. Env vars with these defaults. Counters in Postgres. The client IP is read from a trusted forwarded header whose name is set by env, since behind the proxies every request otherwise arrives from the proxy's address | The public deploy must not spam people from the sending subdomain |
 | Cap behaviour | Address cap hit: the normal success response, and the suppressed send is logged. IP cap hit: 429 with code `rate_limited` (Better Auth's `APIError`, see below) | No account enumeration |
-| Where the caps are checked | The per-IP cap is checked before the route runs (a Better Auth before-hook on the email-sending paths that throws `APIError` with status 429 and code `rate_limited`; the limiter's own 429 body is fixed and has no code, so no limiter rule is used for this) and returns the 429; Better Auth's docs say not to await the send inside its email callbacks, and after 3.1 the send is a queued job, so nothing thrown there reaches the response. The per-address cap is checked where the send is requested and suppresses silently. Both counters stay in Postgres | The 429 cannot come from inside `sendEmail` |
+| Where the caps are checked | The per-IP cap is checked before the route runs (a Better Auth before-hook on the email-sending paths that throws `APIError` with status 429 and code `rate_limited`; the limiter's own 429 body is fixed and has no code, so no limiter rule is used for this) and returns the 429; Better Auth's docs say not to await the send inside its email callbacks, and every send is a queued job, so nothing thrown there reaches the response. The per-address cap is checked where the send is requested and suppresses silently. Both counters stay in Postgres | The 429 cannot come from inside `sendEmail` |
 | Super admin | Separate app, after v1 | Platform owner only. Not needed to prove the kit |
 
 ### 2.4 Modules
 
 | Decision | Choice | Why |
 |---|---|---|
-| Email | One `sendEmail`, React Email templates, two adapters: `console` and `resend`. Core calls `sendEmail` with a template name, typed data and an idempotency key (the caller always passes one: a fresh UUID per send before 3.1, the job id from 3.1 on); the adapter in the API renders the template from `packages/ts/email`. Core never imports the email package. The `resend` adapter passes the key as Resend's `Idempotency-Key` header; the `console` adapter names the saved file by the key, so a second run overwrites. No sent-emails table | Local dev and tests need no account. Core stays React-free |
+| Email | One `sendEmail`, React Email templates, two adapters: `console` and `resend`. Core calls `sendEmail` with a template name, typed data and an idempotency key (the caller always passes one: the job id); the adapter in the API renders the template from `packages/ts/email`. Core never imports the email package. The `resend` adapter passes the key as Resend's `Idempotency-Key` header; the `console` adapter names the saved file by the key, so a second run overwrites. No sent-emails table | Local dev and tests need no account. Core stays React-free |
 | Adapter choice | Every module follows the email pattern. Email has `console` and `resend`; payments, storage and AI each have a `fake` adapter value. The fake (`console` for email) is the default in local dev, tests and CI; the real one is chosen by env in deploys. The env schema requires a provider's keys only when its adapter is selected, so tests, CI, the smoke run and the spec export boot from the committed `.env.example` values alone | |
-| Sending path | Every send is a pg-boss job, in every environment, from 3.1 on. Tests wait for the console file rather than assume it exists | One path, not two |
+| Sending path | Every send is a pg-boss job, in every environment, from the first send (2.3) on. Tests wait for the console file rather than assume it exists | One path, not two |
 | Console output | Prints one line (to, subject, every link) and saves the full email as HTML in a gitignored folder | Humans open it in a browser; tests poll the folder for the newest file addressed to their own recipient (every test uses its own address) |
 | Console in production | The API refuses to boot when `NODE_ENV=production` and any adapter is `console` or `fake`. Production-like container runs use a non-production `NODE_ENV` for the API container only; the web container runs with `NODE_ENV=production` | Otherwise verification and reset emails vanish without an error |
 | Payments | One provider-agnostic interface with adapters. Stripe is the first | Existing account, international customers |
-| Adapters | Adapters (Resend, Stripe, S3, AI) live in the API service under one adapters folder and are passed into core. Core holds only the interfaces. Exception, AI: the adapter is a function in the API returning an AI SDK language model chosen by env, the `fake` is the AI SDK's mock model, and core holds no AI interface, only the daily-cap function (3.7) | Core stays framework- and provider-free |
+| Adapters | Adapters (Resend, Stripe, S3, AI) live in the API service under one adapters folder and are passed into core. Core holds only the interfaces. Exception, AI: the adapter is a function in the API returning an AI SDK language model chosen by env, the `fake` is the AI SDK's mock model, and core holds no AI interface, only the daily-cap function (3.6) | Core stays framework- and provider-free |
 | Billing models | Subscriptions and one-time purchases, owned by an org | Both are needed by most projects |
 | Plans | Free, Pro (monthly and yearly), one one-time purchase. The plan config is a typed file in core and includes the display amount and currency; the billing page reads plans from a billing endpoint through the generated client (apps may not import core). Stripe price IDs stay in env vars. An org can buy the one-time product more than once; each purchase is its own row on the billing page, with no already-bought check | Smallest set covering both models, upgrade, downgrade and the interval switch. Core exposes one function returning an org's current plan (Pro while the Stripe status is `active`, `trialing` or `past_due`, otherwise Free); v1 gates nothing with it |
-| Stripe customer | One customer per org, stored in a product table of ours keyed by org id (not a column on Better Auth's organization table), created on first checkout | 3.2a, 3.2b and the portal all need the id, and Better Auth owns the org table |
+| Stripe customer | One customer per org, stored in a product table of ours keyed by org id (not a column on Better Auth's organization table), created on first checkout | 3.1a, 3.1b and the portal all need the id, and Better Auth owns the org table |
 | Stripe on the reference deploy | Test mode | Proves the same code paths without charging strangers. Live keys are a per-project setting |
 | Paystack, Polar | After v1 | Polar's payout to the owning entity is unconfirmed; it is a hands-on precondition on the first Polar task |
 | Usage credits | After v1. The data model leaves room | No v1 proof needs them |
-| File storage | S3 API, signed-URL uploads. R2 in production, a local S3-compatible container in Compose (MinIO is no longer published; 3.5 picks a maintained one that supports presigned PUT and bucket CORS) | One API everywhere |
+| File storage | S3 API, signed-URL uploads. R2 in production, a local S3-compatible container in Compose (MinIO is no longer published; 3.4 picks a maintained one that supports presigned PUT and bucket CORS) | One API everywhere |
 | Avatar and org logo | PNG, JPEG or WebP, at most 2 MB, no server-side resizing. The API refuses to sign when the declared type or size is outside the limits and signs the content type into the URL. After upload it reads the object's size and deletes an oversize object before saving the URL. Public-URL read. One fixed object key per user avatar and per org logo, so a new upload replaces the old one and storage is bounded by accounts; the saved URL carries a version query so caches refresh | A signed PUT URL cannot carry a size range and R2 has no signed POST forms. Avatars are not secret. Open signup must not allow unlimited objects |
 | AI | Vercel AI SDK, one OpenAI-compatible provider configured by base URL, key and model env vars, SSE streaming (the endpoint is left out of the OpenAPI spec, since no generated client calls it), tested against OpenRouter | Covers OpenRouter. More providers come when a project asks |
 | AI chat demo | No saved chats. Signed-in users only. A per-user daily message cap set by env. A cheap model by default | Saved chats are product work. The cap protects the owner's bill |
@@ -280,18 +280,18 @@ named check.
 |---|---|---|---|
 | supastarter | Business logic inside API route handlers | 0.4b and every API task | Verify check: controllers never import the database package |
 | supastarter | Prisma schema and generated migrations | 0.3 | Verify check: no Prisma dependency; migrations are hand-written SQL |
-| supastarter | Library calls from early 2025 (Better Auth 1.1, AI SDK 4, Tailwind 3) | 2.3a, 3.6 | Task log cites the current docs used; typecheck against current versions |
-| supastarter | Redis for rate limits | 2.4 | No Redis dependency; cap tests run on Postgres only |
+| supastarter | Library calls from early 2025 (Better Auth 1.1, AI SDK 4, Tailwind 3) | 2.4a, 3.5 | Task log cites the current docs used; typecheck against current versions |
+| supastarter | Redis for rate limits | 2.5 | No Redis dependency; cap tests run on Postgres only |
 | saasrock | 129-model structure, entity builder, hand-rolled auth | Not used in v1 | No v1 task names saasrock |
 | ui-kit | Route guards that redirect after render | 1.5 | Test: a protected route never renders its content without a session |
 | ui-kit | Layout chosen by an effect writing to a store | 1.5 | No layout store; test: the first render already has the right layout |
 | ui-kit | Shadows applied by a helper outside the components | 1.4 | Verify token-purity check, plus the throwaway test theme |
 | ui-kit | Two icon sets installed | 1.2 | Verify check: one icon dependency |
-| ui-kit | Mock API, axios, zustand auth store | 2.3c | Verify check: no axios or zustand in the web app |
+| ui-kit | Mock API, axios, zustand auth store | 2.4c | Verify check: no axios or zustand in the web app |
 | ui-kit | Config flags for features that do not exist | 1.5 | Review against section 3.4 |
 | ui-kit | Fourteen path aliases | 1.2 | One alias in the web app's TS config |
 | ui-kit | Plain-string titles | 1.6 | Pseudo-locale test |
-| ui-kit | Stub pages (activity log, pricing) | 1.2 | Not moved. Pricing is rebuilt in 3.3 |
+| ui-kit | Stub pages (activity log, pricing) | 1.2 | Not moved. Pricing is rebuilt in 3.2 |
 | ui-kit | Screens with no v1 feature behind them (OTP, settings notifications, settings integrations, roles and permissions) | 1.2 | Not moved |
 
 ## 4. Layout
@@ -334,7 +334,7 @@ scripts/               potato-eng loop and verify
 
 | Kind | Where | What |
 |---|---|---|
-| Checked by a tool | The verify script, run by every task and by CI | Typecheck. oxlint. oxfmt check. Tests. Contract drift (regenerate, fail if it changed). Added during v1: core has no framework imports (0.3); controllers never import db (0.4b); the web app imports no core, db or service code (0.6); one icon dependency and no axios or zustand in the web app (1.2, 2.3c); token purity in UI components (1.4); every product table in a migration has an org id, read against an allowlist of non-product tables with one reason per table, kept beside the migrations (2.6) |
+| Checked by a tool | The verify script, run by every task and by CI | Typecheck. oxlint. oxfmt check. Tests. Contract drift (regenerate, fail if it changed). Added during v1: core has no framework imports (0.3); controllers never import db (0.4b); the web app imports no core, db or service code (0.6); one icon dependency and no axios or zustand in the web app (1.2, 2.4c); token purity in UI components (1.4); every product table in a migration has an org id, read against an allowlist of non-product tables with one reason per table, kept beside the migrations (2.7) |
 | Judgement, checked at review | The standards doc | Smell baseline plus project standards added by phase gates |
 | Convention | Agent guides and recipes | Recipe steps, naming, where a feature's files go |
 
@@ -352,7 +352,7 @@ at the next phase gate.
 |---|---|---|
 | Core functions | Vitest unit tests for validation, coded errors and logic, with fake adapters and a fake clock. There is no fake database: queries are proven by the API tests on real Postgres | Verify, CI |
 | API endpoints | Vitest API tests against a real Postgres in Docker. The API test harness starts the app in the test process on a free port and calls it with `fetch`; no framework test helper, so the tests survive the 0.4b swap and can reach the fake adapters. Tests and the smoke script use a second database in the same Compose Postgres (name by env, separate from the dev database `app`), created and migrated by the test setup, tables truncated between tests; the smoke test signs up with a unique address per run. Better Auth's rate limiter is on in the tests that prove the limits and off (by env) in the rest of the test run and in the local smoke run, since every test arrives from one IP and sign-in allows 3 requests per 10 seconds; the production-like run in 4.1 and the deploy keep it on. API test files run serially (file parallelism off for the API project); core and web tests stay parallel. Verify fails with a clear message when Postgres is not reachable | Verify, CI |
-| Adapters in tests | Verify and CI use the `console` email adapter and in-memory fakes for payments, storage and AI (webhook signature checks are the exception, in the Webhooks row below), so they need no keys, no provider accounts and no S3 container. The real Stripe, S3 and AI adapters are proven by the runtime criteria (3.3, 3.5, 3.6). The local S3 container is needed for dev and 3.5's runtime check only | Verify, CI |
+| Adapters in tests | Verify and CI use the `console` email adapter and in-memory fakes for payments, storage and AI (webhook signature checks are the exception, in the Webhooks row below), so they need no keys, no provider accounts and no S3 container. The real Stripe, S3 and AI adapters are proven by the runtime criteria (3.2, 3.4, 3.5). The local S3 container is needed for dev and 3.4's runtime check only | Verify, CI |
 | Web routes and shell | Vitest with a DOM environment and Testing Library, rendering the router in memory | Verify, CI |
 | Org isolation | An API test proving one org cannot read another's rows, for every org-scoped feature | Verify, CI |
 | Auth email caps, AI cap, upload limits | API tests | Verify, CI |
@@ -369,7 +369,7 @@ contract-drift check and the smoke test.
 Each task is one vertical slice for one fresh session. "Read" lists the PRD sections to
 read. **Runtime** marks a criterion proven by running the thing. **Precondition
 (human)** marks a step only the owner can do; the task waits for the owner's dated
-sign-off. A sign-off is a dated line the owner adds to the card in `docs/TASKS.md`; a card whose precondition is unsigned is set `blocked` with the step the owner must do, and the loop stops. A card whose builder checks pass but whose owner sign-off is missing is closed with a line `Awaiting sign-off: <what the owner does>`; the phase gate does not pass while any card in the phase has that line unsigned. A browser runtime criterion is, from 0.7 on, proven by a throwaway Playwright script run against the dev servers, not committed, with the steps and result written in the task log. Phase branches are `phase-0` to `phase-4`; the first card of a phase runs `git fetch origin` and creates the branch from `origin/main` if it does not exist, and is set `blocked` if the previous phase's gate card is not signed in `docs/TASKS.md` on `origin/main` (read after the fetch, before the branch is created) or if local `main` has commits `origin/main` lacks. A gate card has no precondition: it runs its steps and closes with `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`. The owner adds the dated sign-off lines (the gate's and every `Awaiting sign-off` in the phase) as the last commit on the phase branch, pushes, then merges; the sign-offs reach `main` in that PR. Phase sizes (11, 12 and 11 cards in phases 0, 2 and 3) are accepted; `/tasks` does not split a phase. A task with **Ref** follows that reference's mode, and the reference is vetted
+sign-off. A sign-off is a dated line the owner adds to the card in `docs/TASKS.md`; a card whose precondition is unsigned is set `blocked` with the step the owner must do, and the loop stops. A card whose builder checks pass but whose owner sign-off is missing is closed with a line `Awaiting sign-off: <what the owner does>`; the phase gate does not pass while any card in the phase has that line unsigned. A browser runtime criterion is, from 0.7 on, proven by a throwaway Playwright script run against the dev servers, not committed, with the steps and result written in the task log. Phase branches are `phase-0` to `phase-4`; the first card of a phase runs `git fetch origin` and creates the branch from `origin/main` if it does not exist, and is set `blocked` if the previous phase's gate card is not signed in `docs/TASKS.md` on `origin/main` (read after the fetch, before the branch is created) or if local `main` has commits `origin/main` lacks. A gate card has no precondition: it runs its steps and closes with `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`. The owner adds the dated sign-off lines (the gate's and every `Awaiting sign-off` in the phase) as the last commit on the phase branch, pushes, then merges; the sign-offs reach `main` in that PR. Phase sizes (11, 13 and 10 cards in phases 0, 2 and 3) are accepted; `/tasks` does not split a phase. A task with **Ref** follows that reference's mode, and the reference is vetted
 before its first use. A card that removes or renames something the agent guide names (`just`, Hono, Biome) fixes those lines in the same task; 0.9 is the final sweep.
 
 ### Phase 0: Align the skeleton
@@ -439,7 +439,7 @@ Ref: ui-kit (reuse).
 - **1.1 Vet ui-kit.** Precondition (human): the owner unpacks the finished UI project
   into the references folder; the card checks for the unpacked `src/` folder. Read §3.4, §3.5. Done: a vet report with keep, fix or
   reject per file.
-- **1.2 Move the UI kit.** Tokens, components and design rules into the UI package (no screens: a screen enters the web app only in the card that rebuilds it, auth screens in 2.3a to 2.3c, billing in 3.3, settings in 3.4); one
+- **1.2 Move the UI kit.** Tokens, components and design rules into the UI package (no screens: a screen enters the web app only in the card that rebuilds it, auth screens in 2.4a to 2.4c, billing in 3.2, settings in 3.3); one
   icon set (Tabler, §2.5); one app alias; stubs left behind. Read §2.5, §3.4, §3.5. Ref: ui-kit.
   Done: the web app builds on the UI package; verify fails on a second icon dependency.
 - **1.3 Component preview.** A dev-only route rendering every component. Read §2.5.
@@ -449,8 +449,9 @@ Ref: ui-kit (reuse).
   theme changes the whole preview page without editing a component.
 - **1.5 Shell and routing.** The stacked-side app shell and the side auth layout (§2.5), config-driven
   navigation, access checks before render, layout derived from the route. The session
-  is a stub behind an interface until 2.3a; a placeholder sign-in route in the side auth layout is replaced in 2.3a. Read §3.1, §3.4, §3.5. Includes the access denied screen. Ref: ui-kit. Done:
-  web tests (§6) prove a protected route never renders without a session and the first render
+  is a stub behind an interface until 2.4a, and the guard is tested against that stub, since
+  auth does not exist yet; a placeholder sign-in route in the side auth layout is replaced in 2.4a. Read §3.1, §3.4, §3.5. Includes the access denied screen. Ref: ui-kit. Done:
+  web tests (§6), run against the stub session, prove a protected route never renders without a session and the first render
   has the right layout.
 - **1.6 i18n.** i18next wired; all shell text through message files. Read §2.4. Done: the
   pseudo-locale web test passes.
@@ -464,22 +465,31 @@ Ref: supastarter (study): auth, mail, organizations.
 
 - **2.1 Vet supastarter.** Read §3.5. Done: a vet report for the supastarter auth, mail,
   organizations and settings paths the references doc lists.
-- **2.2 Email module.** `sendEmail`, React Email, `console` and `resend` adapters,
+- **2.2 Jobs.** pg-boss, its worker inside the API process, and the job pattern every
+  later job follows: retries, and the job id as the idempotency key (§2.4). Comes before
+  email so auth emails go through the queue from the first send and are never reworked.
+  Read §2.2, §2.4, §3.3. Done: tests with a test job prove a failed job is retried and a
+  job running twice has its effect once.
+- **2.3 Email module.** `sendEmail`, React Email, `console` and `resend` adapters,
   console output to a gitignored folder, boot refused in production with `console`.
-  Read §2.4. Done: unit tests for the console output; a boot test for the production
-  refusal. Owner sign-off (not a precondition for starting): the sending subdomain is
+  Every send is a 2.2 job from the start, with the job id as the idempotency key.
+  Read §2.4, §3.3. Done: unit tests for the console output; a boot test for the
+  production refusal; tests prove a failed send is retried and a job running twice
+  sends once. Owner sign-off (not a precondition for starting): the sending subdomain is
   verified on Resend, a Resend API key and a from address are in the local env, and one
   real email was sent through `resend`.
-- **2.3a Sign up and sign in.** Better Auth mounted in NestJS, its core tables (user,
+- **2.4a Sign up and sign in.** Better Auth mounted in NestJS, its core tables (user,
   session, account, verification) as SQL migrations with the Drizzle mirror, sign up,
   sign in and out, those auth screens rebuilt on it; the session replaces the 1.5 stub.
   Better Auth sits at `/api/auth` (§2.6). Read §2.2, §2.3, §2.6, §3.3, §3.5. Ref: supastarter.
   The web auth client declares the `personal` field by hand, never importing the server's `auth` type (§4). The notes endpoints require a session from here on, and the API tests get a sign-in
-  helper. Done, runtime: the smoke test signs up, signs in and creates a note.
-- **2.3b Email verification.** Verification required before sign in, the verification
+  helper. Done: 1.5's "a protected route never renders without a session" web test
+  passes again against the real Better Auth session; runtime: the smoke test signs up,
+  signs in and creates a note.
+- **2.4b Email verification.** Verification required before sign in, the verification
   template and screen. Read §2.3, §2.4. Ref: supastarter. Done, runtime: the smoke test
   follows the verification link from the console email before signing in.
-- **2.3c Password reset and auth limits.** Reset flow and its screens, rate limits on
+- **2.4c Password reset and auth limits.** Reset flow and its screens, rate limits on
   auth routes, verify check: no axios or zustand in the web app. Better Auth's limiter
   is set to database storage (its `rateLimit` table is one more hand-written migration),
   enabled explicitly so tests do not depend on the default (on in the tests that prove
@@ -487,19 +497,19 @@ Ref: supastarter (study): auth, mail, organizations.
   setting from §2.3 now. The limiter's own tests assert status 429 and `X-Retry-After`,
   not a code. Read §2.2, §2.3, §3.5, §6.
   Ref: supastarter. Done: API tests for reset and the limits; the check passes.
-- **2.4 Auth email caps.** Per-address and per-IP caps with the agreed behaviour. Read
+- **2.5 Auth email caps.** Per-address and per-IP caps with the agreed behaviour. Read
   §2.3. The per-IP cap is a before-hook throwing `APIError` 429 with code `rate_limited`
   (no limiter rule); it is checked before the route runs; the
   per-address cap is checked where the send is requested and suppresses silently; both
   counters in Postgres (§2.3 "Where the caps are checked"). Done: API tests prove both caps, the silent address cap and the 429.
-- **2.5a Personal org.** The organization plugin's tables (organization, member,
+- **2.6a Personal org.** The organization plugin's tables (organization, member,
   invitation, the active-org column on session) as hand-written SQL with the Drizzle
   mirror, and the `personal` boolean on the organization table (declared to Better Auth as
   an additional field; confirm a boolean works, else a text flag). A user-create hook makes
   the org (named after the user, slug generated; no slug in URLs, §3.2), a session-create hook sets it active (§3.2), `disableOrganizationDeletion` on.
   Read §2.2, §2.3, §3.2, §3.3. Ref: supastarter. Done: an API test that a new user has
   exactly one personal org and a new session is active in it.
-- **2.5b Create and switch.** `organizationLimit` from an env var (default 5; counts all
+- **2.6b Create and switch.** `organizationLimit` from an env var (default 5; counts all
   memberships, §2.3), create an org, the org switcher, and the org general page (rename)
   limited to owner and admin. The web app calls Better Auth's own client for organization
   actions (§3.3). The before-load step loads the active member's role with the session
@@ -507,10 +517,10 @@ Ref: supastarter (study): auth, mail, organizations.
   card the only authority is "signed in". Read §2.3, §3.2, §3.4. Ref: supastarter. Done:
   an API test for the limit; runtime: a new user lands in a personal org, creates a second
   one, switches, and renames it.
-- **2.6 Org scoping.** Org context in core, an org id on every product table, notes
+- **2.7 Org scoping.** Org context in core, an org id on every product table, notes
   scoped; the migration deletes existing notes rows (no deploy exists yet). Read §2.3, §3.1. Done: the isolation test passes; verify fails on a product
   table without an org id.
-- **2.7a Invites.** Invite by email and accept. Invite caps (§2.3): at most 3 per recipient address per hour and 20 per org per
+- **2.8a Invites.** Invite by email and accept. Invite caps (§2.3): at most 3 per recipient address per hour and 20 per org per
   day, by env; both return 429 with code `rate_limited`. The invite link leads to sign
   in or sign up with the invited address, the normal email verification applies, then
   the invite is accepted; the API tests cover an existing user and a new one. Both
@@ -519,7 +529,7 @@ Ref: supastarter (study): auth, mail, organizations.
   with an API test. Read §2.3.
   Cancelling a pending invite is included. Ref: supastarter. Done: API tests for
   invite, accept and cancel; runtime: an invite accepted through the console email.
-- **2.7b Members and roles.** Members screen, role changes, owner/admin/member limits,
+- **2.8b Members and roles.** Members screen, role changes, owner/admin/member limits,
   removing a member, and the one-owner rule, all enforced by the API (§2.3) in Better Auth organization hooks (`beforeUpdateMemberRole` and the remove-member hook), not in a controller. Read §2.3, §3.2.
   Done: API tests for each role's limits, member removal, and the one-owner rule
   (admins cannot remove or demote the owner; the owner cannot remove or demote
@@ -533,16 +543,14 @@ Ref: supastarter (study): payments, storage, AI.
 
 - **3.0 Vet supastarter modules.** Read §3.5. Done: a vet report for the supastarter
   payments types, Stripe adapter, purchases model, storage and AI paths.
-- **3.1 Jobs.** pg-boss, its worker inside the API process; every email send moves onto
-  the queue with retries. Read §2.2, §2.4, §3.3. Done: tests prove a failed send is retried and a job running twice sends once (the idempotency key, §2.4).
-- **3.2a Payments and checkout.** The payments interface, the Stripe adapter, the
+- **3.1a Payments and checkout.** The payments interface, the Stripe adapter, the
   purchases table owned by the org, a checkout endpoint for Pro and the one-time product,
   the Stripe customer table (one customer per org, created on first checkout, §2.4) and
   the plan-lookup function. Read §2.4, §3.2. Ref: supastarter. The checkout endpoint refuses with a coded error when the org already has an active Pro subscription (the page sends that org to the portal). The one-time product has no already-bought check (§2.4). Done: API tests for
   checkout and purchases (on fakes), including role limits (owner and admin allowed, member refused), a Pro checkout refused when a seeded active subscription exists, a second one-time checkout by the same org not refused, and the org isolation test for purchases (§6). The card also ships the core function that records a completed purchase or a subscription change, with unit tests; the API tests seed rows through it.
-- **3.2b Stripe webhooks.** Webhooks verified and queued as jobs that call core, handling `checkout.session.completed`, `customer.subscription.updated` and `customer.subscription.deleted` (confirm in current Stripe docs). Read
+- **3.1b Stripe webhooks.** Webhooks verified and queued as jobs that call core, handling `checkout.session.completed`, `customer.subscription.updated` and `customer.subscription.deleted` (confirm in current Stripe docs). Read
   §2.4, §3.3. Ref: supastarter. Done: API tests with signed webhook fixtures, the same event delivered twice changes nothing, and two completed one-time checkouts make two rows.
-- **3.3 Billing page.** Plans from a billing endpoint (the plan config lives in core,
+- **3.2 Billing page.** Plans from a billing endpoint (the plan config lives in core,
   §2.4), the current plan, the customer portal (switch interval, cancel), one-time
   purchases shown, one row each; limited by role (§2.3). Read §2.4. Precondition (human): Stripe
   test-mode keys and prices exist and their IDs are in the local env; the Stripe CLI is
@@ -550,24 +558,24 @@ Ref: supastarter (study): payments, storage, AI.
   between the two Pro prices and cancelling. Done: API tests for the billing endpoints and the
   role limits; the owner signs off that a test-card checkout, the one-time purchase, the interval switch and
   cancel update the page (hosted Stripe pages, with the Stripe CLI forwarding).
-- **3.4 Settings.** Profile and security screens (name, password change; email shown
+- **3.3 Settings.** Profile and security screens (name, password change; email shown
   read-only, §2.3) on Better Auth. Read §2.3, §3.4. Ref: supastarter. Done, runtime: each setting saves and survives a reload.
-- **3.5 Uploads.** Signed-URL uploads, a local S3-compatible container in Compose (pick a
+- **3.4 Uploads.** Signed-URL uploads, a local S3-compatible container in Compose (pick a
   maintained one from current docs that supports presigned PUT and bucket CORS;
   candidates RustFS, Garage, SeaweedFS), avatar and org logo with the type and size
   limits, public-URL reads, one fixed key per avatar and per org logo, the avatar control on
-  the 3.4 profile page, and the logo on the 2.5b org general page. Read §2.4. Ref: supastarter. Done: API tests reject a wrong
+  the 3.3 profile page, and the logo on the 2.6b org general page. Read §2.4. Ref: supastarter. Done: API tests reject a wrong
   type at signing and delete an oversize object after upload, and a member cannot sign or save an org logo; runtime: both images
   upload and display. If an oversize object is deleted, the saved URL is cleared (one
   fixed key means the previous image goes too).
-- **3.6 AI chat demo.** AI SDK, provider by env (an adapter function returning a language model, the `fake` the AI SDK's mock model from `ai/test`; confirm the export name in current docs, §2.4), an SSE endpoint where the controller calls `streamText` and pipes the SDK's stream response, left out of the OpenAPI spec, the chat page under
+- **3.5 AI chat demo.** AI SDK, provider by env (an adapter function returning a language model, the `fake` the AI SDK's mock model from `ai/test`; confirm the export name in current docs, §2.4), an SSE endpoint where the controller calls `streamText` and pipes the SDK's stream response, left out of the OpenAPI spec, the chat page under
   `/demo/`, signed-in users only. Read §2.4, §3.3. Ref: supastarter. Precondition
   (human): an OpenRouter key in the local env. Done: an API test with the fake AI
   adapter shows the endpoint refuses a request with no session and streams the fake's
   reply as SSE; runtime: a reply streams into the page.
-- **3.7 AI cap.** The per-user daily cap, a cheap default model, and the agent-guide line
+- **3.6 AI cap.** The per-user daily cap, a cheap default model, and the agent-guide line
   telling projects to delete `/demo/*`. Read §2.4. The cap resets at 00:00 UTC. Done: an API test proves the cap.
-- **3.8 Google sign-in.** Read §2.3. Linking applies to a verified password account only; the card must not set `requireLocalEmailVerified: false`, and the sign-in screen shows a message for `account_not_linked`. Precondition (human): a Google OAuth client exists
+- **3.7 Google sign-in.** Read §2.3. Linking applies to a verified password account only; the card must not set `requireLocalEmailVerified: false`, and the sign-in screen shows a message for `account_not_linked`. Precondition (human): a Google OAuth client exists
   and its credentials are in the local env. Done: the owner signs off that Google sign-in
   works locally.
 - **3.G Phase 3 gate.**
@@ -667,12 +675,12 @@ forces another.
 
 | Risk | Mitigation | Checked in |
 |---|---|---|
-| The Better Auth NestJS adapter has one maintainer | Keep the integration thin, so the kit can own it if it is abandoned | 2.3a |
+| The Better Auth NestJS adapter has one maintainer | Keep the integration thin, so the kit can own it if it is abandoned | 2.4a |
 | oxfmt is pre-1.0 | Pin it; fall back to Prettier if it breaks | 0.1 |
 | Type-aware oxlint runs on tsgolint, which tracks TypeScript 7; the repo is on 5.9 | If it does not accept this workspace, ship oxlint without it and log why | 0.1 |
 | nestjs-zod output does not suit Hey API | Prove the notes client keeps its operations before anything else is built | 0.4b |
 | TanStack Router's static data or before-load APIs change | Build from current docs, cite them in the task log | 1.5 |
-| The public reference deploy is abused (email spam, AI cost, junk signups) | Auth rate limits, auth email caps, AI cap, one fixed object key per avatar and logo, an org creation limit per user (`organizationLimit`), invite caps, Stripe test mode | 2.3c, 2.4, 2.5b, 2.7a, 3.5, 3.7 |
+| The public reference deploy is abused (email spam, AI cost, junk signups) | Auth rate limits, auth email caps, AI cap, one fixed object key per avatar and logo, an org creation limit per user (`organizationLimit`), invite caps, Stripe test mode | 2.4c, 2.5, 2.6b, 2.8a, 3.4, 3.6 |
 | `@sentry/tanstackstart-react` is alpha | Fall back to `@sentry/react` and `@sentry/node` | 4.5 |
 | Windows development versus Linux CI | LF line endings everywhere; CI runs on Linux from Phase 0 | 0.8 |
 | The kit drifts into product features | The scope rule, enforced by every phase gate | Every gate |
@@ -694,6 +702,8 @@ client exceptions, Tabler, stacked-side shell and side auth layout, roles and th
 one-owner rule, invite caps and undo, read-only email, org limit 5, personal org is
 ordinary, Google links only onto a verified password account, the one-time product
 can be bought more than once, VPS at 200 ms, notes kept; Google sign-in and
-settings moved to Phase 3.
+settings moved to Phase 3. 2026-11-18 at `/tasks`, by the owner: jobs moved before
+email (2.2), Phase 2 and 3 cards renumbered; 1.5's guard tested on the stub session and
+re-run on the real one in 2.4a.
 
 Tier: full. Next: `scripts/prd-review.sh`.

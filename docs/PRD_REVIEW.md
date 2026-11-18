@@ -1354,3 +1354,15 @@ must: 3, should: 3, minor: 7, owner: 0
 11. `[minor]` Phase sizes accepted: applied as one line in §7.
 12. `[minor]` `.env.example` loading: applied in 0.5.
 13. `[minor]` Hand-declared `personal` field: applied in 2.3a.
+
+## Owner changes at /tasks (2026-11-18)
+
+Applied to `docs/PRD.md` §7 and `docs/TASKS.md`.
+
+- Jobs moved before email, so auth emails go through pg-boss from the first send and are
+  never reworked. Renumbered: old 3.1 became 2.2; old 2.2 to 2.7b became 2.3 to 2.8b
+  (2.3a to 2.3c became 2.4a to 2.4c, and so on); old 3.2a to 3.8 became 3.1a to 3.7.
+  Phase 2 has 13 cards, Phase 3 has 10. Card numbers above this entry use the old
+  numbering.
+- 1.5's guard is tested against the stub session; 2.4a re-runs the same "a protected
+  route never renders without a session" test against the real Better Auth session.
