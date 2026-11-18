@@ -2,6 +2,39 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "react"],
   "categories": { "correctness": "error" },
+  "overrides": [
+    {
+      "files": ["packages/ts/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@nestjs/*",
+                  "hono",
+                  "hono/*",
+                  "@hono/*",
+                  "express",
+                  "express/*",
+                  "fastify",
+                  "@tanstack/*",
+                  "react",
+                  "react/*",
+                  "react-dom",
+                  "react-dom/*",
+                  "better-auth",
+                  "better-auth/*"
+                ],
+                "message": "Core imports no framework and never better-auth (PRD 4, 2.2)."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "ignorePatterns": [
     "**/dist",
     "**/.output",

@@ -160,9 +160,28 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   README-only `packages/ts/auth` and `packages/ts/payments` placeholders.
 - Done when: tests for the notes schemas and coded errors pass (the data path is proven
   in 0.4a); verify fails if core imports a framework or `better-auth`.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-18: built `@qlastakit/core` (`packages/ts/core`): `CodedError(code, message)`,
+    notes zod schemas (plain zod, no `.openapi`), `listNotes(db)` / `createNote(db, input)`
+    with the db passed in. Tests: schemas and `CodedError` (core Vitest project added to
+    the root list; 7 tests plus the web one pass). The API notes routes now import core and
+    name its schemas with `.openapi("Note")` / `.openapi("CreateNote")`; contract is
+    unchanged (drift check green). Removed the feature's `schema.ts`/`service.ts`,
+    `lib/errors.ts` (`AppError`) and the `auth` and `payments` README placeholders.
+    The import ban is an oxlint `no-restricted-imports` override for `packages/ts/core/**`
+    (nestjs, hono, express, fastify, tanstack, react, better-auth), so it runs in
+    `pnpm lint` and verify; proved with a throwaway probe importing `hono` and
+    `better-auth` (both reported). Decisions the PRD left open: core depends on
+    `@qlastakit/db` and `drizzle-orm` (PRD 2.2 allows the Drizzle mirror); core errors carry
+    no HTTP status, the Hono `onError` maps code to status (`not_found` 404, else 400) until
+    0.4b; `createNote` takes `unknown` and validates itself, throwing `validation_error`;
+    the Hono default hook still validates first. No fake-db test: the data path is proven
+    in 0.4a. Stubs: none. Wish: permission to delete files from the shell (the probe
+    `packages/ts/core/src/_probe.ts`, now `export {};`, plus `services/api/src/_tmp.ts` and
+    `_review_probe.ts`, are untracked and need a human to delete; the probe file is not
+    committed).
 
 ## 0.4a Postgres, migrations and API tests
 - Precondition (human): Docker Desktop is installed and running.

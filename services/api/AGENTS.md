@@ -7,9 +7,7 @@ from them.
 
 ```
 src/features/<name>/
-  schema.ts   zod shapes for requests/responses, each with .openapi("Name")
-  service.ts  business logic: plain async functions, no Hono, no HTTP
-  routes.ts   createRoute(...) + handlers that validate and call the service
+  routes.ts   createRoute(...) + handlers that call a core function
 ```
 
 Register the feature in `src/app.ts` with `app.route("/", <name>Routes)`.
@@ -18,7 +16,9 @@ Register the feature in `src/app.ts` with `app.route("/", <name>Routes)`.
 
 - Every route needs a unique `operationId`. It becomes the client function name
   (`operationId: "listNotes"` -> `listNotes()` in `@qlastakit/api-client`).
-- Throw `new AppError(code, message, status)` from services for expected failures.
+- Business logic and zod schemas live in `@qlastakit/core` (`packages/ts/core`). Routes
+  name a core schema with `.openapi("Name")`. Core throws `CodedError(code, message)`;
+  `src/app.ts` maps the code to a status.
   Validation errors and crashes are already turned into JSON by `src/app.ts`.
 - Get the database with `getDb()` from `src/db.ts`.
 - Run `mise run contract` after changing any route or schema.
