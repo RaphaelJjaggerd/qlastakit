@@ -41,8 +41,8 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   type-aware oxlint does not accept this workspace, ship oxlint without it and log why.
 - Done when: `mise run check` passes, no Biome config or justfile remains,
   `scripts/verify.sh` passes.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-18 Raphael: mise installed, main pushed.
   - 2026-11-18: built mise tasks (setup, dev, contract, check, build, db-up, db-down,
@@ -60,6 +60,31 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     still says `just contract`/`just check` (left for 0.9), and a stray
     `services/api/src/_tmp.ts` (contents `export {};`, uncommitted) needs a human to
     delete it.
+  - Review: returned 2026-11-18
+    - Checked: `scripts/verify.sh` passes; `mise run check` passes; `mise tasks` lists
+      all eight; no `biome.json` or `justfile` left; type-aware oxlint fires (a throwaway
+      `no-floating-promises` probe was reported as an error).
+    - Spec:
+      - [must] `mise.toml`, `package.json:11` (`db:migrate`): the replacement drops the
+        justfile's `set dotenv-load`, and nothing else loads `.env`. `db/migrate.sh:5`
+        reads `DATABASE_URL` only from the environment, so the README quick start this
+        diff wrote (`cp .env.example .env`, then `mise run db-migrate`, `README.md:12-16`)
+        now fails with "DATABASE_URL is not set". Ran `mise run db-migrate`: that is the
+        error. Restore `.env` loading for the tasks (for example mise's `[env]`
+        `_.file = ".env"`), or log why not and fix the README. The loss is not in the log.
+      - [minor] The justfile's other-language steps (`cargo fetch` / `go work sync` /
+        `uv sync` in setup, `cargo check` / `go vet` / `ruff` in check, `cargo build` in
+        build) were dropped without a log line. `packages/go/README.md:17`,
+        `packages/python/README.md:24` and `packages/rust/README.md:19` still say
+        "`just setup` and `just check` pick up <lang> automatically", which is now false.
+      - [minor] The log says only `.claude/commands/new-feature.md` is left for 0.9, but
+        `just` also remains in `docs/recipes/add-feature.md:13,23,29`,
+        `docs/recipes/add-service.md:14` and `docs/adr/0001-contract-first.md:11`. 0.9 may
+        sweep them; list them in the log.
+    - Standards: no findings.
+    - Note: deleting files is blocked for the reviewer too. Untracked
+      `services/api/src/_review_probe.ts` (now just `export {};`) needs a human to delete
+      it, along with `_tmp.ts`.
 
 ## 0.2 Test harness
 - Read: PRD §6
