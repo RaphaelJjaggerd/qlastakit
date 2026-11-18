@@ -521,3 +521,210 @@ Notes:
 - OQ1 in §9 was reworded to the wider round 2 Q1 (which replaces round 1 Q1). Its recommendation is still unanswered; it awaits the owner.
 - Q8 (invite caps) and Q9 (email read-only) are marked pending in 2.8a and 2.9; they are not locked.
 - Round 1 Q2 to Q7, round 2 Q1, Q8, Q9 await the owner.
+
+## Round 3 (reviewer, 2026-11-18)
+
+Read: the PRD whole (rounds 1 and 2 applied), rounds 1 and 2, `scripts/verify.sh`,
+the root `package.json`, `infra/docker-compose.yml`, the app and service manifests.
+Better Auth facts were checked against its docs (sources at the end). Rounds 1 and 2
+were all applied and are not repeated. `docs/TASKS.md` does not exist yet, as expected.
+
+### Must
+
+1. `[must]` **4.1's container run has nothing that makes one origin.** §2.6 locks one
+   origin everywhere: a Coolify proxy rule on the deploy, the Vite dev proxy locally.
+   The production-like Compose run in 4.1 has neither: the web container is a built
+   server with no dev proxy and there is no Coolify. The smoke test's browser cannot
+   reach `/api`, so 4.1's done criterion cannot be met without inventing a component,
+   and the obvious guess (the web server proxies `/api`) changes the locked topology.
+   Fix: 4.1's Compose file includes one small reverse-proxy container with the same
+   rule as the deploy (`/api/*` to the API, everything else to the web app, no prefix
+   stripping); the smoke test targets the proxy. Say in §2.6 that this is the third
+   place the rule lives. Also say in 0.7 that the smoke script runs the dev servers
+   (so the Vite proxy applies), not a build.
+
+### Should
+
+2. `[should]` **0.4 is too big for one session, and round 2 made it bigger.** It now
+   holds: first Compose run, a Node migrate script, the API test harness on real
+   Postgres, the Hono to NestJS swap, nestjs-zod, a runner choice, the `/api` prefix,
+   ADR 0004, the contract regeneration and a new verify check. Fix: split it. 0.4a:
+   Compose Postgres, the Node migrate script (delete `db/migrate.sh`), the API test
+   harness, and API tests that create and list notes against the existing Hono API;
+   carries the Docker precondition. 0.4b: the NestJS swap with everything else on the
+   card; done when the same tests pass (paths updated for `/api`) and the client keeps
+   its operations. The tests written before the swap prove the swap.
+
+3. `[should]` **Core tests are told to fake the database, which a card cannot do
+   sensibly.** §6 says core functions are unit-tested with "dependencies passed in as
+   fakes"; §3.1 lists db as a dependency; principle 3 puts data access in core. Notes
+   is pure data access, so 0.3's "notes core tests pass" means mocking Drizzle's query
+   chain, and Postgres does not exist until 0.4. Fix in §6: core unit tests cover
+   validation, coded errors and logic, with fake adapters and a fake clock; there is no
+   fake database. Queries are proven by the API tests on real Postgres. 0.3's done
+   becomes: tests for the notes schemas and coded errors pass; the data path is proven
+   in 0.4a.
+
+4. `[should]` **The test database is not separate from the dev database.**
+   `infra/docker-compose.yml` has one database, `app`. §6 truncates tables between
+   tests, so every verify run wipes local dev data, and the smoke test signs up on
+   whatever is there. Fix in §6: tests and the smoke script use a second database in
+   the same Compose Postgres (name by env), created and migrated by the test setup.
+   The smoke test signs up with a unique address per run.
+
+5. `[should]` **Auth rate limits will make the API tests and the smoke test flaky.**
+   2.3b enables Better Auth's limiter explicitly. Its sign-in rule is 3 requests per
+   10 seconds per IP (docs, below), and every test arrives from one IP. Any test file
+   that signs in more than three users fails with 429. Fix in §6 and 2.3b: the limiter
+   is on in the tests that prove the limits and off (by env) in the rest of the test
+   run and in the local smoke run; the production-like run in 4.1 and the deploy keep
+   it on.
+
+6. `[should]` **The IP cap's 429 cannot come from where 2.4 puts it.** 2.4 says the
+   caps "sit in core in front of `sendEmail`". Better Auth's docs say not to await the
+   send inside its email callbacks (timing attacks), and after 3.1 the send is a queued
+   job, so nothing thrown there reaches the response. Fix in 2.4: the per-IP cap is
+   checked before the route runs (a Better Auth before-hook or a custom limiter rule on
+   the email-sending paths) and returns the 429; the per-address cap is checked where
+   the send is requested and suppresses silently. Both counters stay in Postgres.
+
+7. `[should]` **Org creation is uncapped, which undoes two other caps.** Better Auth
+   lets any user create unlimited orgs by default (`organizationLimit`, docs below).
+   §2.4 says upload storage is "bounded by accounts"; with one logo per org and
+   unlimited orgs it is not. Q8's invite cap is per org, so it is unbounded too. Fix
+   in §2.3 and 2.6, once Q10 is answered: set `organizationLimit` from an env var. Add
+   it to the abuse row in §9.
+
+8. `[should]` **The personal org is not marked and can be deleted.** §2.3 and §3.2
+   depend on every user having one, and a new session must find it. Better Auth has no
+   notion of a personal org, creates none at signup, leaves the active org null at
+   sign-in, and exposes org deletion to any owner (docs, below). Fix in §2.3 and 2.6:
+   the organization table gets a `personal` boolean in the hand-written migration,
+   declared to Better Auth as an additional field (its docs show a string example;
+   2.6 confirms boolean works, else a text flag); a user-create hook makes the org and
+   a session-create hook sets it active; `disableOrganizationDeletion` is on in v1
+   (round 1 Q5 already recommends no delete screens). 2.6 gets an API test: a new user
+   has exactly one personal org and a new session is active in it.
+
+9. `[should]` **Human preconditions sit on cards whose done criteria do not need
+   them, so the unattended loop blocks early.** 3.2a waits for Stripe keys and prices,
+   3.2b for the Stripe CLI, but §6 says their tests run on fakes and signed fixtures.
+   Fix: move both preconditions to 3.3, the first card with a real Stripe sign-off.
+   Same shape in 2.2: keep the card unblocked by making the real `resend` send an owner
+   sign-off line, not a precondition for starting.
+
+10. `[should]` **Phase 4 gives the agent work only the owner can do.** 4.3 ("the live
+    reference deploy") and 4.4 ("configure Coolify's scheduled backups") happen in
+    Coolify's UI, which the builder cannot reach. "A backup file appears in R2" and
+    "the API logs the real client IP" cannot be checked by the builder either. Fix:
+    in 4.3 and 4.4 the card writes the recipe and any repo-side config; the owner
+    performs the steps and signs off. The builder's own done checks are the ones it
+    can run: the public URLs answer over HTTPS (4.3), the restore recipe exists and
+    names every command (4.4). The client-IP log line and the backup file become
+    sign-off lines.
+
+11. `[should]` **4.3 does not say whether Cloudflare proxies the subdomain, and the
+    trusted header depends on it.** Proxied: the client IP is in `CF-Connecting-IP`,
+    SSL is terminated twice, and the origin must refuse non-Cloudflare traffic or the
+    header can be forged. DNS only: Coolify's proxy issues the certificate and sets
+    `X-Forwarded-For`. Fix in §2.6 and 4.3: DNS only for the app subdomain in v1, the
+    trusted header is the one Coolify's proxy sets, and SSE needs no buffering
+    exception. Proxying is a per-project choice later.
+
+12. `[should]` **`sendEmail`'s idempotency key is "the job id", but there are no jobs
+    until 3.1.** 2.2, 2.3a, 2.3b and 2.8a all send before then. Fix in §2.4: the caller
+    always passes a key; before 3.1 it is a fresh UUID per send, from 3.1 on the job id.
+
+13. `[should]` **Where the plan config lives decides whether 3.3 breaks a layout
+    rule.** §2.4 puts plans "in a typed config file"; core's plan lookup needs it and
+    the billing page shows it, but apps may not import core (§4). Fix in §2.4: the plan
+    config lives in core and includes the display amount and currency; the billing page
+    reads plans from a billing endpoint through the generated client. Stripe price IDs
+    stay in env.
+
+14. `[should]` **Nothing says where the Stripe customer id is kept.** 3.2a, 3.2b and
+    3.3 (portal) all need it, and the org table belongs to Better Auth. Fix in §2.4:
+    one customer per org, stored in a product table of ours keyed by org id (not a
+    column added to Better Auth's organization table), created on first checkout.
+
+15. `[should]` **How core touches Better Auth's data is not stated.** Core must check
+    membership (§3.2) and save the avatar and logo URLs (3.4), which are columns on
+    Better Auth's user and organization tables; the Better Auth instance lives in the
+    API. Fix in §3.1 or §3.3: core reads and writes those tables through the Drizzle
+    mirror where it must (membership, avatar URL, logo URL) and never imports Better
+    Auth; add `better-auth` to the verify check's forbidden core imports.
+
+16. `[should]` **The app-side import rule has no check.** §4's first rule (apps import
+    only UI, the generated client and config) is the kit's main seam, and §5 lists
+    checks for core and controllers but not for apps. Fix: add to §5 and 0.6 a verify
+    check that the web app imports no core, db or service code.
+
+17. `[should]` **0.7's smoke script is machinery Playwright already has.** Its
+    `webServer` setting starts the API and web app, waits for them and stops them, on
+    Windows and Linux alike. Fix: 0.7 uses `webServer` for both servers; the only
+    pre-step is the migrate script. No start-and-stop shell script, which also keeps
+    §2.1's "one `pnpm` command per task" true.
+
+18. `[should]` **2.8a does not say what an invitee without an account does.** §1 item
+    3 needs "the invitee joins". Fix in 2.8a: the invite link leads to sign in or sign
+    up with the invited address, the normal email verification applies, then the
+    invite is accepted; the API test covers an existing user and a new one.
+
+19. `[should]` **3.5 has no automated check.** Its only done criterion is a runtime
+    stream with a real key. Fix: add an API test with the fake AI adapter: the endpoint
+    refuses a request with no session and streams the fake's reply as SSE.
+
+### Minor
+
+20. `[minor]` §2.2 says the docs UI is at `/docs`; §2.6 says everything is under
+    `/api`. Say `/api/docs` and `/api/openapi.json` in §2.2 and 0.4.
+21. `[minor]` 2.7 adds a required org id to the existing notes table. Say the
+    migration deletes existing notes rows (no deploy exists yet).
+22. `[minor]` 3.4: with one fixed key, deleting an oversize object also removes the
+    previous image. Say the saved URL is cleared in that case.
+23. `[minor]` 4.3's precondition: the Google OAuth client lists the deploy's redirect
+    URI, and the Better Auth secret and public base URL are in the production env.
+24. `[minor]` §6 says payments use an in-memory fake in tests, and also that webhook
+    tests use signed fixtures. Say the webhook tests run the real adapter's signature
+    check offline with a test secret.
+25. `[minor]` §2.6 Errors: say Sentry is off when no DSN is set (local, CI).
+26. `[minor]` OQ3 still plans to pick the auth layout from the 1.3 preview page, which
+    round 1 Q4 showed cannot work. Reword OQ3 to round 1 Q4.
+27. `[minor]` §9 still holds only OQ1 to OQ4 (round 2 finding 24 was skipped). `/tasks`
+    reads the PRD, not this log, and Q2 (3.5), Q6 (0.6, 4.6) and Q7 (4.2) are named on
+    no card. Copy every open question into §9.
+
+### Owner
+
+Still open from earlier rounds, not re-asked: round 1 Q2 (AI chat transport), Q3 (icon
+set), Q4 (shell and auth layout), Q5 (roles), Q6 (notes page), Q7 (VPS latency);
+round 2 Q1 (Better Auth client, wider), Q8 (invite caps), Q9 (email read-only).
+
+`[owner]` ❓ Q10 - Who can create orgs (needed by 2.6): any signed-in user can create
+orgs, up to a per-user limit set by env, default 5?
+➡️ Yes. §1 item 3 needs self-serve org creation, and a limit keeps open signup from
+multiplying logos and invite quotas without end.
+
+`[owner]` ❓ Q11 - Inviting into a personal org (needed by 2.8a): a personal org is an
+ordinary org that happens to be created at signup, so its owner can invite members
+into it, and it can be renamed?
+➡️ Yes. A special single-member org needs extra rules in invites, members and billing;
+treating it as ordinary keeps one code path, which is why the personal org exists.
+
+`[owner]` ❓ Q12 - Google and password accounts with the same email (needed by 2.5):
+signing in with Google on an address that already has a password account links the
+two into one user, since Google verifies the address?
+➡️ Yes. The other choice is an error telling the user to sign in with their password,
+which most users read as a broken sign-in.
+
+### Sources
+
+- Better Auth organization plugin (`organizationLimit`, `disableOrganizationDeletion`,
+  active org null at sign-in, session-create hook, additional fields):
+  https://better-auth.com/docs/plugins/organization
+- Better Auth rate limit (off in development by default, sign-in 3 per 10 seconds,
+  `customRules`): https://better-auth.com/docs/concepts/rate-limit
+- Better Auth email (request passed to callbacks, do not await the send):
+  https://better-auth.com/docs/concepts/email
+
+must: 1, should: 18, minor: 8, owner: 3
