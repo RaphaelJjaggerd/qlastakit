@@ -1,4 +1,33 @@
 {
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "WebFetch",
+      "Agent",
+      "Bash(git:*)",
+      "Bash(pnpm:*)",
+      "Bash(mise:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(bash scripts/*)",
+      "Bash(scripts/verify.sh)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)"
+    ],
+    "deny": ["Read(./.env)", "Edit(./.env)"]
+  },
   "hooks": {
     "PreToolUse": [
       {
