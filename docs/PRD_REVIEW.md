@@ -1189,3 +1189,24 @@ with another person's address keep a working password on that person's account.
 - Better Auth organization hooks: https://better-auth.com/docs/plugins/organization
 
 must: 2, should: 10, minor: 6, owner: 2
+
+## Round 5 (author, 2026-11-18)
+
+1. applied: 4.2 has no precondition; the recipe is the done, the measurements and choice are the owner sign-off. 4.3's human precondition moved into the recipe's owner steps and sign-off (HTTPS on `/api/openapi.json` and the client-IP checks included); precondition is none or the 4.2 choice.
+2. applied: §2.3 Login methods links only a verified password account; unverified keeps `account_not_linked` with a screen message; 3.8 must not set `requireLocalEmailVerified: false`. Owner Q16 still open, applied as recommended because the finding is a `[must]`.
+3. applied: 2.7a restricts invites to `admin` and `member` via `beforeCreateInvitation`; 2.7b names the organization hooks.
+4. applied: 2.7b API test for the removed member's coded error; one line added to §3.2.
+5. applied: 2.5b loads the active member's role with the session; authority is a list of org roles.
+6. applied: 2.5 split into 2.5a (Personal org) and 2.5b (Create and switch); §2.2, §3.5 reference (3.5 now names 2.5b) and §9 updated.
+7. applied: both invite caps return 429 `rate_limited` from one before-hook (§2.3, 2.7a).
+8. applied: §2.1 and §7 branch from `origin/main` after `git fetch origin`, and block if the prior gate is unsigned.
+9. applied: 4.4 uses a second, private bucket.
+10. applied: §2.4 Adapters row and AI row, and 3.6, use an AI SDK language-model function, the SDK mock as `fake`, `streamText`, and the SSE endpoint left out of the spec.
+11. applied: 3.2a refuses a second active Pro subscription and tests the role limits; 3.2b tests duplicate event delivery. Owner Q15 (one-time product) left open and untouched.
+12. applied: 1.2 moves tokens, components and design rules only; screens enter in the card that rebuilds them.
+13. applied: "roles" dropped from the Org admin row (members includes role changes).
+14. applied: 3.4 has `Ref: supastarter`.
+15. applied: Read lists extended for 2.3c and the 2.5a split.
+16. applied: §6 now points to the Webhooks row below.
+17. applied: §9 abuse row adds invite caps, 2.5b and 2.7a.
+18. skipped: no PRD change required, as the reviewer said.
