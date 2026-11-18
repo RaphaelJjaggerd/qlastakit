@@ -29,3 +29,19 @@ One entry per finding: date, what happened, suggested fix.
   with a reviewer round, or report "musts applied, unconfirmed".
 - Must counts per round: 5, 1, 1, 1, 2. Each round finds a few new real issues on a
   ~700-line PRD; there is no stopping rule for diminishing returns besides the cap.
+
+## 2026-11-18: first run-tasks.sh run
+
+- A bare `scripts/run-tasks.sh` with no allow list burned eight sessions (four `/task`,
+  four `/review`) doing nothing: every `/task` was denied its first edit and ended with
+  the card still `todo`, every `/review` found nothing done, and the loop stopped only on
+  `MAX_SAME=4`. Fix: stop as soon as a `/task` session ends with the first card still
+  `todo` and nothing changed (same `HEAD`, clean tree), and skip `/review` when `/task`
+  committed nothing.
+- `run-tasks.sh` runs headless, so any command missing from the allow list is denied
+  with no prompt and the card stalls silently; the denial shows only in the session's
+  prose. Fix: detect a permission denial (e.g. run `claude -p` with
+  `--output-format stream-json` and look for denied tool results, or check the exit
+  report) and stop with a clear message naming the denied tool and command, so the
+  owner adds that one rule. Setup should also write a starting allow list into
+  `.claude/settings.json` for the stack's commands.
