@@ -100,6 +100,22 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     Stubs: none. Wish: write access to `.claude/` and to `.env`, and the ability to
     delete `services/api/src/_tmp.ts` and `_review_probe.ts` (still untracked, human to
     remove).
+  - Review: approved 2026-11-18
+    - Checked: `scripts/verify.sh` passes (tests still skipped, expected until 0.2);
+      `mise run check` passes; with no `.env`, `mise env` runs clean (missing file
+      tolerated). The load path the log could not run: a scratch dir outside the repo with
+      the same `[env] _.file = ".env"` and a `.env` holding `DATABASE_URL`; `mise env`
+      exported it. The previous [must] is fixed. The only `just` left outside history is
+      `.claude/commands/new-feature.md:10`, which is logged for 0.9.
+    - Spec:
+      - [minor] `docs/recipes/add-service.md:14` ("Add its commands to the mise tasks")
+        and `packages/{go,python,rust}/README.md` ("add the <lang> steps ... to those mise
+        tasks") read as "put `cargo check` etc. into the mise task". PRD §2.1 locks one
+        `pnpm` command per task (the header of `mise.toml` says so too). Say: add the step
+        to the root `package.json` script that the task calls. 0.9 can do this in its sweep.
+    - Standards: no findings.
+    - Note: untracked `services/api/src/_tmp.ts` and `_review_probe.ts` are still there
+      for a human to delete.
 
 ## 0.2 Test harness
 - Read: PRD §6
