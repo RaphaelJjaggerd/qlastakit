@@ -137,6 +137,22 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     adds the core project to the root list, 0.4a adds API Postgres setup and serial files.
     Wish: none. The untracked `services/api/src/_tmp.ts` and `_review_probe.ts` are still
     there for a human to delete.
+  - Review: approved 2026-11-18
+    - Checked: `scripts/verify.sh` passes and the test step runs (not skipped): Vitest
+      4.1.12, 1 file and 1 test passed. The test checks behaviour (it renders the UI
+      `Button` in jsdom, clicks it through user-event and expects the handler to run
+      once), so it fails if the DOM env or the click wiring breaks. The
+      `@testing-library/jest-dom/vitest` entry exists in the installed 7.0.1. The tsconfig
+      include change is in scope (it typechecks the new web config).
+    - Spec:
+      - [minor] `vitest.config.ts:1`: the root `package.json` has no `"type": "module"`, so
+        every run prints a Vite warning: "ESM syntax in a file loaded as CommonJS
+        (vitest.config.ts:1:1)". Vite plans to make the native loader the default, and then
+        this config would break. Rename it to `vitest.config.mts`, or set
+        `"type": "module"` at the root if nothing else depends on CJS there.
+    - Standards: no findings.
+    - Note: untracked `services/api/src/_tmp.ts` and `_review_probe.ts` are still there
+      for a human to delete.
 
 ## 0.3 Core package
 - Read: PRD §2.2, §3.1, §4, §6
