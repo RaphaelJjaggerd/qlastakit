@@ -762,3 +762,205 @@ Applied to `docs/PRD.md`. No `[must]` disputed.
 27. skipped: copying owner questions Q2 to Q12 into §9 would pre-empt the owner round; left until they are answered.
 
 Open owner questions (untouched): round 1 Q2 to Q7, round 2 Q1, Q8, Q9, round 3 Q10 to Q12.
+
+## Round 4 (reviewer, 2026-11-18)
+
+Read: the PRD whole (rounds 1 to 3 applied), round 3, `scripts/verify.sh`,
+`scripts/run-tasks.sh`, the root `package.json`, `mise.toml`, `docs/REFERENCES.md`.
+Better Auth, Coolify and Traefik facts were checked against their docs and source
+(sources at the end). Rounds 1 to 3 are not repeated. Round 3 finding 27 (copy the open
+questions into §9) stays skipped by the author and is not re-raised; the questions are
+collected in this log.
+
+### Must
+
+1. `[must]` **OQ4 lets the owner delete the org; §2.3 locks deletion off.** §9 OQ4
+   says "Owner: everything, including deleting the org and transferring ownership".
+   §2.3 (personal org row) sets `disableOrganizationDeletion` on in v1, and round 1 Q5
+   recommends no delete, transfer or account-deletion screens. 2.8b's done is "API
+   tests for each role's limits", so the card would have to guess which one holds.
+   Fix in §9: reword OQ4 to round 1 Q5. Owner: everything v1 offers. V1 offers no org
+   deletion (disabled in the API), no ownership transfer and no account deletion.
+
+### Should
+
+2. `[should]` **Browser runtime criteria have no stated method, and 0.6 needs a
+   browser before one exists.** §7 says "Runtime" is "proven by running the thing".
+   The builder is a headless session; 0.6 asks for "create and list a note in the
+   browser" one card before Playwright arrives in 0.7. Later cards (1.3, 1.4, 2.6,
+   2.8a, 2.8b, 2.9, 3.4, 3.5) have the same shape. Fix in §7: from 0.7 on, a browser
+   runtime criterion is proven by a throwaway Playwright script run against the dev
+   servers, not committed, with the steps and result written in the task log. Fix in
+   0.6: drop its browser criterion; done is the import check, typecheck and the
+   regenerated client in use, and 0.7's smoke test proves the page (the same pattern
+   as 0.3 and 0.4a).
+
+3. `[should]` **0.4a's tests only survive the swap if they speak HTTP.** 0.4b is done
+   when "the 0.4a API tests pass unchanged apart from the `/api` paths". The natural
+   Hono test calls `app.request()`, which does not exist on NestJS. Fix in 0.4a and §6:
+   the API test harness starts the app in the test process on a free port and calls
+   it with `fetch`; no framework test helper. Starting it in-process also lets later
+   tests reach the fake adapters (finding 4).
+
+4. `[should]` **Nothing says how a fake adapter is chosen, or whether the API boots
+   without provider keys.** §3.1 says adapters are "selected by env at boot". §6 says
+   tests use in-memory fakes for payments, storage and AI. The smoke test in CI boots
+   the real dev servers with no keys, and local dev has none until 3.3, 3.4 and 3.5's
+   preconditions. 3.2a, 3.4 and 3.5 would each invent an answer. Fix in §2.4 (Adapter
+   choice row): every module follows the email pattern. Payments, storage and AI each
+   have a `fake` adapter value, the default in local dev, tests and CI; the real one
+   is chosen by env in deploys. The "Console in production" boot refusal covers every
+   `fake` too. Fix in 0.5: the env schema requires a provider's keys only when that
+   provider's adapter is selected, so tests, CI, the smoke run and the spec export
+   boot from the committed `.env.example` values alone. Each card that adds an env
+   var adds it to `.env.example`.
+
+5. `[should]` **The IP cap's 429 cannot carry a code if it comes from the limiter.**
+   §2.3 says the IP cap returns "429 with code `rate_limited`" and allows "a Better
+   Auth before-hook or a custom limiter rule". The limiter's 429 body is fixed:
+   `{"message": "Too many requests. Please try again later."}`, no `code`, and custom
+   rules take only a window and a max (source below). Fix in §2.3 and 2.4: the per-IP
+   cap is a before-hook that throws Better Auth's `APIError` with status 429 and code
+   `rate_limited`; remove the limiter-rule option. Same for the org invite cap in 2.8a
+   once Q8 is answered. 2.3b's own limiter tests assert status 429 and
+   `X-Retry-After`, not a code.
+
+6. `[should]` **2.3a is still the largest card in the plan.** It mounts Better Auth
+   in NestJS, writes its tables and the Drizzle mirror, wires verification email,
+   rebuilds three screens, replaces the session stub, adds the server-side
+   before-load check, puts the notes endpoints behind a session, gives the API tests
+   a signed-in helper and rewrites the smoke test. Fix: split it. First card: sign
+   up, sign in, sign out, the session replaces the 1.5 stub, notes need a session,
+   the API tests get a sign-in helper; done when the smoke test signs up, signs in
+   and creates a note. Second card: email verification required, the verification
+   template and screen; done when the smoke test follows the link from the console
+   email before signing in. Update the card numbers that point at 2.3a (§3.5, §9,
+   OQ1, 1.5, 2.3b).
+
+7. `[should]` **`organizationLimit` counts memberships, and the personal org is one
+   of them.** Better Auth compares the limit with every org the user is a member of,
+   including the personal org and orgs joined by invitation, and applies it to
+   server-side creation too (source below). With the recommended default of 5, a user
+   can create 4 more orgs, and a user invited into 4 orgs can create none. Fix in
+   §2.3 (org creation limit row): say the limit counts all memberships including the
+   personal org, and that v1 accepts this rather than writing a custom count. 2.6's
+   API test covers the limit.
+
+8. `[should]` **Which Better Auth tables each card writes is not stated.** §2.2 says
+   "core and organization plugin" tables are hand-written; 2.3a says "its tables as
+   SQL migrations"; 2.6 mentions only the `personal` flag. Fix: 2.3a writes the core
+   tables (user, session, account, verification). 2.6 writes the organization
+   plugin's (organization, member, invitation, the active-org column on session) with
+   the `personal` flag. 2.3b writes `rateLimit`.
+
+9. `[should]` **A card that is built but not signed off has no state, so the loop
+   stops at the first one.** `scripts/run-tasks.sh` stops whenever any card is
+   `blocked`. 2.2's sign-off is "not a precondition for starting", and 2.5, 3.3, 4.3,
+   4.4 and 4.5 are done only by a sign-off the builder cannot give. §7 defines the
+   state for an unsigned precondition only. Fix in §7: a card whose builder checks
+   pass but whose owner sign-off is missing is closed with a line
+   `Awaiting sign-off: <what the owner does>`; the phase gate does not pass while any
+   card in the phase has that line unsigned. Preconditions keep blocking as they do
+   now.
+
+10. `[should]` **The phase branch has no name and no card creates it.** §2.1 locks a
+    branch per phase and 0.8's workflow triggers on "phase branches", but nothing
+    names the pattern, and the repo is on `main` now. Fix in §2.1 and §7: branches
+    are `phase-0` to `phase-4`. The first card of a phase creates the branch from
+    `main` if it does not exist. The gate card's precondition: the owner pushes the
+    branch, opens the PR, CI is green, the owner merges. 0.8's trigger is `phase-*`
+    and pull requests.
+
+11. `[should]` **Migrations on the deploy have no moment to run.** 4.1 says they
+    "run the Node migrate script" and 4.3 leaves how to the recipe. Coolify's
+    pre-deployment command runs in the old container (old migration files) and is
+    skipped on the first deploy; its post-deployment command cannot fail a deploy
+    (docs below). Fix in 4.1: the API container's start command runs the migrate
+    script, then starts the API. One API instance in v1, so no lock is needed.
+
+12. `[should]` **Coolify strips the path prefix by default.** §2.6 locks "no prefix
+    stripping", but a Coolify path route (`https://<subdomain>/api`) forwards
+    `/api/users` as `/users` unless "Path prefixes" is set to "Keep paths as-is"
+    (docs below). Fix in 4.3: the recipe names that setting for the API resource, and
+    says the web app and the API are two Coolify applications from the same repo
+    (base directory at the repo root, one Dockerfile location each). The builder's
+    HTTPS check requests `/api/openapi.json` through the public URL, which fails if
+    the prefix was stripped.
+
+13. `[should]` **`X-Forwarded-For` may not be safe to trust as 4.3 assumes.** §2.6
+    says Coolify's proxy sets the header. Traefik's docs imply it appends the peer
+    address to a header the client already sent, and Better Auth reads one address
+    from the header unless `trustedProxies` is set (docs below; neither states the
+    default outright). A client could then forge its IP and step around the per-IP
+    cap. Fix in 4.3: the card checks current Traefik and Better Auth docs and sets
+    `trustedProxies` if needed, by env. The owner's sign-off adds: a request sent
+    with a forged `X-Forwarded-For` still logs the real client IP.
+
+14. `[should]` **A non-production `NODE_ENV` makes the web container not
+    production-like.** §2.4 has the production-like run use a non-production
+    `NODE_ENV` so the `console` adapter may boot. For the built web server that
+    selects React's development build. Fix in §2.4 and 4.1: the non-production
+    `NODE_ENV` applies to the API container only; the web container runs with
+    `NODE_ENV=production`.
+
+15. `[should]` **§2.4 says the container run happens in CI; no card puts it there.**
+    "Production-like container runs in CI" (Console in production row), but 0.8's CI
+    runs the dev-server smoke and 4.1 is a local runtime check. Fix: 4.1 adds one CI
+    job that builds both images, so a broken Dockerfile fails the PR; the container
+    smoke stays one local `pnpm` command. Reword the §2.4 row to "production-like
+    container runs".
+
+16. `[should]` **The import checks do not say how they are written.** §5 adds five
+    import rules to verify (core, controllers, web app, icons, axios and zustand).
+    Fix in §5: an import rule is an oxlint `no-restricted-imports` override for its
+    folder, so it runs in `pnpm lint` and in the editor. Verify gets a script only
+    for what lint cannot see (dependency counts in a manifest, token purity, the
+    org-id check).
+
+### Minor
+
+17. `[minor]` 3.3's sign-off lists checkout, the interval switch and cancel. §1 item
+    4 also needs the one-time purchase. Add it.
+18. `[minor]` §6 wants an isolation test "for every org-scoped feature". 3.2a's done
+    does not name one for purchases. Add it.
+19. `[minor]` 3.4 does not say where the avatar control lives. Say the 2.9 profile
+    page.
+20. `[minor]` The status line says rounds 1 to 3 applied; update it with each round.
+21. `[minor]` §7 says a blocked card means "the loop moves on or stops".
+    `scripts/run-tasks.sh` stops. Say "stops".
+22. `[minor]` 4.3: Coolify's docs warn that every resource sharing a hostname must be
+    running, or the root route changes what it serves. One line in the recipe.
+
+### Owner
+
+Still open from earlier rounds, not re-asked: round 1 Q2 (AI chat transport), Q3
+(icon set), Q4 (shell and auth layout), Q5 (roles), Q6 (notes page), Q7 (VPS
+latency); round 2 Q1 (Better Auth client, wider), Q8 (invite caps), Q9 (email
+read-only); round 3 Q10 (org creation limit), Q11 (personal org is ordinary), Q12
+(Google and password linking).
+
+Waiting on Q11, not asked yet: what a new session does when the user is no longer a
+member of their personal org.
+
+`[owner]` ❓ Q13 - Undo for invites and members (needed by 2.8a, 2.8b): 2.8a includes
+cancelling a pending invite, 2.8b includes removing a member, and v1 has no "leave
+this org" action?
+➡️ Yes. An admin who invites or adds the wrong person needs a way back, and Better
+Auth ships both endpoints; leaving is not in the v1 done list and an owner can remove
+the member instead.
+
+### Sources
+
+- Better Auth rate limiter response body and custom rules:
+  https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/api/rate-limiter/index.ts ,
+  https://better-auth.com/docs/concepts/rate-limit
+- Better Auth `organizationLimit` check and `APIError` with a code:
+  https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/plugins/organization/routes/crud-org.ts
+- Better Auth hooks: https://better-auth.com/docs/concepts/hooks
+- Coolify path routes and "Path prefixes": https://coolify.io/docs/core/networking/domains
+- Coolify Dockerfile builds, pre and post deployment commands:
+  https://coolify.io/docs/applications/builds/dockerfile
+- Traefik forwarded headers:
+  https://doc.traefik.io/traefik/reference/install-configuration/entrypoints/
+
+must: 1, should: 15, minor: 6, owner: 1
