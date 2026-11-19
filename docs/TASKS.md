@@ -723,6 +723,35 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     chromium`, CI in 0.8 needs the same step). Not done: the sign-up/verify/sign-in steps
     (2.4a/2.4b extend this test); smoke is not part of `verify.sh` (CI runs it, 0.8).
     Stubs: none. Wish: none.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Runtime, run by the reviewer: `pnpm smoke` passed twice in a row (1 test, about 7s
+      each). With `reuseExistingServer: false`, the second run passing shows both servers
+      were stopped after the first. A throwaway probe (deleted) queried both databases
+      afterwards: the two `smoke <ts>` notes are in `app_test` and none are in `app`, so the
+      browser went through the Vite proxy to the smoke API on 8799 and not to a dev stack.
+      The test checks real behaviour: the page has no optimistic update
+      (`apps/web/src/routes/index.tsx:16` only invalidates), so the note appears only after
+      it comes back from the API. The previous review's cwd-relative `envDir` minor does not
+      affect this card: `pnpm --filter … exec` runs vite in `apps/web`, and `API_PORT` /
+      `API_INTERNAL_URL` come in as real env vars, which win over the file values.
+    - Spec:
+      - [minor] `package.json:23` adds `tsx` to the root devDependencies. No root script
+        uses it and the log does not mention it. Remove it, or log why it is needed.
+      - [minor] `playwright.config.mts` and `e2e/*.mts` are not typechecked. `pnpm
+        typecheck` is `turbo run typecheck` over workspace packages, and the root has no
+        tsconfig, so these files only get oxlint. Playwright strips types without checking
+        them. 2.4a makes this test bigger, so a root (or `e2e/`) tsconfig in the typecheck
+        run would be worth adding before then.
+      - [minor] Running the smoke from a fresh clone needs `pnpm exec playwright install
+        chromium`, and that step is written only in this log. `AGENTS.md` Commands and
+        `mise.toml` do not mention `pnpm smoke`. Carry it to 0.8 (CI needs the same step) and
+        0.9 (docs sweep).
+      - [minor] `e2e/smoke.spec.mts:8` waits for `networkidle` to know the page has
+        hydrated. Playwright's docs advise against `networkidle`, and on a slow CI runner it
+        can resolve before hydration has finished. A real hydration signal, such as the Add
+        button enabled only after mount, would be more reliable. Watch for flakiness in 0.8.
+    - Standards: no findings.
 
 ## 0.8 CI
 - Read: PRD §6
