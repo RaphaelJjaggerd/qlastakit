@@ -45,3 +45,27 @@ One entry per finding: date, what happened, suggested fix.
   report) and stop with a clear message naming the denied tool and command, so the
   owner adds that one rule. Setup should also write a starting allow list into
   `.claude/settings.json` for the stack's commands.
+
+## 2026-11-19: run-tasks.sh, cards 0.1 to 0.3
+
+- No `rm` on the allow list, so agents could not delete what they made: every lint probe
+  (`_tmp.ts`, `_review_probe.ts`, `_probe.ts`) stayed untracked in `src/`, was reported
+  by every later session, and one reviewer probed in the system temp folder and asked
+  the owner to delete that too. Fixed here: `Bash(rm:*)` allowed, the guard hook blocks
+  recursive `rm` (`-r`, `-R`, `-rf`, `-fr`, `--recursive`; `git rm -r` stays allowed),
+  and scratch files go in a gitignored `.potato/tmp/`. Fix in potato-eng: setup writes
+  the scratch folder, its gitignore line and the rm rule; the guard template includes
+  the recursive-rm block.
+- Headless sessions are refused edits under `.claude/` even with `Edit` allowed, so no
+  card can fix a stale line in a project command; 0.1 deferred `.claude/commands/
+  new-feature.md` to 0.9, which would hit the same wall. Fix: `/task` logs such a line
+  as "needs owner" instead of deferring it to a later card.
+- The `.env` deny rule stopped the builder from proving 0.1's `.env` loading; the
+  reviewer proved it in a temp folder outside the repo. Fix: a card whose proof needs
+  `.env` names an owner sign-off, or the test uses a throwaway env file in `.potato/tmp/`.
+- Stale guide pointers recurred three times (0.1, then 0.3 twice) despite the card rule
+  "a card that removes something the guide names fixes those lines". A rule the builder
+  keeps missing is mechanical: a verify check that every backticked repo path in
+  `AGENTS.md` and `docs/recipes/` exists would catch it. Left for the 0.G retro.
+- `/task` set 0.4a `blocked` and left `docs/TASKS.md` uncommitted. Fix: commit the
+  blocked status, so the tree is clean when the owner comes to sign.
