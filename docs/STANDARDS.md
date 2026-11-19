@@ -24,6 +24,8 @@ Two rules decide what goes in this file:
   for that and asserts the setup worked.
 - After moving or renaming a path, URL, env var or script, sweep the whole committed tree
   for the old name before closing, not just the lines a reviewer cites.
+- A lint or verify ban is proved with a probe for every form the repo really uses (extension,
+  alias, relative path), not one (0.4b: `../../db` was banned, `../../db.ts` was not).
 
 ## Smell baseline
 

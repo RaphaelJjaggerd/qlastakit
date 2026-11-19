@@ -865,7 +865,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
 - Done when: all six steps below are logged, even if a decision is "nothing"; the card
   closes with `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`.
-- Status: todo
+- Status: done
 - Retries: 1
 - Steps:
   1. Wishes: read every task log in this phase and list each "wish the project had X".
@@ -917,6 +917,36 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     5. Scope: no card in Phase 0 added an idea-app or product feature (notes is the
        reference feature, kept by the PRD).
     6. Decisions: the above; "nothing" for AGENTS.md pruning and for parked items.
+  - 2026-11-19 (retry 1, fixes for the returned review):
+    - [must] Step 3, the four retry-costing `[must]`s with no decision:
+      0.1 `.env` loading lost in the mise swap: mechanical, but fixed in 0.1 by `[env]
+      _.file`, and the web-side part is already card 1.9; nothing new. 0.3 coded errors
+      tested only through the constructor: judgement, covered by the standard "test names
+      say what they assert / claims match what tests prove"; nothing new. 0.4b controller-db
+      ban missed `.ts`/`.js`: mechanical, fixed in 0.4b with a wider pattern; the class is
+      "a lint ban proved with a probe that skips the forms the repo uses", which is a
+      judgement call, so one line added to STANDARDS.md (probe every import form). 0.6 "check
+      the docs" done from memory: judgement, covered by the "claims match what was done"
+      standard; the zod-plugin revisit is dropped as a carried item (no card builds a
+      generated-client form yet; whoever adds the first one reads the Hey API zod page then,
+      and 0.6's log has the findings).
+    - [must] Carried items now sit on their cards: Nest's logger through pino added to card
+      2.2, the web production `API_INTERNAL_URL` branch added to card 4.1. The review's
+      third item, the zod revisit, is the "dropped" above.
+    - Minors: 0.4a's blocked state was an expected precondition wait (Docker), nothing.
+      Shell-permission wish (six cards): the owner should widen the committed
+      `.claude/settings.json` allowlist for deleting files under `.claude/tmp`-style probe
+      dirs, `sed -i` on repo files and `.claude/` edits; the agent does not change its own
+      permissions, so no card. Typecheck of `e2e/` and `playwright.config.mts` went to 2.4a
+      instead of a Phase 1 card: this departs from step 3 on purpose, because 2.4a is the
+      card that makes those files grow. Line counts, reproducible: tooling = `wc -l` over
+      `git ls-files scripts e2e .github mise.toml .oxlintrc.json .oxfmtrc.json
+      vitest.config.ts playwright.config.mts services/api/test apps/web/vitest.config.ts
+      services/api/vitest.config.ts` = 531 (the earlier 482 was an estimate); product = `wc
+      -l` over tracked non-test `.ts`/`.tsx` under `apps/web/src`, `services/api/src`,
+      `packages/ts/{core,db,ui}/src` = 641 (the earlier 933 counted other file types).
+      Card 1.8 scope now includes `.claude/commands/*.md`. Not done: the
+      `.claude/commands/new-feature.md` edit (agent edits under `.claude/` are denied).
   - Open for the owner: card 0.8's sign-off (push `phase-0`, CI green; the `networkidle`
     wait in the smoke test is unproven on a runner) and the `.claude/commands/new-feature.md`
     edit.
@@ -1054,8 +1084,10 @@ Ref: ui-kit (reuse).
 ## 1.8 Stale-reference check
 - Read: PRD §6
 - Build: a `scripts/verify.sh` check that fails on stale references in committed docs and
-  config: backticked repo paths in `AGENTS.md`, `README.md`, `docs/recipes` and app/service
-  agent guides that do not exist, and `localhost:8787` not followed by `/api` in `*.md`,
+  config: backticked repo paths in `AGENTS.md`, `README.md`, `docs/recipes`, app/service
+  agent guides and `.claude/commands/*.md` that do not exist (the known stale one is
+  `.claude/commands/new-feature.md:10`, `features/notes/routes.ts`, and `:8`, the
+  reference-feature pointer; the owner fixes them or the check fails), and `localhost:8787` not followed by `/api` in `*.md`,
   `.env.example` and `*.toml`. (Added by the 0.G retro: six stale-reference findings in 0.1,
   0.3 and 0.4b.)
 - Done when: verify passes on the repo and fails on a throwaway stale path and a bare
@@ -1100,7 +1132,9 @@ Ref: supastarter (study): auth, mail, organizations.
 - Read: PRD §2.2, §2.4, §3.3
 - Build: pg-boss with its worker inside the API process, and the job pattern every later
   job follows: retries, and the job id as the idempotency key (§2.4). Comes before email
-  so auth emails go through the queue from the first send and are never reworked.
+  so auth emails go through the queue from the first send and are never reworked. Also
+  (0.G): route Nest's own logger and the boot `console.log` through pino (`bufferLogs` +
+  `useLogger`), so there is one log shape (PRD §2.2; 0.5's minor).
 - Done when: tests with a test job prove a failed job is retried and a job running twice
   has its effect once.
 - Status: todo
@@ -1393,6 +1427,9 @@ Ref: supastarter (study): payments, storage, AI.
   prefix stripping); the smoke test targets the proxy; the auth rate limiter stays on.
   The API container's start command runs the 0.4a migrate script, then starts the API.
   One CI job builds both images; the container smoke stays one local `pnpm` command.
+  Also (0.G): prove the web container's production branch of the server-side base URL
+  (`apps/web/src/router.tsx` throws when `API_INTERNAL_URL` is unset outside dev): start
+  the web container without it and see the failure, then with it and see the page load.
 - Done when: runtime: the smoke test passes against the containers through the proxy.
 - Status: todo
 - Retries: 0
