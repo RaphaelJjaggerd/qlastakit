@@ -335,7 +335,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   regenerated client keeps the same notes operations; verify fails if a controller
   imports db. Runtime: the API boots and serves the spec at `/api/openapi.json` and the
   docs UI at `/api/docs`.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-19: built NestJS 11 on Express with nestjs-zod 5.6 and @nestjs/swagger 11
@@ -485,6 +485,18 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   - Advised: 2026-11-19: hint. The card and the PRD are sound and the build met its done
     criteria twice; both returns came from the same path (patching the cited line after
     the `/api` move with no repo-wide sweep, plus filter work that belongs to 0.5).
+  - 2026-11-19 (retry 3, per hint): swept the committed tree (`8787`, `VITE_API_URL`,
+    `openapi.json`, `/docs`; generated files, PRD and this file aside). The only stale hit
+    was `.env.example:7`, now `VITE_API_URL=http://localhost:8787/api`, so a fresh copy
+    gives the web app an API URL ending in `/api`; every other hit already says `/api`.
+    Error filter: dropped the unreachable 405/413 table; an `HttpException` with status
+    404 is `not_found`, 500 or above is `internal_error`, else `bad_request`. Correction to
+    the retry 2 log line: the 405/413 mappings never worked and are removed. For 0.5: an
+    oversized body is a 500 `internal_error` today, because Express's body parser throws a
+    plain `http-errors` error (status 413), not a Nest `HttpException`; 0.5 owns the error
+    shape and should handle errors carrying a 4xx `status`. Stubs: none. Wish: a verify
+    check that greps committed docs and config for `localhost:8787` not followed by `/api`
+    (for the 0.G gate). `verify.sh` passes.
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4
