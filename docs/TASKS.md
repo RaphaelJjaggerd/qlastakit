@@ -664,6 +664,36 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     peer dependency plus a devDependency. `verify.sh` passes. Stubs: none. Wish: an
     allowed way to run a node probe and read `.env` files; no web test yet that the
     server base URL comes from the root env (the reviewer's gate suggestion, for 0.G).
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Runtime proof of the first [must], run by the reviewer: a throwaway script (deleted)
+      started the web Vite dev server in middleware mode with a root `.env.reviewprobe`
+      (deleted) holding `http://reviewprobe.example/api` and no `API_INTERNAL_URL` in the
+      shell. It imported `src/router.tsx` through the `ssr` environment's module runner. With
+      cwd `apps/web` (how `turbo run dev` runs it), `process.env.API_INTERNAL_URL` inside SSR
+      and the client's `baseUrl` were both the probe value. Fixed.
+    - Spec: the zod-plugin [must] is closed. The check was attempted, what was found is
+      logged, it is marked partial, and the decision has a reason, which is what the return
+      asked for. The reviewer could not fetch the page here, so the 404 is taken from the log.
+    - [minor] Spec: `apps/web/vite.config.ts:6,9` `loadEnv(mode, "../../")` resolves
+      against the process cwd, not the config file. Started from the repo root (the same
+      probe without `chdir`), it loads no root env: `process.env.API_INTERNAL_URL` stayed
+      undefined in SSR and the dev fallback `localhost:8787/api` was used without any warning.
+      `API_PORT` for the proxy has the same problem (it already did before this card). This
+      matters for 0.7 if Playwright's `webServer` starts vite from the root. Resolve `envDir`
+      from `import.meta.url`.
+    - [minor] Spec: the zod plugin "revisit in 2.4a" is only written in this log. Card 2.4a
+      does not mention it, and its Read list leaves out §3.1, so it will not come up there.
+      Its forms use Better Auth's client anyway, so the first generated-client form is
+      probably a later card. Carry it to whichever card builds the first such form, or to 0.G.
+    - [minor] Spec: the production branch (`router.tsx:14`, throws when the var is unset
+      outside dev) has not been run. Reading the code, it is correct. 4.1's Docker run is
+      the natural place to prove it.
+    - Standards: no findings.
+    - **Recurs:** this is the third finding on the web app's env wiring from the root `.env`
+      (0.4b, 0.6 return, and the cwd-relative `envDir` here). The test 0.G was asked to add
+      (the server-side base URL comes from the root env file) should also run from the repo
+      root.
 
 ## 0.7 Smoke test
 - Read: PRD §6
