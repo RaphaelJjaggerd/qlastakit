@@ -10,12 +10,13 @@
     "generate": "openapi-ts",
     "typecheck": "tsc -p ."
   },
-  "dependencies": {
-    "@tanstack/react-query": "^5.108.0"
-  },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",
     "@qlastakit/config": "workspace:*",
+    "@tanstack/react-query": "^5.108.0",
     "typescript": "^5.9.0"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.108.0"
   }
 }

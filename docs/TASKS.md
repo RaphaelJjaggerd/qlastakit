@@ -581,7 +581,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   no core, db or service code.
 - Done when: the check passes, typecheck passes and the regenerated client is in use by
   the page (0.7's smoke test proves the page in a browser).
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-19: built TanStack Query in the web app. Hey API's `@tanstack/react-query`
@@ -644,6 +644,26 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
       `.env` (0.4b: the `.env` value overrode the new default; 0.6: the `.env` value never
       arrives). The phase gate could add a web test that the server-side base URL comes
       from the root env file.
+  - 2026-11-19 (retry 2): fixed both [must]s and both minors. (1) `vite.config.ts` now
+    copies `API_INTERNAL_URL` from the root env (the `loadEnv(mode, envDir)` it already ran
+    for the proxy) into `process.env` when no real env var is set. Proved with a throwaway
+    script (deleted) that resolved the web Vite config from `apps/web` with a root
+    `.env.probe` (mode `probe`, deleted) holding `http://probe.example/api`: after
+    resolving, `process.env.API_INTERNAL_URL` printed that value (before the fix it would
+    stay undefined). (2) Hey API zod plugin: `heyapi.dev/openapi-ts/plugins/zod` returned
+    404 today; a web search found only preview mirrors of the docs, which say: add `'zod'`
+    to `plugins`, it generates request/response/definition schemas (per-output options,
+    `metadata`), has Zod v4 support in newer docs, `validator: true` on the sdk plugin
+    validates responses, and parts were labelled beta. The installed `@hey-api/openapi-ts`
+    0.99.0 lists zod in its package.json. Not verified against the canonical page, so
+    this is partial. Decision stays: not added, because the web app has no form to
+    validate yet and the core schemas remain the single source; revisit in 2.4a when the
+    first forms arrive. (3) `router.tsx`: server-side base URL has no quiet fallback
+    outside dev; `import.meta.env.DEV` keeps `localhost:8787/api`, otherwise it throws
+    "API_INTERNAL_URL is not set". (4) `@tanstack/react-query` in the api-client is now a
+    peer dependency plus a devDependency. `verify.sh` passes. Stubs: none. Wish: an
+    allowed way to run a node probe and read `.env` files; no web test yet that the
+    server base URL comes from the root env (the reviewer's gate suggestion, for 0.G).
 
 ## 0.7 Smoke test
 - Read: PRD §6

@@ -89,10 +89,6 @@ importers:
         version: 8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
 
   contracts/clients/ts:
-    dependencies:
-      '@tanstack/react-query':
-        specifier: ^5.108.0
-        version: 5.108.0(@types/react@19.3.0)(react@19.3.1)
     devDependencies:
       '@hey-api/openapi-ts':
         specifier: ^0.99.0
@@ -100,6 +96,9 @@ importers:
       '@qlastakit/config':
         specifier: workspace:*
         version: link:../../../packages/ts/config
+      '@tanstack/react-query':
+        specifier: ^5.108.0
+        version: 5.108.0(@types/react@19.3.0)(react@19.3.1)
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
