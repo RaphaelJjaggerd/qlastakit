@@ -49,6 +49,7 @@
                   "drizzle-orm/*",
                   "postgres",
                   "**/db",
+                  "**/db.*",
                   "**/db/*"
                 ],
                 "message": "A controller never touches the database; call a core function (PRD 3.1)."

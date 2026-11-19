@@ -5,7 +5,7 @@ import { createApp } from "../src/app";
 export async function startApp() {
   const app = await createApp();
   await app.listen(0, "127.0.0.1");
-  const { port } = (await app.getHttpServer()).address() as AddressInfo;
+  const { port } = app.getHttpServer().address() as AddressInfo;
   return {
     // Everything is served under /api (PRD 2.6).
     baseUrl: `http://127.0.0.1:${port}/api`,

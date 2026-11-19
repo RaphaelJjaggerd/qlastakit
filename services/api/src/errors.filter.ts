@@ -6,6 +6,13 @@ import type { Response } from "express";
 // Core throws codes; the HTTP status is decided here.
 const STATUS: Record<string, number> = { not_found: 404, validation_error: 400 };
 
+// Framework errors (unknown route, bad JSON, body too large) keyed by status.
+const HTTP_CODE: Record<number, string> = {
+  404: "not_found",
+  405: "method_not_allowed",
+  413: "payload_too_large",
+};
+
 @Catch()
 export class ErrorsFilter implements ExceptionFilter {
   catch(err: unknown, host: ArgumentsHost) {
@@ -14,7 +21,7 @@ export class ErrorsFilter implements ExceptionFilter {
       res.status(STATUS[err.code] ?? 400).json({ error: { code: err.code, message: err.message } });
     } else if (err instanceof HttpException) {
       const status = err.getStatus();
-      const code = status === 404 ? "not_found" : "bad_request";
+      const code = HTTP_CODE[status] ?? "bad_request";
       res.status(status).json({ error: { code, message: err.message } });
     } else {
       console.error(err);

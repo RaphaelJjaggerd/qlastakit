@@ -17,7 +17,7 @@ mise run dev
 ```
 
 Open http://localhost:3000. The notes page reads and writes through the API
-(http://localhost:8787) to Postgres.
+(http://localhost:8787/api) to Postgres.
 
 ## Layout
 

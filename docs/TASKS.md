@@ -335,7 +335,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   regenerated client keeps the same notes operations; verify fails if a controller
   imports db. Runtime: the API boots and serves the spec at `/api/openapi.json` and the
   docs UI at `/api/docs`.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-19: built NestJS 11 on Express with nestjs-zod 5.6 and @nestjs/swagger 11
@@ -411,6 +411,19 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
         but log it.
     - Note: the `/api` choice (spec paths without `/api`, server `/api`, client base URL
       `/api`) follows PRD §2.6. The web app's absolute default URL is logged until 0.6.
+  - 2026-11-19 (retry 2): fixed both [must]s. The controller-db ban now also matches
+    `**/db.*`; re-probed a throwaway `*.controller.ts` importing `../../db.ts` and
+    `../../db.js`: both reported (probe deleted). `AGENTS.md` and `README.md` now give the
+    API as `http://localhost:8787/api`, spec `/api/openapi.json`, docs `/api/docs`.
+    Minors: the error filter maps 404, 405 and 413 to `not_found`, `method_not_allowed`,
+    `payload_too_large`, other `HttpException`s stay `bad_request`; dropped the stray
+    `await` in `harness.ts`. Logged, not changed: the 400 for invalid input no longer
+    carries `issues` (matches PRD §2.2: code and message; the Hono hook sent them); the
+    filter's `HttpException` branch has no test yet, 0.5's "API tests prove each one"
+    covers it; the health response schema is still inline in `health.controller.ts`, not
+    in core (as under Hono), to move when core gets a health schema. Stubs: none.
+    Wish: a verify check that greps the guides for URLs and paths that no longer exist
+    (fifth stale-guide finding; for the 0.G gate). `verify.sh` passes.
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4

@@ -96,8 +96,8 @@ scripts/verify.sh    # potato-eng gate: typecheck, lint, tests, contract drift
 Each mise task is one `pnpm` command: `pnpm install`, `pnpm dev`, `pnpm contract`,
 `pnpm check`, `pnpm format` (oxfmt, writes).
 
-Local URLs: web `http://localhost:3000`, API `http://localhost:8787`,
-spec `http://localhost:8787/openapi.json`.
+Local URLs: web `http://localhost:3000`, API `http://localhost:8787/api`,
+spec `http://localhost:8787/api/openapi.json`, docs `http://localhost:8787/api/docs`.
 
 ## Windows
 
