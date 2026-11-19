@@ -23,7 +23,7 @@ Open http://localhost:3000. The notes page reads and writes through the API
 
 ```
 apps/web                 TanStack Start web app
-services/api             Hono API (business logic lives here)
+services/api             NestJS API (business logic lives here)
 contracts/openapi.json   generated API contract
 contracts/clients/ts     generated TS client (@qlastakit/api-client)
 db/migrations            plain SQL, source of truth for the schema

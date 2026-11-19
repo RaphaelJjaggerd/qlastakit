@@ -2,7 +2,7 @@ import { configureApi } from "@qlastakit/api-client";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
-configureApi(import.meta.env.VITE_API_URL ?? "http://localhost:8787");
+configureApi(import.meta.env.VITE_API_URL ?? "http://localhost:8787/api");
 
 export function getRouter() {
   return createRouter({ routeTree, scrollRestoration: true });

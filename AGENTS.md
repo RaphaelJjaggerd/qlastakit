@@ -5,7 +5,7 @@ Guide for AI agents (and humans) working in this repo. Read this first.
 > **Status: draft.** The kit is still being aligned with its PRD. Read `docs/PRD.md`
 > for locked decisions, open questions and the roadmap, and `docs/VISION.md` for where
 > this is heading. Where this file and the PRD disagree (the PRD locks NestJS, a
-> framework-free core, oxlint + oxfmt and mise tasks; the skeleton still uses Hono),
+> framework-free core, oxlint + oxfmt and mise tasks),
 > the PRD wins. Do not build product features until Phase 0 is done.
 
 Tier: full
@@ -47,7 +47,7 @@ add features to `services/api` and screens to `apps/*`.
 |---|---|---|
 | `apps/web` | Web app, TanStack Start | TS |
 | `apps/*` | Other clients (mobile, desktop, extension) as they are added | any |
-| `services/api` | Main HTTP API, Hono + zod-openapi. **All business logic lives here.** | TS |
+| `services/api` | Main HTTP API, NestJS (Express) + nestjs-zod. **All business logic lives here.** | TS |
 | `services/*` | Other services, any language, each self-contained | any |
 | `contracts/openapi.json` | The API contract. **Generated, never edit by hand.** | none |
 | `contracts/clients/ts` | Generated TS client (`@qlastakit/api-client`) | TS |
@@ -114,7 +114,7 @@ spec `http://localhost:8787/openapi.json`.
 - New feature end to end: `docs/recipes/add-feature.md`
 - New service in another language: `docs/recipes/add-service.md`
 - Notes is the reference feature: logic in `packages/ts/core/src/notes`, its thin API
-  route in `services/api/src/features/notes/routes.ts`. Copy its shape.
+  controller in `services/api/src/features/notes/notes.controller.ts`. Copy its shape.
 
 ## Definition of done
 

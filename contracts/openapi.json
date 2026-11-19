@@ -1,114 +1,54 @@
 {
   "openapi": "3.1.0",
-  "info": {
-    "title": "API",
-    "version": "0.1.0"
-  },
-  "components": {
-    "schemas": {
-      "Note": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "title": {
-            "type": "string"
-          },
-          "body": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "body",
-          "createdAt"
-        ]
-      },
-      "CreateNote": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "body": {
-            "type": "string",
-            "maxLength": 10000,
-            "default": ""
-          }
-        },
-        "required": [
-          "title"
-        ]
-      }
-    },
-    "parameters": {}
-  },
   "paths": {
     "/health": {
       "get": {
         "operationId": "getHealth",
-        "tags": [
-          "system"
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Service is up",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "ok"
-                  ]
+                  "$ref": "#/components/schemas/Health_Output"
                 }
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "system"
+        ]
       }
     },
     "/notes": {
       "get": {
         "operationId": "listNotes",
-        "tags": [
-          "notes"
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Latest notes",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Note"
-                  }
+                  "$ref": "#/components/schemas/NoteListDto_Output"
                 }
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "notes"
+        ]
       },
       "post": {
         "operationId": "createNote",
-        "tags": [
-          "notes"
-        ],
+        "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -123,14 +63,97 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Note"
+                  "$ref": "#/components/schemas/Note_Output"
                 }
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "notes"
+        ]
       }
     }
   },
-  "webhooks": {}
+  "info": {
+    "title": "API",
+    "description": "",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Health_Output": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "additionalProperties": false
+      },
+      "Note_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "NoteListDto_Output": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Note_Output"
+        }
+      },
+      "CreateNote": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "body": {
+            "default": "",
+            "type": "string",
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    }
+  }
 }

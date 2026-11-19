@@ -335,9 +335,32 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   regenerated client keeps the same notes operations; verify fails if a controller
   imports db. Runtime: the API boots and serves the spec at `/api/openapi.json` and the
   docs UI at `/api/docs`.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built NestJS 11 on Express with nestjs-zod 5.6 and @nestjs/swagger 11
+    (Nest 12 is latest but nestjs-zod and swagger-compatible peers stop at 11). Global
+    prefix `/api`; spec at `/api/openapi.json`, docs UI at `/api/docs`; `cleanupOpenApiDoc`
+    applied. Notes and health are controller + module (+ `notes.providers.ts` binding the
+    db into core); Hono removed with its routes files. One error filter keeps the
+    `{ error: { code, message } }` shape. Decorator metadata: none emitted; explicit
+    `@Inject(NOTES)` tokens, `experimentalDecorators` in the API tsconfig, and bodies taken
+    as `unknown` for core to validate. Works identically in tsx (dev, spec export) and
+    Vitest 4 (proved: 15 tests pass, spec export runs, API boots). API tests are unchanged;
+    only the harness base URL gained `/api`. Verify fails if a controller imports db: oxlint
+    override on `services/api/src/**/*.controller.ts` (db package, drizzle, postgres, any
+    `**/db`), proved with a throwaway probe (both imports reported). Runtime: booted the
+    API; `/api/openapi.json` 200, `/api/docs` 200, `/api/health`, `/api/notes`, coded 400
+    and 404. ADR 0004 written. Fixed guide lines (AGENTS.md, README, API AGENTS.md,
+    add-feature recipe). Decisions the PRD left open: spec paths drop `/api` and the spec
+    has server `/api`, so the client's base URL is `/api` and operations keep `/notes`;
+    response schemas get nestjs-zod's `_Output` suffix (`Note_Output`, `NoteListDto_Output`)
+    and the web app does not import those types yet; core zod schemas carry `.meta({ id })`;
+    open `enableCors()` kept until 0.5's allowlist; the web default API URL is now
+    `http://localhost:8787/api` until 0.6 (proxy); API tsconfig now includes `test` and
+    `vitest.config.ts` (closes 0.4a's minor). Stubs: none. Wish: running a server and
+    probing it from the shell (curl, inline env vars) is blocked; I used a scratch Node
+    script. `.claude/commands/new-feature.md` still has stale pointers (0.9).
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4

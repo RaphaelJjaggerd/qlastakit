@@ -33,6 +33,30 @@
           }
         ]
       }
+    },
+    {
+      "files": ["services/api/src/**/*.controller.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@qlastakit/db",
+                  "@qlastakit/db/*",
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "postgres",
+                  "**/db",
+                  "**/db/*"
+                ],
+                "message": "A controller never touches the database; call a core function (PRD 3.1)."
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": [

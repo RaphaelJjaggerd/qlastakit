@@ -22,11 +22,11 @@ export const getHealth = <ThrowOnError extends boolean = false>(options?: Option
 
 export const listNotes = <ThrowOnError extends boolean = false>(options?: Options<ListNotesData, ThrowOnError>): RequestResult<ListNotesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListNotesResponses, unknown, ThrowOnError>({ url: '/notes', ...options });
 
-export const createNote = <ThrowOnError extends boolean = false>(options?: Options<CreateNoteData, ThrowOnError>): RequestResult<CreateNoteResponses, unknown, ThrowOnError> => (options?.client ?? client).post<CreateNoteResponses, unknown, ThrowOnError>({
+export const createNote = <ThrowOnError extends boolean = false>(options: Options<CreateNoteData, ThrowOnError>): RequestResult<CreateNoteResponses, unknown, ThrowOnError> => (options.client ?? client).post<CreateNoteResponses, unknown, ThrowOnError>({
     url: '/notes',
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options?.headers
+        ...options.headers
     }
 });

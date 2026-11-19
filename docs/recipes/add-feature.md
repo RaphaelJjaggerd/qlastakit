@@ -16,12 +16,13 @@ Example: a `projects` feature with list and create.
 
 3. **Core + API feature.** Copy `packages/ts/core/src/notes` to `projects` (adapt
    `schema.ts` and `service.ts`, export from `packages/ts/core/src/index.ts`), then copy
-   `services/api/src/features/notes/routes.ts` to `features/projects` and adapt it as a thin
-   adapter over core, naming schemas with `.openapi(...)`. Give each route a unique
-   `operationId`.
+   the `services/api/src/features/notes` folder (controller, providers, module) to
+   `features/projects` and adapt it: the controller is a thin adapter over one core function
+   and never imports the db (verify fails if it does); the providers file binds the db into
+   core. Give each route a unique `operationId` with `@ApiOperation`, and use
+   `createZodDto` + `@ZodResponse` with core's schemas.
 
-4. **Register** it in `services/api/src/app.ts`:
-   `app.route("/", projectsRoutes);`
+4. **Register** the module in `services/api/src/app.module.ts` (`imports: [...]`).
 
 5. **Regenerate the contract:** `mise run contract`. New functions such as `listProjects()`
    now exist in `@qlastakit/api-client`.
