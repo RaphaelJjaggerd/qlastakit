@@ -335,8 +335,8 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   regenerated client keeps the same notes operations; verify fails if a controller
   imports db. Runtime: the API boots and serves the spec at `/api/openapi.json` and the
   docs UI at `/api/docs`.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-19: built NestJS 11 on Express with nestjs-zod 5.6 and @nestjs/swagger 11
     (Nest 12 is latest but nestjs-zod and swagger-compatible peers stop at 11). Global
@@ -361,6 +361,56 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     `vitest.config.ts` (closes 0.4a's minor). Stubs: none. Wish: running a server and
     probing it from the shell (curl, inline env vars) is blocked; I used a scratch Node
     script. `.claude/commands/new-feature.md` still has stale pointers (0.9).
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      `notes.api.test.ts` is unchanged by the commit; only `harness.ts` gained `/api`.
+      Runtime: started the API with `pnpm --filter @qlastakit/api start` and probed it with
+      a scratch script. `/api/health` 200; `/api/openapi.json` 200 with paths `/health`,
+      `/notes` and server `/api`; `/api/docs` 200 HTML, and its assets
+      (`swagger-ui.css`, `-bundle.js`, `-init.js`) load with the `/api` server; `GET` and
+      `POST /api/notes` 200/201; empty title and missing body give 400 `validation_error`;
+      malformed JSON gives 400 `bad_request`; `/api/nope`, `/notes` and `/openapi.json` give
+      404 `not_found`, all in the `{ error: { code, message } }` shape. The client keeps
+      `getHealth`, `listNotes`, `createNote`. The spec export takes no database: `getDb()`
+      is only called inside the provider's methods. The lint ban: a throwaway
+      `*.controller.ts` probe importing `../../db`, `@qlastakit/db`, `drizzle-orm` and
+      `postgres` got four `no-restricted-imports` errors (probe deleted).
+    - Spec:
+      - [must] The controller-db ban misses imports with an extension. Done-when says
+        "verify fails if a controller imports db". A probe controller importing
+        `../../db.ts` and `../../db.js` passed both `pnpm --filter @qlastakit/api
+        typecheck` and oxlint, so verify would pass. `.oxlintrc.json:51-52` matches only
+        `**/db` and `**/db/*`. This card turned on `allowImportingTsExtensions`
+        (`services/api/tsconfig.json:8`), and the repo already imports with `.ts`
+        (`vitest.config.ts` → `./test/urls.ts`), so `../../db.ts` is a likely path, not a
+        far-fetched one. Add `**/db.*` (or the `.ts`/`.js` forms) to the patterns and probe
+        it again.
+      - [must] Stale agent-guide line. `AGENTS.md:99-100` still gives the spec as
+        `http://localhost:8787/openapi.json`; the card moved it to `/api/openapi.json`, and
+        the old URL now returns 404 (probed). The rule at the top of this file says a card
+        that renames something the guide names fixes those lines in the same card, and the
+        log says the AGENTS.md lines were fixed. Give the API as
+        `http://localhost:8787/api`, the spec as `/api/openapi.json` and the docs as
+        `/api/docs`. **Recurs:** this is the fourth stale-guide finding after a move or
+        rename (0.1, 0.3 twice, now 0.4b). The 0.G gate should turn it into a check: for
+        example, verify could grep the guides for paths and URLs that no longer exist.
+      - [minor] Every non-404 `HttpException` gets the code `bad_request`
+        (`services/api/src/errors.filter.ts:17`), including 413 (body too large) and 405.
+        Map the status to a code, or log this as a 0.5 item.
+      - [minor] The 400 for invalid input no longer carries `issues` (the Hono hook sent
+        them). That matches PRD §2.2 (code and message), but it changes the response and
+        the log does not say so.
+      - [minor] Nothing tests the filter's new `HttpException` branch (unknown route,
+        malformed JSON). 0.5's "API tests prove each one" can cover it; say so in the log.
+    - Standards:
+      - [minor] `services/api/test/harness.ts:12`: `await app.getHttpServer()` awaits a
+        synchronous call. Drop the `await`.
+      - [minor] Possible duplicated source: the health response schema is written inline
+        in `health.controller.ts:6` and not in core, though PRD §3.1 makes core's zod
+        schemas the single source. This was already the case under Hono, so it can wait,
+        but log it.
+    - Note: the `/api` choice (spec paths without `/api`, server `/api`, client base URL
+      `/api`) follows PRD §2.6. The web app's absolute default URL is logged until 0.6.
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4
