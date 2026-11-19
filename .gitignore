@@ -19,3 +19,7 @@ Logs/
 
 # potato-eng scratch: lint probes, throwaway scripts (see AGENTS.md)
 .potato/
+
+# Playwright output
+test-results/
+playwright-report/

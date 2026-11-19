@@ -702,9 +702,27 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   not a build); the only pre-step is the migrate script on the test database. No
   start-and-stop shell script: one `pnpm` command runs it.
 - Done when: runtime: the smoke command passes.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built the Playwright smoke test: `pnpm smoke` (= `playwright test`),
+    `playwright.config.mts`, `e2e/smoke.spec.mts` (open `/`, fill "New note", click Add,
+    expect the note in the list), `e2e/global-setup.mts` (the one pre-step: re-exports the
+    API test global setup, which creates and migrates the test database). Playwright's
+    `webServer` starts the API (`pnpm --filter @qlastakit/api start`, port 8799,
+    `DATABASE_URL` = the test database) and the web dev server (vite dev, port 3100, so the
+    `/api` proxy applies; `API_PORT` and `API_INTERNAL_URL` point at 8799) and stops them.
+    Runtime: `pnpm smoke` passed twice (1 test, about 8s), and `scripts/verify.sh` passes.
+    Decisions the PRD left open: ports 8799/3100 so it never collides with a running dev
+    stack (`reuseExistingServer: false`); config and files are `.mts` because the root
+    package is CommonJS (the same Vite warning 0.2 logged for the Vitest config); the note
+    title carries a timestamp since the test database is not truncated by the smoke run;
+    the test waits for `networkidle` before clicking, because a click before hydration
+    submitted the form natively and the first run failed; `test-results/` and
+    `playwright-report/` gitignored; only Chromium installed (`playwright install
+    chromium`, CI in 0.8 needs the same step). Not done: the sign-up/verify/sign-in steps
+    (2.4a/2.4b extend this test); smoke is not part of `verify.sh` (CI runs it, 0.8).
+    Stubs: none. Wish: none.
 
 ## 0.8 CI
 - Read: PRD §6

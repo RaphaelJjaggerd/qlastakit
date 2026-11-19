@@ -12,12 +12,15 @@
     "lint": "oxlint --type-aware . && oxfmt --check .",
     "format": "oxfmt .",
     "test": "vitest run",
+    "smoke": "playwright test",
     "contract": "pnpm --filter @qlastakit/api openapi:export && pnpm --filter @qlastakit/api-client generate"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "oxfmt": "0.79.0",
     "oxlint": "1.94.0",
     "oxlint-tsgolint": "7.0.2007",
+    "tsx": "^4.23.15",
     "turbo": "^2.11.11",
     "typescript": "^5.9.0",
     "vitest": "^4.1.12"
