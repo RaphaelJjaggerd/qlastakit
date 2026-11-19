@@ -1005,6 +1005,38 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
         out.
     - Standards: no findings. The three new lines are judgement calls with examples, not
       mechanical rules. Mechanical rules would belong in verify.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date). No
+      runtime criterion. Both `[must]`s are fixed. All four retry-costing findings now have
+      a decision. The pino line is on 2.2 (TASKS.md:1167) and the `API_INTERNAL_URL` proof
+      is on 4.1 (TASKS.md:1462); I checked that one against `apps/web/src/router.tsx:9-14`.
+      The zod revisit is logged as dropped, with a reason. The log's other claims hold:
+      `mise.toml:12-14` has `[env] _.file`, `.oxlintrc.json:81-83` bans `**/db.*`, and
+      `.claude/settings.json` is committed. Both line counts come out at the logged numbers
+      (531, 641) when I re-run them. All six review minors are answered.
+    - Spec:
+      - [minor] Card 1.8's "verify passes on the repo" now depends on an owner edit
+        (`.claude/commands/new-feature.md:10`; agent edits under `.claude/` are denied). The
+        dependency is only in the Build prose, so the unattended loop will reach 1.8 and
+        block. Give 1.8 a `Precondition (human)` line, as 1.1 has. Step 4 drops any card
+        whose criteria only the owner can meet, and this edit came after step 4 ran.
+      - [minor] TASKS.md:1121-1122 says `new-feature.md` `:8`, "the reference-feature
+        pointer", is stale too. It is not. Lines 8-10 already point at the core folder plus
+        the route. Only the `routes.ts` path on `:10` is wrong. A path-existence check would
+        not fail on `:8`.
+      - [minor] The 0.3 decision quotes "test names say what they assert / claims match what
+        tests prove". That merges two standards, and neither one covers "a test that proves
+        presence, not behaviour". The accurate decision is "nothing: `/review` already
+        counts presence-only tests as missing".
+      - [minor] The product count (641) includes the generated `routeTree.gen.ts` (68) and
+        `test-setup.ts` (5), but the log says "non-test". 1.G should leave both out, or say
+        it counts them.
+      - [minor] The retry-1 entry was placed above the first `Review: returned`, not after
+        it. Read by position, the card then has a Review line after its latest dated entry,
+        which is the review selector's "already reviewed" signal. 0.4b and 0.6 put retries
+        after the return. Do the same.
+    - Standards: no findings. The new STANDARDS line is a judgement call with a concrete
+      example (0.4b), and it is backed by a finding that cost a retry.
 
 # Phase 1: UI kit in the web app
 
