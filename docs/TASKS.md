@@ -829,6 +829,37 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     `features/notes/routes.ts` (should be `notes.controller.ts`); edits under `.claude/` are
     denied to the agent, so the owner changes that one line. Stubs: none. Wish: write access
     to `.claude/`. `verify.sh` passes.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Re-ran the sweep over the committed tree, excluding `references/`, TASKS.md and the
+      lockfile. Hono, Biome and `just` now appear only as history: PRD §2.1/§7,
+      PRD_REVIEW.md, ADR 0004, the REFERENCES.md translation row (marked "we use NestJS,
+      ADR 0004") and the Hono import ban in `.oxlintrc.json`. "section 6b", "PRD Q1" and
+      next-intl are gone. REFERENCES.md:40 matches PRD §2.4 (i18next + react-i18next). I
+      checked the add-feature recipe against the code. `packages/ts/core/src/notes/{schema,service}.ts`,
+      `features/notes/{notes.controller,notes.providers,notes.module}.ts` and
+      `app.module.ts` `imports: [...]` all exist. The controller uses `@ApiOperation`,
+      `createZodDto` and `ZodResponse`. The generated `listNotesOptions` and
+      `createNoteMutation` exist in `contracts/clients/ts/src/gen/@tanstack/react-query.gen.ts`
+      and `apps/web/src/routes/index.tsx` uses them as step 6 says. The next migration
+      number, 0002, is correct. The language READMEs and add-service step 7 match `mise.toml`:
+      every task is one `pnpm` command.
+    - Spec:
+      - [minor] `.claude/commands/new-feature.md:10` still says `features/notes/routes.ts`.
+        The builder logged this as left for the owner. It does not name Hono, Biome or `just`,
+        so the done criterion holds, but `/new-feature` points agents at a file that does
+        not exist. Owner: change it to `notes.controller.ts`.
+      - [minor] `docs/recipes/add-service.md:14`: `build` is listed among the scripts "the
+        mise tasks call", but `mise.toml` has no `build` task. Only the root `pnpm build`
+        script exists. Either drop `build` or say "root scripts (and the mise tasks that
+        call them)".
+      - [minor] `docs/recipes/add-feature.md:5-11`: the example `projects` table has no
+        org id. PRD §3.1 says every product table has one, and 2.7's org-id check will
+        reject this example. This was already wrong before 0.9 and orgs do not exist yet, but
+        2.7 should update the recipe.
+      - [minor] `docs/recipes/add-feature.md:34` ends with `mise run check`, which skips
+        tests and contract drift. The Definition of done in AGENTS.md is `scripts/verify.sh`.
+    - Standards: no findings.
 
 ## 0.G Phase 0 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
