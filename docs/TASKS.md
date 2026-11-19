@@ -335,8 +335,8 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   regenerated client keeps the same notes operations; verify fails if a controller
   imports db. Runtime: the API boots and serves the spec at `/api/openapi.json` and the
   docs UI at `/api/docs`.
-- Status: done
-- Retries: 1
+- Status: todo
+- Retries: 2
 - Log:
   - 2026-11-19: built NestJS 11 on Express with nestjs-zod 5.6 and @nestjs/swagger 11
     (Nest 12 is latest but nestjs-zod and swagger-compatible peers stop at 11). Global
@@ -424,6 +424,53 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     in core (as under Hono), to move when core gets a health schema. Stubs: none.
     Wish: a verify check that greps the guides for URLs and paths that no longer exist
     (fifth stale-guide finding; for the 0.G gate). `verify.sh` passes.
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes. Lint ban: a throwaway `*.controller.ts` probe
+      importing `../../db.ts`, `../../db.js`, `../../db` and `../../db.mjs` got four
+      `no-restricted-imports` errors (probe deleted). Guides: `AGENTS.md:99-100` and
+      `README.md:20` now give `/api`. Runtime: started the API with `pnpm --filter
+      @qlastakit/api start` and probed it with a scratch script. `/api/health` 200;
+      `/api/openapi.json` 200 with paths `/health`, `/notes` and server `/api`; `/api/docs`
+      200 Swagger UI; `GET` and `POST /api/notes` 200/201; malformed JSON 400
+      `bad_request`; empty title 400 `validation_error`; `/api/nope` and `/notes` 404
+      `not_found`. The 0.4a tests and the client's three operations are unchanged.
+    - Spec:
+      - [must] The committed env template still points the web app at the API root.
+        `.env.example:7` is `VITE_API_URL=http://localhost:8787`, with no `/api`. The
+        README quick start (`README.md:12`) copies it to `.env`. Vite reads `.env` from
+        the repo root (`apps/web/vite.config.ts:7`, `envDir: "../../"`), and
+        `apps/web/src/router.tsx:5` uses `VITE_API_URL ?? "http://localhost:8787/api"`,
+        so the env value wins over the new default. The client then calls
+        `http://localhost:8787/notes` (`sdk.gen.ts` uses `url: '/notes'`), and that
+        returns 404 (probed). Following the documented setup breaks the notes page, the
+        reference feature. The log says the web default is now `/api`, but the committed
+        env file overrides it. Set `VITE_API_URL=http://localhost:8787/api` in
+        `.env.example` until 0.6 moves the client to `/api` through the proxy. Grep for
+        every other committed place that names the API origin. (I did not run the web
+        app; this follows from the four lines cited plus the probe of `/notes`.)
+        **Recurs:** this is the sixth stale-reference finding after a move or rename
+        (0.1, 0.3 twice, 0.4b twice), and the first review of this card missed it too.
+        0.G should make it a check, for example: verify greps committed docs and config
+        (`*.md`, `.env.example`, `*.toml`) for `localhost:8787` not followed by `/api`.
+      - [minor] The log says the filter now maps 405 and 413 to `method_not_allowed` and
+        `payload_too_large`, but neither happens. A 2 MB JSON body gives **500
+        `internal_error`**: Express's body parser throws a plain `http-errors` error with
+        `status` 413, not a Nest `HttpException`, so it falls into the 500 branch. `DELETE
+        /api/notes` gives 404, because Express never sends 405. So the two new
+        `HTTP_CODE` entries (`services/api/src/errors.filter.ts:10-14`) never fire, and a
+        client error is reported as a server error, against PRD §2.2 "codes, not text".
+        Either handle errors that carry a numeric `status`/`statusCode` (4xx) in the
+        filter, or drop the dead entries and log the oversized-body 500 for 0.5. Fix the
+        log line either way, because 0.5 will read it. (My earlier note on this card said
+        413 got `bad_request`; that was wrong too, because it never reached that branch.)
+      - [minor] Any other `HttpException` status, including 5xx, gets `bad_request`
+        (`errors.filter.ts:24`). For example, a thrown `InternalServerErrorException`
+        returns 500 `bad_request`. Fall back to `internal_error` for status ≥ 500.
+    - Standards:
+      - [minor] Possible speculative generality: the unreachable 405/413 entries above.
+        A lookup table for one reachable status (404) is more structure than the code
+        needs.
+    - Note: the round 1 fixes hold. The `/api` design still follows PRD §2.6.
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4
