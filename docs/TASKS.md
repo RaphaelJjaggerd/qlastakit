@@ -1037,6 +1037,11 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
         after the return. Do the same.
     - Standards: no findings. The new STANDARDS line is a judgement call with a concrete
       example (0.4b), and it is backed by a finding that cost a retry.
+  - 2026-11-19 Raphael: signed off without CI. GitHub Actions is blocked by a billing
+    lock on the account, so the workflow has not run. `scripts/verify.sh` and `pnpm smoke`
+    pass locally on `phase-0`; the branch is pushed and PR #1 is open. Owner exception to
+    the gate rule: 0.8 stays `Awaiting sign-off` until CI has run green once on GitHub,
+    and Phase 1 starts with it open.
 
 # Phase 1: UI kit in the web app
 
