@@ -497,6 +497,26 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     shape and should handle errors carrying a 4xx `status`. Stubs: none. Wish: a verify
     check that greps committed docs and config for `localhost:8787` not followed by `/api`
     (for the 0.G gate). `verify.sh` passes.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      Sweep: `git grep` for `8787`, `VITE_API_URL`, `openapi.json` and `/docs` outside
+      generated files, the PRD and this file finds no stale API root; the only bare
+      `8787` hits are `API_PORT` and the listen default. Runtime: booted the API with
+      `pnpm --filter @qlastakit/api start` and probed it with a scratch script (deleted).
+      `/api/health` 200, `/api/openapi.json` 200, `/api/docs` 200 Swagger UI, `GET`/`POST
+      /api/notes` 200/201, empty title 400 `validation_error`, malformed JSON 400
+      `bad_request`, `/api/nope` and `/notes` 404 `not_found`, 2 MB body 500
+      `internal_error` (logged for 0.5). `VITE_API_URL` read from `.env.example` plus
+      `/notes` gives 200. The diff touches only `.env.example`, the filter and this log,
+      as the hint asked.
+    - Spec:
+      - [minor] An `HttpException` with status 500 or above now gets `internal_error`, but
+        it still sends `err.message` (`services/api/src/errors.filter.ts:18`), while the
+        non-HTTP 500 branch hides the message behind "Something went wrong". For 0.5's
+        error shape: decide whether 5xx messages reach the client.
+    - Standards: none.
+    - Note: the stale-reference finding recurs across 0.1, 0.3 and 0.4b. It is already
+      on the 0.G wish list as a verify grep.
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4
