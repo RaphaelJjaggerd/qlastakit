@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: ["phase-*"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      # Same credentials and database name as .env.example, which the tests and the smoke
+      # run boot from. The test database (app_test) is created by the test setup.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version comes from packageManager in package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # typecheck, lint, tests (API tests on the Postgres service), contract drift
+      - run: bash scripts/verify.sh
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm smoke
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: |
+            Logs/
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore

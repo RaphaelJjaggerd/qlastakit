@@ -760,9 +760,23 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
 - Done when: the workflow file runs the verify steps and the 0.7 smoke command with a
   Postgres service.
 - Sign-off (owner, after close): the owner pushed `phase-0` and the run was green.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built `.github/workflows/ci.yml`: runs on pushes to `phase-*` and on PRs,
+    one job on ubuntu with a `postgres:17` service (same user, password and database as
+    `.env.example`, so tests and the smoke run boot from it alone). Steps: checkout, pnpm
+    (version from `packageManager`), Node 22 with pnpm cache, `pnpm install
+    --frozen-lockfile`, `bash scripts/verify.sh` (typecheck, lint, tests on the Postgres
+    service, contract drift), `playwright install --with-deps chromium`, `pnpm smoke`;
+    logs and Playwright output upload as an artifact on failure. `verify.sh` passes
+    locally. Not run: the workflow itself (needs a push to GitHub; that is the owner's
+    sign-off). Decisions the PRD left open: one job rather than two, so install and the
+    Postgres service are shared; concurrency group cancels superseded runs. Stubs: none.
+    Wish: the 0.7 reviewer's notes for 0.9 still stand (document `pnpm smoke` and the
+    Chromium install in AGENTS.md Commands). Watch the smoke's `networkidle` wait for
+    flakiness on the runner.
+  - Awaiting sign-off: the owner pushed `phase-0` and the run was green.
 
 ## 0.9 Docs match the code
 - Read: PRD §3, §4, §5
