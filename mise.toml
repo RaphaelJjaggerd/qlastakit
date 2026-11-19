@@ -10,7 +10,7 @@ pnpm = "10"
 # uv = "latest"
 
 [env]
-# Loads .env for every task (db/migrate.sh reads DATABASE_URL from the environment).
+# Loads .env for every task (the migrate script reads DATABASE_URL from the environment).
 _.file = ".env"
 
 [tasks.setup]

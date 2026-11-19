@@ -101,11 +101,12 @@ spec `http://localhost:8787/openapi.json`.
 
 ## Windows
 
-- Shell scripts (`scripts/*.sh`, `db/migrate.sh`, hooks) run in Git Bash.
+- Shell scripts (`scripts/*.sh`, hooks) run in Git Bash.
 - Postgres runs in Docker Compose (`mise run db-up`). Any Docker-compatible runtime
   works (Docker Desktop, Kiri, Podman) as long as `docker` and `docker compose` are on
   the PATH.
-- `psql` is not needed on the host: `db/migrate.sh` runs it inside the Postgres container.
+- Migrations run from Node (`packages/ts/db/src/migrate.ts`, via `mise run db-migrate`);
+  `psql` is not needed on the host.
 - Line endings are LF everywhere (`.gitattributes`). Do not commit CRLF.
 
 ## Common tasks

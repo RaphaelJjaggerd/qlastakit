@@ -21,6 +21,7 @@
   "devDependencies": {
     "@qlastakit/config": "workspace:*",
     "@types/node": "^22.0.0",
+    "postgres": "^3.4.7",
     "tsx": "^4.23.15",
     "typescript": "^5.9.0"
   }

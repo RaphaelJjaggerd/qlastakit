@@ -260,7 +260,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   API tests that create and list notes against the existing Hono API.
 - Done when: the API tests pass on real Postgres; verify fails with a clear message when
   Postgres is unreachable.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-18: blocked, waiting for: Docker Desktop is installed and running (no dated
@@ -269,6 +269,27 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   - 2026-11-19 Raphael: Kiri installed and running; `docker` and `docker compose` work,
     `mise run db-up` starts Postgres, and `mise run db-migrate` (psql now runs inside the
     container) applied 0001 on the first run and nothing on the second. Checked, passes.
+  - 2026-11-19: built the Node migrate script (`packages/ts/db/src/migrate.ts`, CLI
+    `migrate-cli.ts`, run by `mise run db-migrate` through `pnpm --filter @qlastakit/db
+    migrate`): ordered files, `schema_migrations`, one transaction per file, same
+    behaviour as the shell script; `db/migrate.sh` deleted. API test harness in
+    `services/api/test`: `global-setup.ts` creates the second database (`TEST_DB_NAME`,
+    default `app_test`, same Postgres) and migrates it; `setup.ts` truncates all tables
+    except `schema_migrations` before each test; `harness.ts` starts the app in-process
+    on port 0 and tests use `fetch`; API project has `fileParallelism: false` and
+    `DATABASE_URL` pointed at the test database. `notes.api.test.ts`: list empty,
+    create and list, invalid input (coded error), and a pair proving truncation between
+    tests. Unreachable Postgres: global setup fails with "API tests need Postgres at
+    localhost:5432 and it is not reachable (ECONNREFUSED). Start it with: mise run
+    db-up"; proved by running verify with the container down (verify prints it first).
+    Fixed the stale `db/migrate.sh` mentions in AGENTS.md, ADR 0002 and mise.toml.
+    Decisions the PRD left open: the migrate code lives in the db package and is exported
+    as `@qlastakit/db/migrate` for the test setup; `TEST_DB_NAME` added to
+    `.env.example`; the test setup falls back to the `.env.example` URL when
+    `DATABASE_URL` is unset (0.5 moves this to loading `.env.example`); `vitest.config.ts`
+    in the API imports `./test/urls.ts` with its extension (native config loader).
+    Stubs: none. Wish: shell commands that set an env var inline (to prove the
+    unreachable case against a wrong port) are blocked; I stopped the container instead.
 
 ## 0.4b NestJS API
 - Read: PRD §2.2, §2.6, §3.1, §3.3, §6
