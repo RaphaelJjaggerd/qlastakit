@@ -290,6 +290,37 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     in the API imports `./test/urls.ts` with its extension (native config loader).
     Stubs: none. Wish: shell commands that set an env var inline (to prove the
     unreachable case against a wrong port) are blocked; I stopped the container instead.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (5 test files, 15 tests, the 5 API tests
+      included). Unreachable: stopped the Compose Postgres (`pnpm db:down`), ran verify; it
+      fails at the test step and prints "API tests need Postgres at localhost:5432 and it
+      is not reachable (ECONNREFUSED). Start it with: mise run db-up". Started it again.
+      First run: dropped `app_test`, ran `pnpm test`; global setup recreated and migrated
+      it, all 15 passed. `mise run db-migrate` on the dev database prints "migrations up
+      to date": the Node script reads the `schema_migrations` rows the shell script wrote.
+      The tests use the test database, not `app`: "does not see the previous test's note"
+      would fail if the app wrote to a database the truncation does not clear. No
+      `db/migrate.sh` mention is left outside history and the PRD/review docs. The Node
+      script is a small improvement on the shell one: the `schema_migrations` insert is
+      now in the same transaction as the file.
+    - Spec:
+      - [minor] `services/api/tsconfig.json:7` includes only `src`, so
+        `test/global-setup.ts`, `test/setup.ts` and `test/urls.ts` are not typechecked
+        (`test/harness.ts` is, through the test file's import). 0.2 logged the same gap for
+        `vitest.config.ts`; this card did not log it. Add `test` to the include (and the
+        config file), or log it. 0.4b rewrites the harness, so it can do this.
+      - [minor] `services/api/test/global-setup.ts:12-18`: any failure of the first query
+        is reported as "not reachable", including a wrong password (`28P01`) or a missing
+        admin database. The code is in the message, so it is still diagnosable, but say
+        "could not connect" or branch on connection codes.
+    - Standards:
+      - [minor] Possible mysterious name: `notes.api.test.ts:43` "starts from empty
+        tables in every test" asserts nothing; it only leaves a note behind for the next
+        test, which holds the claim. Name it for what it does ("leaves a note behind for
+        the next test") and add `expect(res.status).toBe(201)` so the pair cannot pass
+        because the post failed.
+    - Note: the recurring stale-guide finding from 0.1 and 0.3 did not recur: this card
+      fixed its `db/migrate.sh` mentions in the same change.
 
 ## 0.4b NestJS API
 - Read: PRD §2.2, §2.6, §3.1, §3.3, §6
