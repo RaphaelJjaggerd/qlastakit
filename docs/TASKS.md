@@ -865,7 +865,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
 - Done when: all six steps below are logged, even if a decision is "nothing"; the card
   closes with `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`.
-- Status: todo
+- Status: done
 - Retries: 0
 - Steps:
   1. Wishes: read every task log in this phase and list each "wish the project had X".
@@ -888,6 +888,39 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   5. Scope: no card in this phase added an idea-app or product feature.
   6. Log every decision, including "nothing".
 - Log:
+  - 2026-11-19: gate steps.
+    1. Wishes found in logs: write access to `.claude/` and `.env`, and shell deletes of
+       probe files (0.1, 0.3, 0.9; the probes are gone now, only `.claude/commands/new-feature.md:10`
+       is left, owner edit: `features/notes/routes.ts` -> `notes.controller.ts`, and `:8` the
+       reference-feature pointer); inline env vars and server probing from the shell (0.4a,
+       0.4b); heredocs and `sed -i` (0.6); a verify check for stale references (0.4b);
+       a web test that the server base URL comes from the root env (0.6); document
+       `pnpm smoke` (0.8, done in 0.9).
+    2. Parked list (PRD §8): no logged wish matches a trigger; nothing comes back. Gaps in
+       what Phase 0 shipped become cards: 1.8 and 1.9 below.
+    3. Retro. Repeated and mechanical: stale references after a move or rename (six
+       findings, 0.1, 0.3 twice, 0.4b three) -> card 1.8 (verify check). Web env wiring from
+       the root `.env` (0.4b, 0.6 twice) -> card 1.9 (test plus `envDir` fix). Files outside
+       `src` not typechecked (0.2, 0.4a, 0.7) -> a line added to card 2.4a (root tsconfig for
+       the Playwright files), no card of its own. Judgement: three lines added to
+       `docs/STANDARDS.md` (claims match what code and tests prove; test names say what
+       they assert; sweep the tree after a rename). AGENTS.md: nothing to delete; no
+       navigation pointer needed. Carried, not carded: Hey API zod plugin revisit (0.6) goes to
+       the first card with a generated-client form, none identified yet; Nest's logger
+       through pino (0.5 minor) waits for 2.2 jobs; production branch of the web
+       `API_INTERNAL_URL` check is proved in 4.1.
+    4. Limits: 1.8 and 1.9 pass (no owner-only criterion, the stale-reference class cost
+       retries in three cards, tooling stays small). Phase 1 now has 9 cards plus the gate.
+       Line counts (git-tracked, approximate): tooling (scripts, e2e, CI, mise, lint config,
+       vitest/playwright config, API test harness) 482; product source (web, API, core,
+       db, ui `src`) 933.
+    5. Scope: no card in Phase 0 added an idea-app or product feature (notes is the
+       reference feature, kept by the PRD).
+    6. Decisions: the above; "nothing" for AGENTS.md pruning and for parked items.
+  - Open for the owner: card 0.8's sign-off (push `phase-0`, CI green; the `networkidle`
+    wait in the smoke test is unproven on a runner) and the `.claude/commands/new-feature.md`
+    edit.
+  - Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green.
 
 # Phase 1: UI kit in the web app
 
@@ -964,6 +997,29 @@ Ref: ui-kit (reuse).
 - Retries: 0
 - Log:
 
+## 1.8 Stale-reference check
+- Read: PRD §6
+- Build: a `scripts/verify.sh` check that fails on stale references in committed docs and
+  config: backticked repo paths in `AGENTS.md`, `README.md`, `docs/recipes` and app/service
+  agent guides that do not exist, and `localhost:8787` not followed by `/api` in `*.md`,
+  `.env.example` and `*.toml`. (Added by the 0.G retro: six stale-reference findings in 0.1,
+  0.3 and 0.4b.)
+- Done when: verify passes on the repo and fails on a throwaway stale path and a bare
+  `localhost:8787` (both proved, probes removed).
+- Status: todo
+- Retries: 0
+- Log:
+
+## 1.9 Web env from the root file
+- Read: PRD §2.6
+- Build: resolve `envDir` in `apps/web/vite.config.ts` from `import.meta.url`, not the cwd;
+  a web test that the server-side API base URL comes from the root env file, run from the
+  repo root. (Added by the 0.G retro: three findings on this wiring in 0.4b and 0.6.)
+- Done when: the test passes from the repo root and from `apps/web`; verify passes.
+- Status: todo
+- Retries: 0
+- Log:
+
 ## 1.G Phase 1 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
 - Done when: the six steps of the 0.G gate are logged for this phase, even if a decision
@@ -1019,7 +1075,8 @@ Ref: supastarter (study): auth, mail, organizations.
   out; those auth screens rebuilt on it; the session replaces the 1.5 stub. The web auth
   client declares the `personal` field by hand, never importing the server's `auth`
   type. The notes endpoints require a session from here on; the API tests get a sign-in
-  helper.
+  helper. Also (0.G): the root `playwright.config.mts` and `e2e/*.mts` get a tsconfig in
+  the typecheck run, since this card makes the smoke test bigger.
 - Done when: 1.5's "a protected route never renders without a session" web test passes
   again, now against the real Better Auth session (same test, stub replaced); runtime:
   the smoke test signs up, signs in and creates a note.
