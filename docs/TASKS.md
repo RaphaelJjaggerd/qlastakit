@@ -865,8 +865,8 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
 - Done when: all six steps below are logged, even if a decision is "nothing"; the card
   closes with `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Steps:
   1. Wishes: read every task log in this phase and list each "wish the project had X".
   2. Parked list: for each parked item in PRD §8, does a logged wish match its trigger?
@@ -921,6 +921,60 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     wait in the smoke test is unproven on a runner) and the `.claude/commands/new-feature.md`
     edit.
   - Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green.
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date). No
+      runtime criterion. I re-read every Phase 0 log and review against the six steps. The
+      wish list, the parked-list decision, the three STANDARDS lines (each backed by two or
+      more findings: 0.4b/0.5 claims, 0.4a/0.5 test names, 0.1/0.3/0.4b sweeps), cards 1.8
+      and 1.9, and the count of 9 cards plus the gate all match the logs.
+    - Spec:
+      - [must] Step 3 is incomplete. It asks for a decision on "each finding that appeared
+        more than once, or that cost a retry". Four `[must]`s that cost a retry have no
+        decision in the log, not even "nothing":
+        0.1 `.env` loading dropped in the mise swap (TASKS.md:68). Env wiring is the
+        retro's own class, yet the retro lists only 0.4b and 0.6.
+        0.3 coded errors tested only through the constructor (TASKS.md:193), a test that
+        proves presence, not behaviour.
+        0.4b the controller-db ban missed `.ts`/`.js` imports (TASKS.md:379). The lint ban
+        was proved with a probe that did not cover the forms the repo uses.
+        0.6 "check the zod plugin docs" done from memory (TASKS.md:627). The retro carries
+        the plugin revisit but does not classify the finding.
+        For each one, say mechanical (a card), judgement (a STANDARDS line) or "nothing,
+        because ...". The done criterion is "all six steps are logged, even if a decision is
+        'nothing'".
+      - [must] Two "carried" decisions are not on the cards they name.
+        "Nest's logger through pino waits for 2.2 jobs" (TASKS.md:909-910): card 2.2 (Jobs)
+        does not mention it.
+        "the production branch of the web `API_INTERNAL_URL` check is proved in 4.1"
+        (TASKS.md:910-911): card 4.1 (Dockerfiles) does not mention it.
+        `/task` reads the card, not the 0.G log, so neither will happen. By the first
+        project standard, a log line claims only what is true. Add a line to each card, as
+        was done for 2.4a, or log them as dropped. **Recurs:** the 0.6 review raised this
+        same problem for the zod-plugin revisit, which only its log mentioned
+        (TASKS.md:685). That revisit is still only in a log ("none identified yet").
+      - [minor] Step 3 says to read every `blocked` reason. 0.4a was blocked waiting for its
+        Docker precondition (TASKS.md:266), and the retro does not mention it. Log
+        "expected precondition wait, nothing".
+      - [minor] The most repeated wish has no decision. Six cards (0.1, 0.3, 0.4a, 0.4b,
+        0.6, 0.9) asked for shell permissions: deleting probe files, inline env vars, server
+        probes, heredocs, `sed -i`, `.env` and `.claude/` writes. `.claude/settings.json`
+        is committed, so an allowlist change by the owner is one possible action. Log
+        whether the owner should make it, or "nothing" with a reason.
+      - [minor] Step 3 sends a mechanical finding to "a card in the next phase". Typechecking
+        the root `e2e/` and `playwright.config.mts` files was folded into Phase 2's 2.4a
+        instead. The reason is logged, which is fine, but say plainly that this departs from
+        the step.
+      - [minor] Step 4's line counts (tooling 482, product 933) do not say which files they
+        cover. I counted `scripts/`, `e2e/`, `.github/`, `mise.toml`, `.oxlintrc.json`, the
+        vitest and playwright configs and `services/api/test` and got 512. 1.G cannot
+        compare against a number it cannot reproduce. Record the command.
+      - [minor] Card 1.8's scope (`AGENTS.md`, `README.md`, `docs/recipes`, app/service
+        guides) leaves out `.claude/commands/*.md`, where the one known stale path is
+        (`.claude/commands/new-feature.md:10`). Its "verify passes on the repo" would pass
+        with that line still wrong. Add `.claude/commands` to the scope, or say why it is
+        out.
+    - Standards: no findings. The three new lines are judgement calls with examples, not
+      mechanical rules. Mechanical rules would belong in verify.
 
 # Phase 1: UI kit in the web app
 
