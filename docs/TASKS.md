@@ -336,7 +336,7 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   imports db. Runtime: the API boots and serves the spec at `/api/openapi.json` and the
   docs UI at `/api/docs`.
 - Status: todo
-- Retries: 2
+- Retries: 0
 - Log:
   - 2026-11-19: built NestJS 11 on Express with nestjs-zod 5.6 and @nestjs/swagger 11
     (Nest 12 is latest but nestjs-zod and swagger-compatible peers stop at 11). Global
@@ -471,6 +471,20 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
         A lookup table for one reachable status (404) is more structure than the code
         needs.
     - Note: the round 1 fixes hold. The `/api` design still follows PRD §2.6.
+  - Hint: both attempts fixed only the lines the checker named, so each review found the
+    next stale consumer of the moved API root; sweep the committed tree yourself
+    (`git grep` for `localhost:8787`, `VITE_API_URL`, `openapi.json` and `/docs`, generated
+    files aside), fix every hit starting with `.env.example:7`, and confirm that a fresh
+    copy of `.env.example` gives the web app an API URL ending in `/api`. In the error
+    filter stop adding status mappings, because the error shape is 0.5's card: drop the
+    unreachable 405/413 entries, send an `HttpException` with status 500 or above to
+    `internal_error`, log the oversized-body 500 (Express throws a plain `http-errors`
+    error, not a Nest `HttpException`) as a 0.5 item, and correct the retry 2 log line
+    that claims those mappings work. The NestJS build itself passed both reviews, so
+    change nothing else.
+  - Advised: 2026-11-19: hint. The card and the PRD are sound and the build met its done
+    criteria twice; both returns came from the same path (patching the cited line after
+    the `/api` move with no repo-wide sweep, plus filter work that belongs to 0.5).
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4
