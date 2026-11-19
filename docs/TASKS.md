@@ -1049,9 +1049,12 @@ Ref: ui-kit (reuse).
 - Read: PRD §3.4, §3.5
 - Done when: `/vet ui-kit` has written its report with keep, fix or reject per file, and
   no verdict needs an owner decision.
-- Status: todo
+- Status: blocked
 - Retries: 0
 - Log:
+  - 2026-11-19: blocked, waiting for: the owner unpacks the finished UI project into the
+    references folder (no dated owner sign-off line in this Log). Owner: add
+    `YYYY-MM-DD: owner: checked, passes.` and set the card back to `todo`.
 
 ## 1.2 Move the UI kit
 - Read: PRD §2.5, §3.4, §3.5
