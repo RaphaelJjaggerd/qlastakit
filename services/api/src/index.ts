@@ -1,7 +1,7 @@
 import { createApp } from "./app";
+import { loadEnv } from "./env";
 
-const port = Number(process.env.API_PORT ?? 8787);
-
-const app = await createApp();
-await app.listen(port);
-console.log(`api listening on http://localhost:${port}`);
+const env = loadEnv();
+const app = await createApp({ env });
+await app.listen(env.API_PORT);
+console.log(`api listening on http://localhost:${env.API_PORT}`);

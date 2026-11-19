@@ -1,5 +1,5 @@
 import { defineConfig } from "vitest/config";
-import { testUrl } from "./test/urls.ts";
+import { exampleEnv, testUrl } from "./test/urls.ts";
 
 // Real Postgres (second database, created and migrated by global-setup), tables
 // truncated between tests, test files run one at a time.
@@ -10,7 +10,7 @@ export default defineConfig({
     include: ["src/**/*.test.ts"],
     globalSetup: ["./test/global-setup.ts"],
     setupFiles: ["./test/setup.ts"],
-    env: { DATABASE_URL: testUrl },
+    env: { ...exampleEnv, NODE_ENV: "test", DATABASE_URL: testUrl, LOG_LEVEL: "silent" },
     fileParallelism: false,
     passWithNoTests: true,
   },

@@ -2,8 +2,8 @@
 import type { AddressInfo } from "node:net";
 import { createApp } from "../src/app";
 
-export async function startApp() {
-  const app = await createApp();
+export async function startApp(options: Parameters<typeof createApp>[0] = {}) {
+  const app = await createApp(options);
   await app.listen(0, "127.0.0.1");
   const { port } = app.getHttpServer().address() as AddressInfo;
   return {

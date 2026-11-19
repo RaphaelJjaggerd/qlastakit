@@ -527,9 +527,30 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   the spec export load `.env.example`; dev loads `.env`, copied from it by setup). Every
   later card that adds an env var adds it to `.env.example`.
 - Done when: API tests prove each one, including a refused boot on a bad env.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built `services/api/src/env.ts` (zod schema: NODE_ENV, API_PORT,
+    DATABASE_URL, CORS_ORIGINS, LOG_LEVEL; one error naming every problem; no provider keys
+    yet, each module card adds its own rule there). `createApp({ env?, logStream? })`
+    validates first, then applies helmet, pino-http (JSON line per request, request id from
+    an incoming `x-request-id` or a new UUID, echoed back in the response) and the CORS
+    allowlist (`CORS_ORIGINS`, empty default = no cross-origin caller). Error filter: 4xx
+    from Express (`http-errors` status) now keep their status (413 is `payload_too_large`,
+    other 4xx `bad_request`, 404 `not_found`), so the oversized-body 500 logged in 0.4b is
+    fixed; any 5xx (Nest or not) is logged and sends `internal_error` with the fixed message
+    "Something went wrong", never the thrown message (closes 0.4b's last minor). Tests load
+    `.env.example` (vitest config, `test/urls.ts`) and the spec export runs with
+    `--env-file=../../.env.example`; `.env.example` gained NODE_ENV, CORS_ORIGINS and
+    LOG_LEVEL. `baseline.api.test.ts` (12 tests) proves: bad env refuses (`loadEnv` and
+    `createApp`), boot from `.env.example` alone, helmet headers, CORS allowed/blocked/
+    default-empty, coded 404/400/413, 5xx message hidden, request id generated and reused
+    and present in the log line. Decisions the PRD left open: pino-http directly rather
+    than nestjs-pino (fewer deps); log shape is pino-http's default (`req.id`); the
+    5xx filter test uses a fake host because no route throws a 5xx on purpose; helmet
+    defaults, untuned (Swagger UI docs still load). Not proven: the NODE_ENV=production
+    refusal with `console`/`fake` adapters (no adapter exists until 2.3). Stubs: none.
+    Wish: none.
 
 ## 0.6 TanStack Query
 - Read: PRD §2.5, §2.6, §3.3, §4, §5
