@@ -17,5 +17,5 @@ members = ["packages/rust/*", "services/api-rs"]
 ```
 
 `mise run setup` and `mise run check` do not cover Rust yet. Once that file exists, add
-the Rust steps (`cargo fetch`, `cargo check`) to those mise tasks (0.1 dropped them with `just`).
+the Rust steps (`cargo fetch`, `cargo check`) to the root `package.json` scripts the mise tasks call.
 Suggested crates: axum or rocket, sqlx (Postgres), jsonwebtoken, utoipa (OpenAPI).

@@ -115,6 +115,7 @@ spec `http://localhost:8787/api/openapi.json`, docs `http://localhost:8787/api/d
 - New service in another language: `docs/recipes/add-service.md`
 - Notes is the reference feature: logic in `packages/ts/core/src/notes`, its thin API
   controller in `services/api/src/features/notes/notes.controller.ts`. Copy its shape.
+- Browser smoke test: `pnpm exec playwright install chromium` once, then `pnpm smoke`.
 
 ## Definition of done
 

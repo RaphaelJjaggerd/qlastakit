@@ -813,9 +813,22 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   and mise; stale pointers ("section 6b", "PRD Q1", next-intl) point at §3.4 and §3.5.
 - Done when: no doc mentions Hono, Biome or `just` except as history; the add-feature
   recipe's steps match the layout.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: swept the committed tree (`git grep` for hono, biome, `just`, "6b", "PRD Q",
+    next-intl). Fixed: `docs/REFERENCES.md` (section 6b → PRD §3.4/§3.5, next-intl row →
+    i18next per PRD §2.4, Hono row notes NestJS and ADR 0004); `docs/recipes/add-feature.md`
+    (step 6 uses the generated query hooks, not a `loader`; step 5 names the hooks);
+    `docs/recipes/add-service.md` and the Go, Python and Rust package READMEs (add steps to
+    the root `package.json` scripts the mise tasks call, closing 0.1's minor; dropped the
+    "0.1 dropped them with `just`" history); `AGENTS.md` Commands (`pnpm smoke` and the
+    Chromium install, 0.7's minor). What is left is history or intentional: the Hono import
+    ban in `.oxlintrc.json`, the translation-table row, ADR 0004. Decisions the PRD left
+    open: none. Not done: `.claude/commands/new-feature.md:10` still names
+    `features/notes/routes.ts` (should be `notes.controller.ts`); edits under `.claude/` are
+    denied to the agent, so the owner changes that one line. Stubs: none. Wish: write access
+    to `.claude/`. `verify.sh` passes.
 
 ## 0.G Phase 0 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh

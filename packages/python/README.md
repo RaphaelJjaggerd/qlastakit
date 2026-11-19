@@ -22,5 +22,5 @@ members = ["packages/python/*", "services/api-py"]
 ```
 
 `mise run setup` and `mise run check` do not cover Python yet. Once that file exists, add
-the Python steps (`uv sync`, `ruff`) to those mise tasks (0.1 dropped them with `just`).
+the Python steps (`uv sync`, `ruff`) to the root `package.json` scripts the mise tasks call.
 Suggested libs: FastAPI (built-in OpenAPI), psycopg, pyjwt, ruff.

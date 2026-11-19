@@ -15,5 +15,5 @@ go work init ./packages/go/auth ./services/api-go
 ```
 
 `mise run setup` and `mise run check` do not cover Go yet. Once `go.work` exists, add the
-Go steps (`go work sync`, `go vet`) to those mise tasks (0.1 dropped them with `just`).
+Go steps (`go work sync`, `go vet`) to the root `package.json` scripts the mise tasks call.
 Suggested libs: gin or chi, pgx + sqlc, golang-jwt, huma (OpenAPI).

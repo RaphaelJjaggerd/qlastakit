@@ -24,10 +24,11 @@ Example: a `projects` feature with list and create.
 
 4. **Register** the module in `services/api/src/app.module.ts` (`imports: [...]`).
 
-5. **Regenerate the contract:** `mise run contract`. New functions such as `listProjects()`
-   now exist in `@qlastakit/api-client`.
+5. **Regenerate the contract:** `mise run contract`. New functions and hooks such as
+   `listProjects()` and `listProjectsOptions()` now exist in `@qlastakit/api-client`.
 
-6. **UI.** Add `apps/web/src/routes/projects.tsx`, load data in `loader` with the new
-   client function, build the page with `@qlastakit/ui` components.
+6. **UI.** Add `apps/web/src/routes/projects.tsx`, fetch data with the generated query
+   hooks (`useQuery(listProjectsOptions())`, `useMutation(createProjectMutation())`), build
+   the page with `@qlastakit/ui` components.
 
 7. **Check:** `mise run check`.
