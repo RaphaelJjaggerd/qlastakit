@@ -777,6 +777,35 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     Chromium install in AGENTS.md Commands). Watch the smoke's `networkidle` wait for
     flakiness on the runner.
   - Awaiting sign-off: the owner pushed `phase-0` and the run was green.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes locally (typecheck, lint, test, contract up to
+      date). The workflow YAML parses (one job, 8 steps). The done criterion is static and
+      met: `.github/workflows/ci.yml:41` runs `bash scripts/verify.sh` (typecheck, lint,
+      tests, contract drift) and `:43` runs `pnpm smoke`, with a `postgres:17` service.
+      Cross-checked against the repo, not the log: Node 22 and pnpm (from `packageManager`)
+      match `mise.toml`; `postgres:17` matches `infra/docker-compose.yml`; the service
+      user, password and port match `DATABASE_URL` in `.env.example`, which
+      `services/api/test/urls.ts` falls back to when no `.env` exists, so tests and the
+      smoke global setup reach it. The smoke `webServer` entries pass `API_PORT`,
+      `DATABASE_URL` and `API_INTERNAL_URL` as env, so the API's
+      `--env-file-if-exists=../../.env` and Vite need no `.env` on the runner. The contract
+      drift check works on a clean checkout. The 0.7 note to add the Chromium install in
+      CI is done (`:42`). Not run by the reviewer: the workflow on GitHub (needs a push,
+      outward-facing); that is the owner's sign-off, correctly left open.
+    - Spec:
+      - [minor] `.github/workflows/ci.yml:3-6`: a push to a `phase-*` branch that has an
+        open PR triggers both `push` and `pull_request`, and the concurrency group keys on
+        `github.ref` (`refs/heads/phase-0` vs `refs/pull/N/merge`), so every phase-PR push
+        runs CI twice. Harmless but doubles minutes; the card asked for both triggers, so
+        not a defect. Consider keying concurrency on the head branch if it matters.
+      - [minor] No `permissions:` block, so the job gets the repository's default
+        `GITHUB_TOKEN` scope, which can be write. `permissions: contents: read` is enough
+        for checkout, cache and artifact upload.
+      - [minor] Chromium and its system deps download on every run (no Playwright browser
+        cache). Fine at this size; revisit if the run gets slow.
+      - [minor] Carried from 0.7: the `networkidle` hydration wait
+        (`e2e/smoke.spec.mts:8`) is unproven on a CI runner until the owner's run.
+    - Standards: no findings.
 
 ## 0.9 Docs match the code
 - Read: PRD §3, §4, §5
