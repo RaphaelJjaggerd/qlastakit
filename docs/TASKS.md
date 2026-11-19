@@ -249,7 +249,8 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
       `packages/ts/core/src/_probe.ts` are still there for a human to delete.
 
 ## 0.4a Postgres, migrations and API tests
-- Precondition (human): Docker Desktop is installed and running.
+- Precondition (human): a Docker-compatible runtime (Docker Desktop, Kiri, Podman) is
+  installed and running, with `docker` and `docker compose` on the PATH.
 - Read: PRD §6
 - Build: Compose Postgres; a small Node migrate script replacing `db/migrate.sh` with
   the same behaviour (ordered files, the `schema_migrations` table, one transaction per
@@ -262,6 +263,12 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
 - Status: todo
 - Retries: 0
 - Log:
+  - 2026-11-18: blocked, waiting for: Docker Desktop is installed and running (no dated
+    owner sign-off line in this Log). Owner: add `YYYY-MM-DD: owner: checked, passes.`
+    and set the card back to `todo`.
+  - 2026-11-19 Raphael: Kiri installed and running; `docker` and `docker compose` work,
+    `mise run db-up` starts Postgres, and `mise run db-migrate` (psql now runs inside the
+    container) applied 0001 on the first run and nothing on the second. Checked, passes.
 
 ## 0.4b NestJS API
 - Read: PRD §2.2, §2.6, §3.1, §3.3, §6
