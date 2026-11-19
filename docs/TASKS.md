@@ -581,9 +581,27 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   no core, db or service code.
 - Done when: the check passes, typecheck passes and the regenerated client is in use by
   the page (0.7's smoke test proves the page in a browser).
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built TanStack Query in the web app. Hey API's `@tanstack/react-query`
+    plugin added to the client codegen (generates `listNotesOptions`, `listNotesQueryKey`,
+    `createNoteMutation`, exported from `@qlastakit/api-client`; `@tanstack/react-query` is a
+    dep of the web app and the client). The notes page uses `useQuery` / `useMutation`
+    instead of a loader. `QueryClientProvider` is the router's `Wrap`. Base URL is `/api` in
+    the browser; the Vite dev server proxies `/api` to `localhost:$API_PORT` with no prefix
+    stripping; server-side code uses the new `API_INTERNAL_URL` (in `.env.example`, replacing
+    `VITE_API_URL`). Check: an oxlint `no-restricted-imports` override for `apps/web/**`
+    bans `@qlastakit/core`, `db`, `api`, drizzle, postgres, nestjs and relative paths into
+    `services/` and `packages/ts/core|db`; proved with a throwaway probe (all reported,
+    probe deleted). `apps/web/AGENTS.md` updated. `verify.sh` passes. Decisions the PRD left
+    open: Hey API's zod plugin not added (docs checked from memory only; the core zod
+    schemas stay the single source and nothing in the web app needs runtime validation yet);
+    the notes page fetches on the client only (no SSR prefetch), so SSR renders an empty
+    list; `API_INTERNAL_URL` is read in `router.tsx` for the server-side base URL, nothing
+    server-side calls the API until 2.4a. Not run: the page in a browser and the proxy
+    (0.7's smoke test proves them). Stubs: none. Wish: a shell that allows heredocs and
+    `sed -i` on repo files.
 
 ## 0.7 Smoke test
 - Read: PRD §6
