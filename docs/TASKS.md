@@ -551,6 +551,27 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     defaults, untuned (Swagger UI docs still load). Not proven: the NODE_ENV=production
     refusal with `console`/`fake` adapters (no adapter exists until 2.3). Stubs: none.
     Wish: none.
+  - Review: approved 2026-11-19
+    - verify.sh passes (12 baseline tests run against Postgres). Swagger UI under helmet's
+      default CSP checked statically: @nestjs/swagger's template loads only same-origin
+      `<script src>` files, no inline script, so `/api/docs` is not blocked.
+    - [minor] Spec: `services/api/src/baseline.api.test.ts:33` "boots from .env.example
+      alone" calls `loadEnv()` on `process.env`, which is `.env.example` plus the test
+      overrides plus anything set in the shell. A var set only in a developer's shell
+      would pass here and fail in CI. `loadEnv(exampleEnv)` proves the claim directly.
+    - [minor] Spec: the 5xx filter test (`baseline.api.test.ts:103`) gives a no-op
+      `log.error` and never checks that the error is logged (`errors.filter.ts:40`). The
+      card says server errors are logged. A spy would prove it.
+    - [minor] Spec: PRD §2.2 says "one log shape everywhere", but Nest's own logger
+      (`app.ts:26`, `logger: ["error", "warn"]`) and `index.ts:7` `console.log` still print
+      plain text next to pino's JSON. This follows from using pino-http directly rather
+      than nestjs-pino. A later card (0.7 smoke or 2.x jobs) could route Nest's logger
+      through pino (`bufferLogs` + `useLogger`).
+    - [minor] Standards (mysterious name): in `errors.filter.ts:17-18`, `code` holds
+      `statusCode`, and in this file "code" otherwise means the error code. Call it
+      `statusCode`.
+    - [minor] Standards: the header of `baseline.api.test.ts:2` says each item is
+      "proven through the running app"; the 5xx case uses a fake host.
 
 ## 0.6 TanStack Query
 - Read: PRD §2.5, §2.6, §3.3, §4, §5
