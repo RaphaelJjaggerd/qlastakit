@@ -581,8 +581,8 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   no core, db or service code.
 - Done when: the check passes, typecheck passes and the regenerated client is in use by
   the page (0.7's smoke test proves the page in a browser).
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-19: built TanStack Query in the web app. Hey API's `@tanstack/react-query`
     plugin added to the client codegen (generates `listNotesOptions`, `listNotesQueryKey`,
@@ -602,6 +602,48 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
     server-side calls the API until 2.4a. Not run: the page in a browser and the proxy
     (0.7's smoke test proves them). Stubs: none. Wish: a shell that allows heredocs and
     `sed -i` on repo files.
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Lint ban: a throwaway `apps/web/src/review-probe.ts` importing `@qlastakit/core`,
+      `@qlastakit/db/schema`, `@qlastakit/api`, relative paths into `services/api`,
+      `packages/ts/core` and `packages/ts/db`, `drizzle-orm`, `@nestjs/common` and
+      `postgres` got nine `no-restricted-imports` errors; `@qlastakit/ui` and
+      `@qlastakit/api-client` passed (probe deleted). The page uses `listNotesOptions` /
+      `createNoteMutation` from the regenerated client. No runtime criterion on this card.
+    - Spec:
+      - [must] `API_INTERNAL_URL` from the root `.env` never reaches server-side code in
+        dev. `apps/web/src/router.tsx:11` reads `process.env.API_INTERNAL_URL`. Vite does not
+        put non-`VITE_` vars into `process.env`. TanStack Start's own env plugin does
+        (`@tanstack/start-plugin-core/dist/esm/vite/load-env-plugin/plugin.js:8`,
+        `Object.assign(process.env, loadEnv(config.mode, config.root, ""))`), but it reads
+        `config.root`, which is `apps/web`, not `envDir: "../../"`. `apps/web` has no
+        `.env`, so the value in the root `.env` is ignored and only the hard-coded fallback
+        `"http://localhost:8787/api"` works. `apps/web/AGENTS.md:14-15` says "Server-side
+        code uses `API_INTERNAL_URL` from the root `.env`", which is not true. Changing the
+        var in `.env` does nothing until 2.4a's before-load check trips on it. `vite.config.ts`
+        already runs `loadEnv(mode, envDir, "")` from the root for the proxy, so the same
+        values can reach `process.env` from there. Prove it with a test or a printed value,
+        not by reading the code.
+      - [must] The card's Build line says "Check Hey API's zod plugin docs", and so does PRD
+        §3.1 (line 196, "check its current docs in 0.6") and §7 (line 418). The log says
+        "docs checked from memory only". So the open decision not to add the plugin rests on
+        a check that was not done. Read the current page
+        (https://heyapi.dev/openapi-ts/plugins/zod, linked in `docs/PRD_REVIEW.md:487`)
+        and log what it says (whether it fits the `@hey-api/*` version in use, what it
+        generates). Either decision is fine if it is logged with a reason.
+      - [minor] The fallback at `apps/web/src/router.tsx:11` hides a missing
+        `API_INTERNAL_URL` everywhere, the deploy included: SSR would quietly call
+        `localhost:8787`. The API refuses to boot on a bad env (0.5). The web server side
+        could fail loudly the same way, or at least not fall back outside dev.
+      - [minor] `contracts/clients/ts/package.json:13-15` makes `@tanstack/react-query` a
+        `dependency` of the client. A library that only works with the app's own
+        `QueryClientProvider` should list it as a `peerDependency` (plus a devDependency for
+        its typecheck), so it can never resolve to a second copy.
+    - Standards: no findings.
+    - **Recurs:** this is the second `[must]` on the web app's env wiring from the root
+      `.env` (0.4b: the `.env` value overrode the new default; 0.6: the `.env` value never
+      arrives). The phase gate could add a web test that the server-side base URL comes
+      from the root env file.
 
 ## 0.7 Smoke test
 - Read: PRD §6
