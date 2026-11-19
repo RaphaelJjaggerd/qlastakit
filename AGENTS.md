@@ -29,6 +29,11 @@ review: `scripts/prd-review.sh`. Models: `scripts/models.env`.
   `docs/STANDARDS.md`. Do not add rules here.
 - Every closed card logs: built, open decisions taken, stubs, wishes.
 - ADRs (`/decide`) go in `docs/adr/`.
+- Scratch files (lint probes, throwaway scripts and Playwright runs, temp output) go in
+  `.potato/tmp/` (gitignored; `mkdir -p` it), never in the repo or the system temp
+  folder. Lint a probe there by its path (`pnpm exec oxlint .potato/tmp/x.ts`). A probe
+  that must sit at a real path, to hit a path-scoped or type-aware lint rule, is deleted
+  with `rm` before the session ends. Recursive `rm` is blocked; files only.
 
 ## What this repo is
 
@@ -107,7 +112,8 @@ spec `http://localhost:8787/openapi.json`.
 
 - New feature end to end: `docs/recipes/add-feature.md`
 - New service in another language: `docs/recipes/add-service.md`
-- `services/api/src/features/notes` is the reference feature. Copy its shape.
+- Notes is the reference feature: logic in `packages/ts/core/src/notes`, its thin API
+  route in `services/api/src/features/notes/routes.ts`. Copy its shape.
 
 ## Definition of done
 

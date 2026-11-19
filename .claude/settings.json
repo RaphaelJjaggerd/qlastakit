@@ -24,7 +24,8 @@
       "Bash(tail:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(rm:*)"
     ],
     "deny": ["Read(./.env)", "Edit(./.env)"]
   },

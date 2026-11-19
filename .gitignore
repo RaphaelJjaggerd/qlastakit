@@ -16,3 +16,6 @@ references/
 
 # potato-eng verify output
 Logs/
+
+# potato-eng scratch: lint probes, throwaway scripts (see AGENTS.md)
+.potato/
