@@ -5,7 +5,8 @@ import { useTranslation } from "react-i18next";
 import { appConfig } from "@/config/app.config";
 
 export const Route = createFileRoute("/sign-in")({
-  staticData: { key: "sign-in", layout: "auth-side" },
+  // The auth layout frames its own content, so no padding or footer from the container.
+  staticData: { key: "sign-in", layout: "auth-side", chrome: { container: "gutterless" } },
   // Already signed in: nothing to do here.
   beforeLoad: ({ context }) => {
     if (context.session) throw redirect({ to: appConfig.authenticatedEntryPath });

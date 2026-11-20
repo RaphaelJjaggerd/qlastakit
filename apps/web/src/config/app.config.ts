@@ -2,6 +2,22 @@
 // the layout for one route.
 export type LayoutKey = "stacked-side" | "auth-side" | "blank";
 
+import type { MessageKey } from "@/i18n";
+
+export type ContainerType = "default" | "gutterless" | "contained";
+
+/** What a route declares about its page chrome; the one page container renders it. */
+export interface PageChrome {
+  /** Message key of the page header title. No key, no header. */
+  headerKey?: MessageKey;
+  /** Show the footer. Default false. */
+  footer?: boolean;
+  /** `default`: padded and centred; `contained`: narrower; `gutterless`: no padding. */
+  container?: ContainerType;
+  /** `plain` paints the page on the base background colour. */
+  background?: "default" | "plain";
+}
+
 export const appConfig = {
   nameKey: "app.name",
   /** Where a signed-in user lands, and where the logo links. */

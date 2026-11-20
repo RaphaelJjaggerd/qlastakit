@@ -7,7 +7,10 @@ import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { protect } from "@/access";
 
-export const Route = createFileRoute("/")({ ...protect("home"), component: Home });
+export const Route = createFileRoute("/")({
+  ...protect("home", [], { headerKey: "notes.title", container: "contained" }),
+  component: Home,
+});
 
 function Home() {
   const { t } = useTranslation();
@@ -29,8 +32,7 @@ function Home() {
   const failed = notes.isError || create.isError;
 
   return (
-    <main className="mx-auto max-w-xl space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">{t("notes.title")}</h1>
+    <div className="space-y-6">
       <form onSubmit={onSubmit} className="flex gap-2">
         <Input
           value={title}
@@ -49,6 +51,6 @@ function Home() {
           </li>
         ))}
       </ul>
-    </main>
+    </div>
   );
 }

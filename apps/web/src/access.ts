@@ -1,5 +1,5 @@
 import { redirect } from "@tanstack/react-router";
-import { appConfig, type LayoutKey } from "./config/app.config";
+import { appConfig, type LayoutKey, type PageChrome } from "./config/app.config";
 import type { Role, Session, SessionSource } from "./session";
 
 /** What a route declares in its static data (PRD 3.1: key, authority, layout). */
@@ -7,6 +7,7 @@ export interface RouteStaticData {
   key?: string;
   authority?: Role[];
   layout?: LayoutKey;
+  chrome?: PageChrome;
 }
 
 declare module "@tanstack/react-router" {
@@ -38,9 +39,9 @@ export async function loadSession({ context }: { context: RouterContext }) {
  * too and before anything renders: no session redirects to sign-in, a session without the
  * authority throws `AccessDeniedError`, which the router's error component shows.
  */
-export function protect(key: string, authority: Role[] = []) {
+export function protect(key: string, authority: Role[] = [], chrome?: PageChrome) {
   return {
-    staticData: { key, authority } satisfies RouteStaticData,
+    staticData: { key, authority, chrome } satisfies RouteStaticData,
     beforeLoad: ({ context }: { context: { session: Session | null } }) => {
       if (!context.session) throw redirect({ to: appConfig.signInPath });
       if (!hasAuthority(context.session, authority)) throw new AccessDeniedError();

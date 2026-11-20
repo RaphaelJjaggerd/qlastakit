@@ -17,6 +17,7 @@ import { expect, test, vi } from "vitest";
 import { loadSession, protect, type RouterContext } from "../access";
 import { getRouter } from "../router";
 import { RouteError } from "./access-denied";
+import { PageContainer } from "./page-container";
 import { createStubSession, type Session } from "../session";
 
 // The notes page talks to the API; the shell tests do not need it.
@@ -95,4 +96,26 @@ test("the first render of the sign-in route is already auth-side, with no nav", 
   expect(html).toContain('data-layout="auth-side"');
   expect(html).not.toContain('data-layout="stacked-side"');
   expect(html).not.toContain('aria-label="Home"');
+});
+
+test("`/` renders its declared header and container type through the one page container", async () => {
+  const router = await loaded("/", member);
+  const html = renderToString(<RouterProvider router={router} />);
+  expect(html).toContain('data-container="contained"');
+  expect(html).toMatch(/<header[^>]*><h1[^>]*>Notes<\/h1><\/header>/);
+  // The page draws no heading of its own: the container's is the only one.
+  expect(html.match(/<h1/g)).toHaveLength(1);
+  expect(html).not.toContain("<footer");
+});
+
+test("the page container renders the footer and container type a route declares", () => {
+  const { container } = render(
+    <PageContainer chrome={{ footer: true, container: "gutterless", headerKey: "nav.home" }}>
+      <p>body</p>
+    </PageContainer>,
+  );
+  expect(container.querySelector('[data-container="gutterless"]')).not.toBeNull();
+  expect(screen.getByRole("contentinfo")).toHaveTextContent("qlastakit");
+  expect(screen.getByRole("heading", { name: "Home" })).toBeInTheDocument();
+  expect(container.querySelector("main")).not.toHaveClass("px-4");
 });

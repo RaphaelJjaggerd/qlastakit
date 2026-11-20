@@ -1,6 +1,7 @@
 {
   "app.name": "qlastakit",
   "app.documentTitle": "App",
+  "app.footer": "qlastakit",
   "nav.home": "Home",
   "nav.closePanel": "Close panel",
   "user.menu.logout": "Log out",

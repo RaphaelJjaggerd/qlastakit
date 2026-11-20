@@ -2311,9 +2311,24 @@ Ref: ui-kit (reuse).
   owned it.
 - Done when: a web test proves a route's declared header and container type render
   through the one page container, and `/` uses it.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: built `PageChrome` (`headerKey`, `footer`, `container`, `background`) in
+    `config/app.config.ts`, a `chrome` field in route static data, `protect(key, authority,
+    chrome)`, and `shell/page-container.tsx`, the one container, which `RootLayout` wraps
+    around the outlet for every layout. `/` declares a Notes header and `contained`; the
+    page lost its own `<main>` and `<h1>`. Sign-in declares `gutterless` (auth layout frames
+    itself). Tests in `shell.test.tsx`: `/` renders the declared header and container type
+    through the container (one `<h1>`, no footer), and the container renders footer,
+    container type and header from chrome. `verify.sh` passes. Ref ui-kit (reuse): the
+    reference `page-container.tsx` is a React Router, store and `useLayout` design with
+    reassemble hooks and lazy-component titles; I wrote a small version of its three types
+    and header/footer instead, since it could not move unchanged (PRD §3.4 layout from the
+    matched route, titles as keys). Decisions the PRD left open: header title is a typed
+    message key; footer defaults to off and shows `app.footer` ("qlastakit"), a placeholder
+    text; `background: plain` kept from the reference. Stubs: no `extraHeader` slot yet.
+    Wish: none.
 
 ## 1.G Phase 1 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
