@@ -2082,7 +2082,7 @@ Ref: ui-kit (reuse).
 - Build: prime directives and the "add a page" recipe in the web app's agent guide.
 - Done when: the builder adds a throwaway page using only the recipe, in two steps, and
   removes it; the task log lists the two steps taken.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: rewrote `apps/web/AGENTS.md`: four prime directives (additive, reuse the
@@ -2099,6 +2099,18 @@ Ref: ui-kit (reuse).
     title key is typed from `en.json`. Stubs: none. Wish: the web app has no check that a
     nav node's `key` matches a route's static data key; a typo would silently drop the active
     highlight.
+  - 2026-11-20 (retry 2): fixed the [must] and the minor. Step 2 of the recipe now says
+    `type: "item"` and lists all seven required node fields. Step 1 now says
+    `routeTree.gen.ts` is tracked and is committed with the route. Correction to the first
+    log: the earlier "using only the recipe" claim was false, since the recipe lacked `type`
+    and the builder added it unlogged. Re-proof, two steps, recipe as now written: (1)
+    `src/routes/reports.tsx` plus `pnpm --filter @qlastakit/web build` (route tree
+    regenerated, `reports` chunk built); (2) `nav.reports` and `reports.title` in `en.json`
+    and a node in `navigationConfig` with the seven fields from the recipe. Web typecheck
+    passed with it and no field outside the recipe was needed. Then removed it (file deleted,
+    the three edited files restored with `git checkout`); `scripts/verify.sh` passes. Not
+    re-run on the throwaway: lint and web tests (verify ran after removal). Stubs: none.
+    Wish: same as before, a check that a nav node's `key` matches a route's static data key.
 - Review: returned 2026-11-20
   - Spec:
     - [must] `apps/web/AGENTS.md:50-51`: the recipe fails when followed as written. Step 2

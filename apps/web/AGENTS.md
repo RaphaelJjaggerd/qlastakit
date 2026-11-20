@@ -43,11 +43,14 @@ Example: a page at `/reports`. `src/routes/index.tsx` is the model.
    A route can override the layout with `layout` in its static data (`stacked-side`,
    `auth-side`, `blank`). The component uses `useTranslation()` for text and `@qlastakit/ui`
    for building blocks. Run `pnpm --filter @qlastakit/web dev` once (or `build`) so
-   `routeTree.gen.ts` picks the route up.
+   `routeTree.gen.ts` picks the route up. That file is tracked in git: commit the regenerated
+   version with the route.
 2. **Navigation and text** (skip the nav node if the page is not in the menu): add the
    message keys to `src/messages/en.json` (`"nav.reports"`, plus the page's own), then add a
    node to `navigationConfig` in `src/config/navigation.config.ts` whose `key` equals the
    route's static data key (`"reports"`), with `path: "/reports"`, `titleKey: "nav.reports"`,
-   an `icon` from `src/shell/nav-icons.tsx`, `authority` and `subMenu: []`.
+   an `icon` from `src/shell/nav-icons.tsx`, `type: "item"` (a plain page; `"collapse"` and
+   `"title"` are for groups), `authority` (`[]` means any signed-in user) and `subMenu: []`.
+   All of `key`, `path`, `titleKey`, `icon`, `type`, `authority` and `subMenu` are required.
 
 Then run `scripts/verify.sh`.
