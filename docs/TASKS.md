@@ -1230,6 +1230,36 @@ Ref: ui-kit (reuse).
     - `scripts/verify.sh` passes; `pnpm --filter @qlastakit/web build` passes. Wish: run
       scratch probes headless (`Bash(bash .potato/tmp/*)`, added by the owner in
       `0e895e3`).
+  - Review: approved 2026-11-20
+    - Checked: `scripts/verify.sh` passes. Runtime: `pnpm --filter @qlastakit/web build`
+      passes (client and SSR), and the built CSS carries `var(--etched-h-shadow)` and
+      `var(--sidebar-ring-hover-shadow)`, so the utilities read the value tokens. Icon
+      check, run by the reviewer with a scratch script (deleted) that runs the same
+      pipeline against an untracked `packages/ts/_probe/package.json`, one form at a time:
+      `@hugeicons/react`, `@hugeicons/core-free-icons`, `@lucide/lab`, `lucide-react` (with
+      and without a space after the colon), `@phosphor-icons/react`, `@remixicon/react`,
+      `remixicon`, `react-icons`, `@heroicons/react`, `@radix-ui/react-icons` and
+      `@tabler/icons` are each caught; `@tabler/icons-react` and the clean tree pass. The
+      full `scripts/verify.sh` with an untracked `@hugeicons/react` probe exits 1 at the
+      icons step and names the file and line, so the "not yet added" reading works too.
+      Both previous [must]s are fixed.
+    - Spec:
+      - [minor] `scripts/verify.sh:33`: the check is still a name match, so an icon set
+        with no listed word in its name passes. Probed: `@mdi/react`,
+        `@material-symbols/svg-400` and an npm alias (`"glyphs": "npm:lucide-react@1"`)
+        all pass. None is a shadcn icon library, so the done criterion holds; matching the
+        value side as well would close the alias case.
+      - [minor] `scripts/verify.sh:32-33`: `xargs` splits on spaces, so a `package.json`
+        under a path with a space would be skipped or break the grep. No such path exists.
+    - Standards: no findings. The log claims match what the probes show, and the
+      `build:icons` trade-off is stated.
+    - Reference: F4 is now applied in the kit's own pattern (`theme.css:84-87` map
+      `var(...)`, values at `:179-182` and `:244-247`). The token names differ from F4's
+      and the Log gives the reason. `cn.ts`, `separator.tsx` and `sidebar.tsx` use the same
+      four utility names. `DESIGN.md:113-114,255` and `component-inventory.md` match.
+    - Note: the reviewer's probe left an empty, untracked folder `packages/ts/_probe`
+      (removing a folder is denied here). It holds no file and git does not see it; a
+      human can delete it.
 
 ## 1.3 Component preview
 - Read: PRD §2.5
