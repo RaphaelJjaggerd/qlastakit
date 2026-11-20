@@ -2162,8 +2162,8 @@ Ref: ui-kit (reuse).
   0.3 and 0.4b.)
 - Done when: verify passes on the repo and fails on a throwaway stale path and a bare
   `localhost:8787` (both proved, probes removed).
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20 Raphael: `.claude/commands/new-feature.md` fixed; it now names
     `services/api/src/features/notes/notes.controller.ts`. Checked, passes.
@@ -2182,6 +2182,42 @@ Ref: ui-kit (reuse).
     paths starting with a known top-level name are checked, so a stale path that does not
     start with one is not caught. No fixture folder (the probe was run once, as the card
     asks). Stubs: none. Wish: none.
+  - Review: returned 2026-11-20
+    - Spec:
+      - [must] `scripts/check-stale-refs.mjs:85-89`: the card names "app/service agent
+        guides", but both guides write their paths relative to their own folder
+        (`apps/web/AGENTS.md`: `src/routes/index.tsx`, `src/messages/en.json`,
+        `src/config/navigation.config.ts`, `src/shell/nav-icons.tsx`, `src/routeTree.gen.ts`;
+        `services/api/AGENTS.md`: `src/features/notes`, `src/app.module.ts`,
+        `src/errors.filter.ts`). None of them starts with a `TOP` name, so the check skips
+        every path in those two guides. They are in scope in name only. Logging the gap
+        does not cover a Build line. The checker's probe: `src/routes/gone.tsx` in a
+        scanned file passed clean. Fix: in a guide below the root, also resolve a
+        `src/...` style token against that guide's folder (or against the folder of the
+        nearest `package.json`), and fail when neither resolves. The examples the web
+        guide asks you to create (`src/routes/reports.tsx`) go in `EXAMPLES`, as the recipe
+        examples do.
+      - [minor] The Done when says "verify ... fails on" a stale path. The log proves this
+        only through the script's argument mode (`node scripts/check-stale-refs.mjs
+        <probe>`), which skips file discovery. The checker proved default mode: an
+        untracked `docs/recipes/zz-probe.md` containing `apps/web/src/gone.ts` and a bare
+        `localhost:8787/` made the no-argument run exit 1 and list both hits. The probe was
+        then deleted. When you re-prove, run the default path.
+    - Standards:
+      - [must] "A lint or verify ban is proved with a probe for every form the repo really
+        uses (extension, alias, relative path)". The repo uses two forms: root-anchored
+        paths (recipes, root `AGENTS.md`) and guide-relative paths (the app and service
+        guides). Only the first form was probed. This finding repeats 0.4b's (one form
+        banned and proved, a sibling form left open), so it is the second card to hit
+        this standard.
+      - [minor] `scripts/check-stale-refs.mjs:21`: `TOP` is a hand list that already
+        misses tracked top-level files (`turbo.json`, `pnpm-workspace.yaml`,
+        `vitest.config.ts`, `playwright.config.mts`, `.oxlintrc.json`, `.oxfmtrc.json`).
+        A guide that names one of these wrongly, e.g. `vitest.config.mts`, is never
+        checked. Derive the list from the first segment of `git ls-files`, or add the
+        missing names.
+      - [minor] `scripts/check-stale-refs.mjs:100`: `(?!\/api)` passes
+        `localhost:8787/apix`. `(?!\/api(?:\/|\b))` is tighter. Low risk, so a note only.
 
 ## 1.9 Web env from the root file
 - Read: PRD §2.6
