@@ -4,11 +4,15 @@
 // email) is not shell text and is allowed through.
 import { render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { afterEach, beforeAll, expect, test, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { SidebarProvider } from "@qlastakit/ui";
+import { beforeAll, expect, test, vi } from "vitest";
 import { i18n, resources } from "../i18n";
 import { getRouter } from "../router";
+import { Route } from "../routes/__root";
 import { createStubSession, type Session } from "../session";
-import { AccessDenied } from "./access-denied";
+import { AccessDenied, RouteError } from "./access-denied";
+import { NavUser } from "./nav-user";
 
 vi.mock("@qlastakit/api-client", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -28,8 +32,6 @@ beforeAll(async () => {
   i18n.addResourceBundle("pseudo", "translation", pseudo);
   await i18n.changeLanguage("pseudo");
 });
-
-afterEach(() => i18n.changeLanguage("pseudo"));
 
 /** Every piece of text a user can see or hear in the rendered page. */
 function shellStrings(root: HTMLElement) {
@@ -73,6 +75,19 @@ test("the signed-in shell and the notes page show only message-file text", async
   expectOnlyMessages(container);
 });
 
+// NavUser is rendered alone: opening its menu inside the full routed shell hangs jsdom.
+test("the open user menu shows only message-file text", async () => {
+  render(
+    <SidebarProvider>
+      <NavUser user={member.user} />
+    </SidebarProvider>,
+  );
+  await userEvent.click(screen.getByLabelText(member.user.name));
+  await screen.findByText("⟦Log out⟧");
+  // The menu renders in a portal, so look at the whole document body.
+  expectOnlyMessages(document.body);
+});
+
 test("the sign-in screen shows only message-file text", async () => {
   const { container } = await renderAt("/sign-in", null);
   await screen.findByRole("heading", { name: "⟦Sign in⟧" });
@@ -85,6 +100,15 @@ test("the access-denied screen shows only message-file text", () => {
   expectOnlyMessages(container);
 });
 
-test("the document title comes from the message file", () => {
-  expect(i18n.t("app.documentTitle")).toBe("⟦App⟧");
+test("the route error screen shows only message-file text", () => {
+  const { container } = render(
+    <RouteError error={new Error("boom")} reset={() => {}} info={undefined} />,
+  );
+  expect(screen.getByText("⟦Something went wrong⟧")).toBeInTheDocument();
+  expectOnlyMessages(container);
+});
+
+test("the root route's head() sets the document title from the message file", async () => {
+  const head = await Route.options.head?.({} as never);
+  expect(head?.meta).toContainEqual({ title: "⟦App⟧" });
 });

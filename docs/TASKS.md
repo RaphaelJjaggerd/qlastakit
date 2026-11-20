@@ -1922,7 +1922,7 @@ Ref: ui-kit (reuse).
 - Read: PRD §2.4
 - Build: i18next wired; all shell text through message files.
 - Done when: the pseudo-locale web test passes.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: built i18next 27 + react-i18next 18 in the web app. `src/i18n.ts` replaces

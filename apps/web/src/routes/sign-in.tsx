@@ -1,8 +1,8 @@
 // Placeholder until 2.4a replaces it with the real sign-in form.
 import { Button } from "@qlastakit/ui";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { appConfig } from "@/config/app.config";
 import { useTranslation } from "react-i18next";
+import { appConfig } from "@/config/app.config";
 
 export const Route = createFileRoute("/sign-in")({
   staticData: { key: "sign-in", layout: "auth-side" },
