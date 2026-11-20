@@ -98,9 +98,7 @@ function Section({ name, children }: { name: string; children: ReactNode }) {
 export default function ComponentPreview() {
   return (
     <TooltipProvider>
-      <main className="mx-auto max-w-4xl space-y-10 p-6">
-        <h1 className="text-2xl font-semibold">Component preview</h1>
-
+      <div className="mx-auto max-w-4xl space-y-10">
         <Section name="Alert">
           <Alert className="w-full">
             <AlertTitle>Heads up</AlertTitle>
@@ -369,7 +367,7 @@ export default function ComponentPreview() {
             <TooltipContent>Tooltip</TooltipContent>
           </Tooltip>
         </Section>
-      </main>
+      </div>
     </TooltipProvider>
   );
 }

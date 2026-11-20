@@ -2311,7 +2311,7 @@ Ref: ui-kit (reuse).
   owned it.
 - Done when: a web test proves a route's declared header and container type render
   through the one page container, and `/` uses it.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: built `PageChrome` (`headerKey`, `footer`, `container`, `background`) in
@@ -2393,6 +2393,27 @@ Ref: ui-kit (reuse).
         different shape from the vet report or the reference, and the Log did not say so. The
         phase gate should turn this into a standard or a step in `/task`: diff every reused
         reference file before closing, and log each difference.
+  - 2026-11-20 (retry 2): fixed both reference [must]s and the minors. Container classes
+    and the three constants (`PAGE_CONTAINER_GUTTER_X/Y`, `PAGE_CONTENT_MAX_WIDTH`) are now
+    the reference's, unchanged; `contained` is `container mx-auto` with the body wrapped in
+    `container mx-auto h-full`; `!footer` keeps `pb-0`; `relative h-full` restored. The
+    notes page now carries its own `max-w-xl` (the width belonged on the page). Header
+    markup is the reference's (`flex items-center justify-between mb-4`, `mt-4` when
+    gutterless). Footer: `h-16` and the X gutter, `container` wrap when contained, default
+    back to on (the reference's). Differences kept, with reasons: (1) header `h3` is `h1`,
+    for one `h1` per page; (2) the page body is a `div`, not `main`, because the
+    stacked-side `SidebarInset` is already the `main` landmark (choice for the standards
+    minor); (3) footer text is the app name only (`app.name`, so the `app.footer` key is
+    gone): the reference's Terms and Privacy links are dead `/#` links, and a `new Date()`
+    year fails the lint purity rule during render; (4) reassemble hooks, route `Meta`
+    types, lazy titles and `extraHeader` are not ported (they hang on rejected files);
+    sign-in sets `footer: false` since its auth layout frames itself. `/dev/components`
+    now declares chrome (`dev.preview.title` header, no footer) and lost its own
+    `main`/`h1`. Tests added for `background` and for footer off. `apps/web/AGENTS.md`
+    line re-wrapped (footer default noted); vet report `ui-kit.md` has a row for
+    `page-container.tsx` and `footer.tsx`. Import moved to the top of `app.config.ts`.
+    Stubs: no `extraHeader` slot. Wish: a `/task` step to diff every reused reference file
+    before closing (as the review asked of the gate). `verify.sh` passes.
 
 ## 1.G Phase 1 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh

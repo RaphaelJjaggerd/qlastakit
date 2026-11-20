@@ -6,7 +6,11 @@ import { appConfig } from "@/config/app.config";
 
 export const Route = createFileRoute("/sign-in")({
   // The auth layout frames its own content, so no padding or footer from the container.
-  staticData: { key: "sign-in", layout: "auth-side", chrome: { container: "gutterless" } },
+  staticData: {
+    key: "sign-in",
+    layout: "auth-side",
+    chrome: { container: "gutterless", footer: false },
+  },
   // Already signed in: nothing to do here.
   beforeLoad: ({ context }) => {
     if (context.session) throw redirect({ to: appConfig.authenticatedEntryPath });

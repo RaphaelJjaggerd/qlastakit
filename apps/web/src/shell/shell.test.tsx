@@ -105,17 +105,43 @@ test("`/` renders its declared header and container type through the one page co
   expect(html).toMatch(/<header[^>]*><h1[^>]*>Notes<\/h1><\/header>/);
   // The page draws no heading of its own: the container's is the only one.
   expect(html.match(/<h1/g)).toHaveLength(1);
-  expect(html).not.toContain("<footer");
+  // The footer is on by default, as in the reference.
+  expect(html).toContain("<footer");
 });
 
 test("the page container renders the footer and container type a route declares", () => {
   const { container } = render(
-    <PageContainer chrome={{ footer: true, container: "gutterless", headerKey: "nav.home" }}>
+    <PageContainer chrome={{ container: "gutterless", headerKey: "nav.home" }}>
       <p>body</p>
     </PageContainer>,
   );
   expect(container.querySelector('[data-container="gutterless"]')).not.toBeNull();
   expect(screen.getByRole("contentinfo")).toHaveTextContent("qlastakit");
   expect(screen.getByRole("heading", { name: "Home" })).toBeInTheDocument();
-  expect(container.querySelector("main")).not.toHaveClass("px-4");
+  // Gutterless: the page body gets no padding (the footer keeps its own gutter).
+  expect(container.querySelector("[data-container] > div .px-4")).toBeNull();
+});
+
+test("the page container leaves out the footer when a route turns it off", () => {
+  render(
+    <PageContainer chrome={{ footer: false }}>
+      <p>body</p>
+    </PageContainer>,
+  );
+  expect(screen.queryByRole("contentinfo")).toBeNull();
+});
+
+test("the page container paints the plain background a route declares", () => {
+  const { container } = render(
+    <PageContainer chrome={{ background: "plain" }}>
+      <p>body</p>
+    </PageContainer>,
+  );
+  expect(container.firstElementChild).toHaveClass("bg-background");
+  const { container: other } = render(
+    <PageContainer>
+      <p>body</p>
+    </PageContainer>,
+  );
+  expect(other.firstElementChild).not.toHaveClass("bg-background");
 });

@@ -43,8 +43,9 @@ Example: a page at `/reports`. `src/routes/index.tsx` is the model.
    A route can override the layout with `layout` in its static data (`stacked-side`,
    `auth-side`, `blank`). Page chrome is declared the same way, as the third argument of
    `protect` (or `chrome` in static data): `{ headerKey, footer, container, background }`.
-   The one page container renders it; the page draws no heading or `<main>` of its own. The component uses `useTranslation()` for text and `@qlastakit/ui`
-   for building blocks. Run `pnpm --filter @qlastakit/web dev` once (or `build`) so
+   The one page container renders it (footer defaults to on); the page draws no heading
+   or `<main>` of its own. The component uses `useTranslation()` for text and
+   `@qlastakit/ui` for building blocks. Run `pnpm --filter @qlastakit/web dev` once (or `build`) so
    `routeTree.gen.ts` picks the route up. That file is tracked in git: commit the regenerated
    version with the route.
 2. **Navigation and text** (skip the nav node if the page is not in the menu): add the

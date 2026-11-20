@@ -32,7 +32,7 @@ function Home() {
   const failed = notes.isError || create.isError;
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-xl space-y-6">
       <form onSubmit={onSubmit} className="flex gap-2">
         <Input
           value={title}

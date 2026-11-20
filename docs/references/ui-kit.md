@@ -29,6 +29,7 @@ built (AGENTS.md rule). Verdicts come from reading. Not every long class string 
 | `src/shared/hooks/use-mobile.ts` | keep | Effect-only, SSR safe (false on the server) |
 | `src/components/shared/logo.tsx` | fix | F6 |
 | `src/components/shared/container.tsx`, `header.tsx` | fix | F7 |
+| `src/components/shared/page-container.tsx`, `footer.tsx` | fix | Added after 1.10's review. Keep the classes, the three container types and the gutter and width constants unchanged. Drop `useLayout`/reassemble, the route `Meta` types, lazy-component titles and `extraHeader` (stub). Titles become message keys; the header renders one `h1`; footer text comes from the app name, the dead Terms and Privacy links are dropped; the page body is a `div`, because the stacked-side layout's inset is already the `main` landmark |
 | `src/components/shared/authority-check.tsx`, `src/shared/hooks/use-authority.ts` | fix | F8 |
 | `src/components/shared/navigation/*` | fix | F9 |
 | `src/components/layouts/**` (app-layout variants, auth-layout, layout-base, layouts.tsx) | fix | F10 |
