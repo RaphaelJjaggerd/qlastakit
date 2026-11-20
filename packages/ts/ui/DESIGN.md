@@ -184,14 +184,14 @@ One token, `--radius` (10px). Scale: `rounded-sm` 6 (menu items), `rounded-md` 8
 
 ## 7. Components to reach for
 
-Before writing markup, check `src/components` (the `Logo` is rebuilt in card 1.5):
+Before writing markup, check `src/components`:
 
 - A settings line with icon, title, description and an action: `SettingRow`
 - An icon square: `IconTile`
 - A search field: `InputGroup` + `InputGroupAddon` + `InputGroupInput`
 - Label + field + help or error: `Field`, `FieldLabel`, `FieldDescription`, `FieldError`
 - An error or notice box: `Alert`
-- The brand mark: `Logo` (name comes from `app.config`, never hardcode it)
+- The brand mark: `Logo` in the web app shell (`apps/web/src/shell/logo.tsx`; the name comes from `app.config`, never hardcode it)
 
 ## 8. Dark mode and forced modes
 

@@ -2456,7 +2456,7 @@ Ref: ui-kit (reuse).
 - Done when: the six steps of the 0.G gate are logged for this phase, even if a decision
   is "nothing"; the card closes with
   `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: gate steps.
@@ -2576,6 +2576,67 @@ Ref: ui-kit (reuse).
         folder". The icons ban lives inline in `verify.sh`, not in a `scripts/check-*` file,
         so the meta-check will not see the next inline ban. Say so on the card, or move the
         icons check into `scripts/check-icons.mjs` as part of the guard.
+  - 2026-11-20 (retry 2, after the return above): fixed every `[must]` and minor. Step 3
+    is redone below with every Phase 1 `[must]` listed by card and line (lines are
+    `docs/TASKS.md` before this entry), each with a decision. No code changed besides two
+    stale lines in `packages/ts/ui/DESIGN.md` (below).
+    - 3 (redo). Returns per card: 1.2 (1), 1.3 (1), 1.4 (3), 1.4a (1), 1.5 (1), 1.6 (2),
+      1.7 (1), 1.8 (1), 1.10 (1), 1.G (1, this one). Blocked: 1.1 waited for its owner
+      precondition, expected, nothing.
+      - Ban proved for fewer forms than the repo uses (mechanical): 1.2 icon deny-list
+        (`:1154`); 1.4 `check-tokens` forms (`:1418`, `:1488`, `:1498`, `:1560`, `:1568`,
+        `:1576`); 1.4a (`:1685`, `:1694`, `:1709`); 1.8 stale-refs (`:2187`, `:2207`). The
+        standard already exists (line 4) and did not stop it, so the answer is the card
+        2.1a fixtures plus its meta-check. The checks have no parser; parked (1.G step 4).
+      - Reference rewritten or differing without a logged reason (judgement): 1.2 F4 shape
+        (`:1186`), 1.5 (`:1868`), 1.10 (`:2360`, `:2379`). STANDARDS line 5 (added in the
+        first attempt) is the decision. Because `/task` does not read STANDARDS, the owner
+        edit: add to `/task` step 8, "for a `reuse` card, diff each reused file against its
+        reference and log every difference before closing". There is no card for it
+        (agent edits under `.claude/` are denied, and the skill is the owner's); if the
+        owner declines, the line stays a review-time catch only.
+      - A runtime "renders" criterion that missed what mounts on interaction (judgement):
+        1.3 (`:1299`), STANDARDS line 6.
+      - Timing and test-name claims (judgement): 1.5 (`:1844`), 1.6 (`:1975`, `:1986`,
+        `:2022`). One line, reworded: "a test reaches its asserted result only through the
+        path its name claims" (replaces the order-or-timing line; it covers the 1.5 effects,
+        the 1.6 title test and the nav-panel presence test). The earlier log text calling
+        it "the sharper form both returns asked for" was wrong for the third break and is
+        withdrawn.
+      - A control that did not do its job (judgement): 1.6 "Try again" (`:2012`). New line
+        in STANDARDS: a control that exists to do something has a test that uses it.
+      - Untranslated strings (mechanical): 1.6 (`:1968`, one of its five `[must]`s). Card
+        2.1a guard (2) and guard (3) (nav key).
+      - Claims in a log that were not true (judgement): 1.4 (`:1520`), 1.5 (`:1851`), 1.7
+        (`:2116` recipe missing `type`, `:2126` "using only the recipe"), plus 0.4b, 0.5, 0.6.
+        No mechanical form exists: a check cannot read prose. Decision: sharper line, not
+        a check. STANDARDS line 1 now sits next to a third line naming the "from memory",
+        "using only the recipe" and "through the running app" forms. 1.7's recipe `type`
+        gap itself was fixed in 1.7.
+      - Retry entries placed above the `Review: returned` block they answer (0.G `:1034`,
+        1.7 `:2147`): process, not code. Decision: owner edit to `/task` step 8, "append the
+        retry entry after the latest `Review:` block". A verify check is not worth it: the
+        order is only visible to the `/review` selector. This entry, and 1.G's earlier
+        gate entry, follow the rule.
+      - Counts corrected: 1.4 was returned three times (`:1402`, `:1476`, `:1549`); only one
+        of 1.6's five `[must]`s was an untranslated string; the reference-diff finding also
+        hit 1.5 (`:1868`).
+    - 1 (additions). Two wishes the first list left out: (a) 1.1 had no byte-diff of the two
+      `theme.css` copies. Not a wish: 1.2 diffed them and logged them byte-identical
+      (`:1122`). Nothing. (b) 1.2: `packages/ts/ui/DESIGN.md` sections still describing the
+      shell. Checked now: only two lines were stale (the "Logo is rebuilt in card 1.5"
+      note and the `Logo` pointer in section 7); both fixed in this card, pointing at
+      `apps/web/src/shell/logo.tsx`. The rest of `DESIGN.md` describes the kit and is right.
+    - 4 (corrected). Phase 2 has 13 cards (2.1, 2.1a, 2.2, 2.3, 2.4a-c, 2.5, 2.6a-b, 2.7,
+      2.8a-b) plus the gate, 14 with the gate against the accepted 13. Keeping 2.1a departs
+      from step 4 ("drop or park any that fails"), as 0.G did for 2.4a: the ban-forms
+      class cost about six retries, so a card that stops it is worth the extra slot. Card
+      2.1a now says the icons check moves to `scripts/check-icons.mjs` so the meta-check
+      covers it; the next inline ban would escape it, which the card says.
+    - Unchanged from the first entry: step 2 (nothing comes back from the parked list),
+      step 5 (no product feature), line counts (1009 tooling, 4442 product).
+  - Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green. Also
+    for the owner: the two `/task` step 8 edits above.
 
 # Phase 2: Accounts
 
@@ -2593,8 +2654,10 @@ Ref: supastarter (study): auth, mail, organizations.
 ## 2.1a Verify guards
 - Read: docs/STANDARDS.md, `scripts/check-tokens.mjs`, `apps/web/AGENTS.md`
 - Build: three small guards, each with committed fixtures that verify runs. (1) The icons
-  check in `verify.sh` and `scripts/check-stale-refs.mjs` each get banned and allowed
-  fixtures, and verify fails if a `scripts/check-*` ban has no fixture folder. (2) A check
+  check moves out of `verify.sh` into `scripts/check-icons.mjs` (the meta-check only sees
+  `scripts/check-*` files, so an inline ban would escape it); it and
+  `scripts/check-stale-refs.mjs` each get banned and allowed fixtures, and verify fails if
+  a `scripts/check-*` ban has no fixture folder. (2) A check
   that fails on an untranslated string in `apps/web/src` (not tests, not `src/dev`): a JSX
   text literal, or a string literal in `title`, `placeholder`, `aria-label`, `alt` or
   `label`; fixtures hold a banned and an allowed line for each form. (3) A web test that

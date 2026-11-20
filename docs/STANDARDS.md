@@ -30,9 +30,15 @@ Two rules decide what goes in this file:
   every difference with its reason (1.2 and 1.10 were each returned for unlogged differences).
 - A runtime criterion that says "renders" exercises everything that mounts on interaction
   (1.3: the page loaded, the dropdown crashed on open).
-- A test of order or timing uses a path that cannot reach the asserted result another way
-  (1.5: effects had already run before the layout assertion; 1.6: a title test that a literal
-  string would still pass).
+- A test reaches its asserted result only through the path its name claims (1.5: effects had
+  already run before the layout assertion; 1.6: a title test that passed through `i18n.t`, not
+  the route's `head()`, and a presence check named "shows only message-file text").
+- A control that exists to do something (retry, submit, close) has a test that uses it and
+  sees the effect; rendering it proves nothing (1.6: "Try again" cleared boundary state and
+  did not retry).
+- "From memory", "using only the recipe", "through the running app" and similar claims in a
+  log say so only if that is how it was done (0.5, 0.6, 1.7: a recipe run that was not run
+  from the recipe alone).
 
 ## Smell baseline
 
