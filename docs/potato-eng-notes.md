@@ -83,3 +83,15 @@ One entry per finding: date, what happened, suggested fix.
   file but not the folder: `rmdir` was not on the allow list, and the empty folder was
   left for the owner. Fixed here with `Bash(rmdir:*)` (empty folders only; recursive `rm`
   stays blocked). Fix in potato-eng: the starting allow list has `rmdir` next to `rm`.
+
+## 2026-11-20: run-tasks.sh, usage limit during card 1.5
+
+- The loop hit the account's usage limit partway into `/task` on 1.5. The session ended
+  with the card `in-progress`, the work uncommitted (228 lines across nine new files plus
+  a theme token, not yet typechecking), and no log line. The next `run-tasks.sh` run
+  would stop at once on "a card is blocked or in-progress", and only the owner can tell a
+  limit stop from a real one. Fix: `run-tasks.sh` recognises the usage-limit message in
+  the session output (or its exit report), prints that the limit was hit and when it
+  resets, and stops without leaving the card `in-progress`. It sets the card back to
+  `todo`, and for uncommitted work either logs "partial work left uncommitted, limit hit"
+  on the card or stashes it under a named stash, so the owner can decide whether to keep it.
