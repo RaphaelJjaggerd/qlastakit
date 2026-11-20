@@ -1648,8 +1648,8 @@ Ref: ui-kit (reuse).
   above and an allowed line for each token form the helper section of `theme.css` really
   uses; a throwaway `@utility lift { @apply shadow-md; }` added to `theme.css` fails
   verify (proved, probe removed).
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: extended `scripts/check-tokens.mjs`. `theme.css` is no longer skipped: it is
     scanned from its first `@utility` on (token blocks above stay skipped). New CSS-only rule
@@ -1672,6 +1672,67 @@ Ref: ui-kit (reuse).
     lines (the multi-line `repeating-conic-gradient` in `glow`) is not read. Stubs: none.
     Wish: a statement-level CSS reader (or a real CSS parser) so multi-line declarations
     are checked.
+  - Review: returned 2026-11-20
+    - Checked: `scripts/verify.sh` passes (`tokens: no hardcoded color, shadow or surface`).
+      Done-when probe, run myself: `@utility lift { @apply shadow-md; }` added to the real
+      `theme.css` failed the repo check (`theme.css:309: stock shadow`); I took it out, and
+      `git status` is clean. The fixture forms are caught or pass. The plain-CSS false-positive
+      probes passed as they should: `color: var(--gold)`,
+      `transition-property: color, background-color`, `font-family: "Tan Sans"`,
+      `url(white-noise.png)`, `grid-template-areas: "red blue"`. Probes were in
+      `.potato/tmp/r14a`, run with `node scripts/check-tokens.mjs <file>`, and are deleted.
+    - Spec:
+      - [must] `scripts/check-tokens.mjs:100`: the comment skip `^\s*(?:\/\*|\*)` treats any
+        line that starts with `*` as a comment. In CSS that is the universal selector, which
+        `theme.css:316` uses. `* { box-shadow: 0 1px 2px #000; }` and
+        `*, ::before, ::after { border-color: black; }` now pass. Before this diff the first
+        was caught twice (`hex color`, `css shadow`), so this is a regression. The skip
+        also hides a rule written after a comment: `/* note */ .y { color: red; }` passes.
+        Fix: skip text that is really inside a comment (track `/*` ... `*/`, or strip
+        comments from the line before matching), not lines that match a line-start pattern.
+        Add banned lines for both `*` forms and for the comment-then-rule form.
+      - [must] `scripts/check-tokens.mjs:61,90-94`: the scan runs from the first `@utility`
+        to the end of the file, but `theme.css:327-339` ("7. ADD A THEME HERE") puts the
+        token blocks for a new theme after the helpers. If you follow that comment, a theme
+        with real values fails verify. My probe was a `theme.css` with the same order
+        (token block, `@utility`, `@layer base`, then `[data-theme='ocean']` with
+        `--background: oklch(...)` and `--primary: #0a66c2`), and it failed on both values.
+        The card says "the token blocks stay skipped", and an allowed token form that gets
+        flagged is a return (the 1.4 rule). Fix: scan only the helper section (stop at
+        section 7, or scan only inside `@utility` and `@layer base` blocks). Moving the
+        add-a-theme slot above section 5 would also work. Either way, put the section
+        logic under the self-test. Today no fixture is named `theme.css`, so the
+        `@utility lift` line in `banned.css` never runs this code. If `THEME_HELPERS`
+        stopped matching, `theme.css` would be skipped whole and nothing would fail
+        (`first = lines.length`, line 93). A committed `theme.css`-named fixture with token
+        blocks before and after the helpers, which must pass, would close this.
+      - [must] `scripts/check-tokens.mjs:24,50`: the card asks for "named colors in plain
+        CSS", but `CSS_NAMED` holds about 40 of CSS's 148 named colors. The `(?<![\w-])`
+        lookbehind also rules out every compound name. These pass: `color: lightgray`,
+        `background: whitesmoke`, `border-color: tomato`, `color: darkblue`,
+        `color: rebeccapurple`, `stroke: hotpink`. The CSS Color 4 list is closed, so this
+        fix does not reopen the open-ended hunt that `/advise` split 1.4 to stop. Fix: use
+        the full named-color list (minus `transparent` and `currentColor`), and add banned
+        lines for a compound name (`lightgray`) and a name outside the palette (`tomato`).
+        The Log's "a few more" was honest, but leaving most of the list out was a decision
+        the card did not leave open.
+      - [minor] `scripts/check-tokens.mjs:62,96`: `MASK_IDIOM` is removed from every line
+        of every file, whatever the property. So `.x { background: linear-gradient(#000 0 0); }`,
+        a solid black fill, passes. Strip it only inside a `mask` or `-webkit-mask` value.
+      - [minor] System colors (`background-color: Canvas`) pass. Add them with the
+        named-color list if that costs nothing.
+    - Standards:
+      - [must] Line 4 ("a verify ban is proved for every form the repo really uses"): the
+        universal selector (`theme.css:316`) and the add-a-theme slot (`theme.css:327`) are
+        both in the file this card scans. Neither has a fixture, and both break the check.
+        Line 1: the Log says "full-line CSS comments are skipped", but the code also skips
+        any line that starts with a `*` selector.
+    - Repeat across cards: this is the fifth time (0.4b, 1.4 three times, now) that a ban's
+      proof missed a form the repo really uses. It is also the first time a change to a check
+      let through a form it used to catch. For the 1.G gate: the fixture self-test should
+      also run the repo's own idioms. Each scanned file type gets a fixture with the same
+      name and shape (a `theme.css` fixture here), so code that only runs for one file name
+      is tested too.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
