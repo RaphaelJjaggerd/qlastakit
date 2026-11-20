@@ -2239,6 +2239,25 @@ Ref: ui-kit (reuse).
     `/apix` probe was on the same line as a bare hit, so the tighter lookahead was not
     proved on its own. Stubs: none. Wish: shell allowing `node ...; echo $?` so exit codes
     can be shown directly.
+  - Review: approved 2026-11-20
+    - Checker re-proved through the default path: root-anchored `apps/web/src/gone.ts` (in
+      an untracked `docs/recipes/zz-probe.md`), guide-relative `src/routes/gone.tsx` in
+      `apps/web/AGENTS.md`, `src/features/gone/x.ts` in `services/api/AGENTS.md`,
+      `localhost:8787/apix` alone on its line and a bare `localhost:8787/`: exit 1, all five
+      listed; `localhost:8787/api/docs` passed. Probes removed; verify passes clean.
+    - Spec:
+      - [minor] A guide-relative token is checked only when its first segment is a folder
+        that still exists under the guide (`localTops`). If `apps/web/src` were renamed,
+        every `src/...` path in that guide would be skipped, not flagged. This is the same
+        class as the logged `vitest.config.mts` gap. The log mentions it only for root names.
+    - Standards:
+      - [minor] `scripts/check-stale-refs.mjs:22-31`: every `EXTRA_TOP` name is a tracked
+        file, so the derived `TOP` already contains it and the list does nothing (possible
+        speculative generality). The comment says the list is for "names a guide could
+        misspell", and it does not do that. The log says "the list must grow when a new root
+        config file is added", but a new tracked root file is picked up automatically. Per
+        the first project standard, the comment and log claim more than the code does.
+        Delete `EXTRA_TOP`, or reword it as a guard for files that are not yet tracked.
 
 ## 1.9 Web env from the root file
 - Read: PRD §2.6
