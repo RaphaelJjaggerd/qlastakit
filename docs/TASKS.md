@@ -2281,6 +2281,27 @@ Ref: ui-kit (reuse).
     `.env`); it runs in the node environment, so `test-setup.ts` now skips the `matchMedia`
     shim when there is no `window`; `root-env.ts` added to the web tsconfig include. Stubs:
     none. Wish: none.
+  - Review: approved 2026-11-20
+    - Checker reran: `verify.sh` passes. `src/root-env.test.ts` passes from the repo root
+      (`pnpm exec vitest run --project web`, run root `D:/.../qlastakit`) and from
+      `apps/web` (`pnpm --filter @qlastakit/web exec vitest run`, run root `.../apps/web`).
+      `router.tsx:12` reads `process.env.API_INTERNAL_URL`, the value the test asserts.
+    - Spec:
+      - [minor] `apps/web/src/root-env.test.ts:27`: the name "whatever the cwd" claims more
+        than the test proves. It checks the root from the one cwd it runs in, so the
+        two-cwd criterion is met only by running it twice, not by the test. Per the second
+        project standard, rename it to say what it asserts (the resolved dir holds
+        `pnpm-workspace.yaml`).
+    - Standards:
+      - [minor] `apps/web/src/root-env.test.ts:10`: the test writes `.env.rootenvtest` into
+        the real repo root, and `.gitignore` only ignores `.env`. If a run is killed between
+        the write and `afterEach`, an untracked env file is left at the root where
+        `git add -A` would pick it up. Write it to a temp dir instead, or ignore `.env.*`
+        (keeping `.env.example`).
+      - [minor] `apps/web/root-env.ts:12`: `loadEnv` with an empty prefix already merges
+        `process.env` over the file, so `env.API_INTERNAL_URL` is the real var when one is
+        set and `??=` never decides anything. This is harmless, but the comment implies
+        `??=` is what makes the real var win.
 
 ## 1.10 Page chrome and container
 - Read: PRD §3.1, §3.4
