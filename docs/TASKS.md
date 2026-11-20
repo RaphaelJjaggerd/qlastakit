@@ -1375,7 +1375,7 @@ Ref: ui-kit (reuse).
     touches no component and no theme file; run it again only if it does.
   - At review, a banned form outside the scope list that gets through is a note on 1.4a,
     not a return. A token form in scope that is wrongly flagged is still a return.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans

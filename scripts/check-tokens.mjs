@@ -31,10 +31,11 @@ const RULES = [
   ["bare white or black", new RegExp(`\\b(?:bg|text|border)-${PART}(?:white|black)\\b`)],
   [
     "stock shadow",
-    /(?:^|[\s"'`:!])shadow(?:-(?:2xs|xs|sm|md|lg|xl|2xl|inner|\[[^\]]*\]))?(?:\/[^\s"'`]+)?!?(?=[\s"'`]|$)/,
+    /(?:^|[\s"'`:!])shadow(?:-(?:2xs|xs|sm|md|lg|xl|2xl|inner|\[[^\]]*\]))?(?:\/[^\s"'`;]+)?!?(?=[\s"'`;]|$)/,
   ],
-  ["other shadow", /\b(?:drop-shadow|inset-shadow|text-shadow)\b/],
-  ["css shadow", /\b(?:box|text)-shadow:\s*(?!none\b|var\()/],
+  // `text-shadow:` as a CSS property is the "css shadow" rule; the class forms are here.
+  ["other shadow", /\b(?:drop-shadow|inset-shadow|text-shadow(?!:))/],
+  ["css shadow", /\b(?:box|text)-shadow:(?!\s*(?:none\b|var\())/],
   ["gradient", /\bbg-(?:linear|gradient|radial|conic)/],
 ];
 
@@ -103,7 +104,8 @@ for (const name of ["banned.txt", "banned.css"]) {
       problems.push(`${file}:${i + 1}: not caught: ${line.trim()}`);
   });
 }
-for (const h of scan([`${dir}/allowed.txt`])) problems.push(`wrongly flagged: ${h}`);
+for (const h of scan([`${dir}/allowed.txt`, `${dir}/allowed.css`]))
+  problems.push(`wrongly flagged: ${h}`);
 if (problems.length > 0) fail("tokens: FAILED, the check's own fixtures:", problems);
 
 console.log("tokens: no hardcoded color, shadow or surface");

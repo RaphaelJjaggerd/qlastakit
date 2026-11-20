@@ -2,3 +2,7 @@
 .b { color: #333; }
 .c { box-shadow: 0 1px 2px black; }
 .d { background: rgb(0 0 0); }
+.e { @apply shadow-md; }
+.f { @apply !shadow-md; }
+.g { @apply shadow-lg/20; }
+.h { text-shadow: 0 1px 2px black; }

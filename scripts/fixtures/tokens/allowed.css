@@ -1,0 +1,6 @@
+.a { box-shadow: var(--shadow-card); }
+.b { box-shadow: none; }
+.c { text-shadow: none; }
+.d { @apply shadow-card; }
+.e { @apply shadow-none border-t border-border; }
+.f { @apply bg-background text-foreground; }
