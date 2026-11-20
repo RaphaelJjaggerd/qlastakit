@@ -1608,6 +1608,31 @@ Ref: ui-kit (reuse).
     component or theme file. Decisions the PRD left open: none. Stubs: none. Wish: the
     reviewer's idea of a required-forms list that verify checks the fixtures against, for
     the 1.G gate.
+  - Review: approved 2026-11-20
+    - Checked: `scripts/verify.sh` passes (`tokens: no hardcoded color, shadow or surface`).
+      The diff (`d0fc041`) touches only `scripts/check-tokens.mjs`, the token fixtures and
+      this card, with no component or theme file, so the runtime result (237 of 237) holds.
+      Spec: every form named in both returns has a fixture line (`banned.txt` 40 lines,
+      `banned.css` 12, `allowed.txt` with two `cn(...)` lines and `hover:shadow-card`,
+      `allowed.css` with the three CSS token forms and `@apply hover:shadow-card;`). `@apply`,
+      `cn(...)` and a variant prefix each have banned and allowed lines in the file types they
+      belong to. Repo scan: `REPO_EXT` has no `txt` (`check-tokens.mjs:43,91`).
+      Probes (scratch tree in `.potato/tmp/r14`, files deleted; the script run with that as
+      cwd): `apps/web/src/notes.txt` holding `see #fff` was not reported, while a `.css` with
+      `#fff` next to it was (exit 1). The self-test is not tautological: an uncaught
+      `bg-background` in `banned.txt` and `@apply shadow-md;` in `allowed.css` both failed it
+      (`not caught`, `wrongly flagged`, exit 1).
+      Standards: line 1, the Log and the header comment match the code. Line 4, `cn(...)` and
+      `@apply` are now covered on both sides.
+    - [minor] `banned.css:1` holds two banned forms (a hardcoded shadow layer and `#000`), so
+      it would still pass if `css shadow` broke. Today `.c` and `.h` prove that rule alone,
+      so nothing is lost. Keep it to one form per line as the header says.
+    - [minor] Paths given on the command line read `.txt` too, so the card's "only for the
+      fixtures" is really "fixtures and probes". The Log says so, and that is what the
+      return asked for.
+    - For the 1.G gate: four rounds on this card (0.4b before it) were about fixture coverage,
+      not the regexes. The Log's wish (verify checks the fixtures against a required-forms
+      list) is the check that would have stopped it.
 
 ## 1.4a Token check: theme helpers and plain CSS
 - Read: PRD §3.5
