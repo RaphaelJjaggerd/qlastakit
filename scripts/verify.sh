@@ -43,6 +43,9 @@ echo "icons: one icon set"
 # or the web app; they come from theme.css tokens.
 node scripts/check-tokens.mjs || exit 1
 
+# Card 1.8: committed guides and config must not point at paths or URLs that moved.
+node scripts/check-stale-refs.mjs || exit 1
+
 # No tests exist yet; the Phase 0 test-harness card adds a root "test" script.
 if grep -qE '"test"[[:space:]]*:' package.json; then
   run test pnpm test

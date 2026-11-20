@@ -2162,11 +2162,26 @@ Ref: ui-kit (reuse).
   0.3 and 0.4b.)
 - Done when: verify passes on the repo and fails on a throwaway stale path and a bare
   `localhost:8787` (both proved, probes removed).
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-20 Raphael: `.claude/commands/new-feature.md` fixed; it now names
     `services/api/src/features/notes/notes.controller.ts`. Checked, passes.
+  - 2026-11-20: built `scripts/check-stale-refs.mjs`, called from `scripts/verify.sh`
+    after the token check. Rule 1: a backticked token in `AGENTS.md`, `README.md`,
+    `docs/recipes`, every `AGENTS.md` and `.claude/commands/*.md` that starts with a
+    top-level repo folder or file must exist (`:12` / `:12-14` suffixes ignored). Rule 2:
+    `localhost:8787` not followed by `/api` in `*.md`, `.env.example`, `*.toml` (not
+    `docs/TASKS.md`, PRD, PRD_REVIEW, BRIEF, VISION or ADRs, which quote old URLs as
+    history). Proved: verify passes on the repo; a throwaway `.potato/tmp/probe.md` with a
+    missing path and a bare `localhost:8787` made the script exit 1 and list both (probe
+    deleted). Decisions the PRD left open: tokens with a glob or placeholder (`* < > { } [ ]
+    $ ... NNNN`) and paths under `references/`, `Logs/`, `.potato/` are skipped; the six
+    "create this" example paths in the two recipes are an exact-path allowlist in the
+    script (`EXAMPLES`), so a recipe naming a new example path needs one line there; only
+    paths starting with a known top-level name are checked, so a stale path that does not
+    start with one is not caught. No fixture folder (the probe was run once, as the card
+    asks). Stubs: none. Wish: none.
 
 ## 1.9 Web env from the root file
 - Read: PRD §2.6
