@@ -1648,7 +1648,7 @@ Ref: ui-kit (reuse).
   above and an allowed line for each token form the helper section of `theme.css` really
   uses; a throwaway `@utility lift { @apply shadow-md; }` added to `theme.css` fails
   verify (proved, probe removed).
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: extended `scripts/check-tokens.mjs`. `theme.css` is no longer skipped: it is
@@ -1733,6 +1733,29 @@ Ref: ui-kit (reuse).
       also run the repo's own idioms. Each scanned file type gets a fixture with the same
       name and shape (a `theme.css` fixture here), so code that only runs for one file name
       is tested too.
+  - 2026-11-20 (retry 2): fixed the three `[must]`s and both minors in
+    `scripts/check-tokens.mjs`. (1) CSS comments are now blanked (newlines kept) before
+    matching instead of skipping lines that start with `/*` or `*`, so `* { box-shadow: ... }`,
+    `*, ::before { border-color: black; }` and `/* note */ .y { color: red; }` are caught,
+    while real comments (one-line and multi-line) are still ignored. (2) `theme.css` is scanned
+    only inside its top-level `@utility` and `@layer base` blocks (brace depth), so token blocks
+    anywhere, including the "add a theme here" slot after the helpers, are skipped. New
+    committed fixture `scripts/fixtures/tokens/theme/theme.css`, named like the real file:
+    token blocks before and after the helpers must pass; lines ending in `/* banned */` must be
+    reported and no other line may be, so the file-name logic is under the self-test. (3) Named
+    colors: the full CSS Color 4 list (148 names, `transparent` and `currentColor` left out)
+    plus the CSS system colors (`Canvas`, `Highlight`...) plus the palette names. Minors: the
+    mask idiom `linear-gradient(#000 0 0)` is removed only inside `mask` / `-webkit-mask`
+    values (also across lines), so `background: linear-gradient(#000 0 0)` is flagged; system
+    colors added. Fixtures: `banned.css` gained both `*` forms, comment-then-rule, `lightgray`,
+    `whitesmoke`, `tomato`, `darkblue`, `rebeccapurple`, `hotpink`, `Canvas` and the solid
+    black gradient; `allowed.css` gained `* { @apply ... }`, one-line and multi-line comments
+    holding banned text, and a two-line mask. Proved: the throwaway `@utility lift { @apply
+    shadow-md; }` added to the real `theme.css` failed (`theme.css:327: stock shadow`),
+    removed, `theme.css` unchanged in the diff; `verify.sh` passes. Decisions the PRD left
+    open: only CSS files get comment blanking (class strings in `.ts` are unaffected); brace
+    depth ignores braces in strings. Stubs: none. Wish: still a line-based reader, so a
+    declaration split over lines is checked per line; a CSS parser would close it.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5

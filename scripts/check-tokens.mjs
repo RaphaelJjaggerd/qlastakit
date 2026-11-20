@@ -1,13 +1,14 @@
 // Token-purity check (PRD 3.5, card 1.4): UI code and web app code carry no hardcoded
 // color, shadow, gradient or surface. Everything comes from a semantic token defined in
 // packages/ts/ui/src/theme.css (its token blocks are skipped, because token values belong
-// there; its helper section, from the first `@utility` on, is scanned).
+// there; its `@utility` and `@layer base` blocks are scanned).
 // Exits 1 and lists every hit.
 //   node scripts/check-tokens.mjs            check the repo, then the fixtures
 //   node scripts/check-tokens.mjs <paths..>  check these files or folders (probes)
 // Fixtures: scripts/fixtures/tokens/banned.txt and banned.css hold one banned form per
-// line and every line must be reported; allowed.txt and allowed.css must pass. Add a form
-// there with every rule change.
+// line and every line must be reported; allowed.txt and allowed.css must pass;
+// theme/theme.css is named like the real file and marks banned lines with `/* banned */`.
+// Add a form there with every rule change.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
@@ -21,7 +22,13 @@ const PART = "(?:(?:[xytblrse]|offset|inset)-)?";
 const NAMED = `white|black|${PALETTE}`;
 
 // Named CSS colors in plain declarations (color: red; border: 1px solid black).
-const CSS_NAMED = `white|black|gray|grey|silver|maroon|olive|navy|aqua|gold|brown|tan|coral|crimson|salmon|khaki|ivory|beige|lavender|magenta|turquoise|${PALETTE}`;
+// The CSS Color 4 named-color list is closed (148 names, minus transparent and currentColor,
+// which are tokens-friendly), plus the CSS system colors and the Tailwind palette names.
+const CSS_COLOR_NAMES =
+  "aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen";
+const CSS_SYSTEM_COLORS =
+  "accentcolor accentcolortext activetext buttonborder buttonface buttontext canvas canvastext field fieldtext graytext highlight highlighttext linktext mark marktext selecteditem selecteditemtext visitedtext";
+const CSS_NAMED = `${[CSS_COLOR_NAMES, CSS_SYSTEM_COLORS].join(" ").split(" ").join("|")}|${PALETTE}`;
 const CSS_PROP =
   "[\\w-]*color|background(?:-image)?|border(?:-[a-z-]+)?|outline|fill|stroke|box-shadow|text-shadow|filter|text-decoration";
 
@@ -57,9 +64,39 @@ const RULES = [
 // Helper section of theme.css (PRD 3.5): everything from the first `@utility` on is scanned;
 // the token blocks above it are skipped. `linear-gradient(#000 0 0)` is the mask-alpha idiom
 // (the color is never painted), so it is not a hardcoded color.
+// Only the `@utility` and `@layer base` blocks are scanned; a token block anywhere else in
+// the file (the "add a theme here" slot sits after the helpers) is skipped.
 const THEME = "theme.css";
 const THEME_HELPERS = /^@(?:utility|layer base)\b/;
+// The idiom is not a color only inside a mask value; elsewhere it is a solid black fill.
+const MASK_DECL = /(?:-webkit-)?mask(?:-image)?\s*:[^;}]*/g;
 const MASK_IDIOM = /linear-gradient\(#000 0 0\)/g;
+
+// CSS with comments blanked (newlines kept, so line numbers stay right) and the mask idiom
+// removed from mask declarations.
+function cleanCss(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, " "))
+    .replace(MASK_DECL, (d) => d.replace(MASK_IDIOM, ""));
+}
+
+// Which lines of theme.css are helper blocks (depth 0 start at `@utility` / `@layer base`,
+// through the line that closes it).
+function themeHelperLines(lines) {
+  const scan = lines.map(() => false);
+  let depth = 0;
+  let inHelper = false;
+  lines.forEach((line, i) => {
+    if (depth === 0 && THEME_HELPERS.test(line)) inHelper = true;
+    if (inHelper) scan[i] = true;
+    depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+    if (depth <= 0) {
+      depth = 0;
+      inHelper = false;
+    }
+  });
+  return scan;
+}
 
 const SKIP = /\.(?:test|spec)\.[cm]?[tj]sx?$/;
 const REPO_EXT = /\.(?:[cm]?[tj]sx?|css)$/;
@@ -84,26 +121,20 @@ function scan(roots, ext = REPO_EXT) {
   for (const root of roots) {
     for (const file of files(root)) {
       if (!ext.test(file) || SKIP.test(file) || SKIP_NAMES.has(basename(file))) continue;
-      const lines = readFileSync(file, "utf8").split("\n");
+      const raw = readFileSync(file, "utf8");
       const isCss = file.endsWith(".css");
-      // theme.css: skip the token blocks, scan from the helper section on.
-      let first = 0;
-      if (basename(file) === THEME) {
-        first = lines.findIndex((l) => THEME_HELPERS.test(l));
-        if (first < 0) first = lines.length;
-      }
-      lines
-        .map((line) => line.replace(MASK_IDIOM, ""))
-        .forEach((line, i) => {
-          if (i < first) return;
-          // Full-line CSS comments are prose ("not a plain colour or shadow").
-          if (isCss && /^\s*(?:\/\*|\*)/.test(line)) return;
-          for (const [name, re, only] of RULES) {
-            if (only === "css" && !isCss) continue;
-            const m = re.exec(line);
-            if (m) hits.push(`${file.replaceAll("\\", "/")}:${i + 1}: ${name}: ${m[0].trim()}`);
-          }
-        });
+      // CSS comments are prose ("not a plain colour or shadow"): blank them, keep the lines.
+      const lines = (isCss ? cleanCss(raw) : raw).split("\n");
+      // theme.css: skip the token blocks, scan only the helper blocks.
+      const helper = basename(file) === THEME ? themeHelperLines(lines) : null;
+      lines.forEach((line, i) => {
+        if (helper && !helper[i]) return;
+        for (const [name, re, only] of RULES) {
+          if (only === "css" && !isCss) continue;
+          const m = re.exec(line);
+          if (m) hits.push(`${file.replaceAll("\\", "/")}:${i + 1}: ${name}: ${m[0].trim()}`);
+        }
+      });
     }
   }
   return hits;
@@ -142,6 +173,20 @@ for (const name of ["banned.txt", "banned.css"]) {
 }
 for (const h of scan([`${dir}/allowed.txt`, `${dir}/allowed.css`], FIXTURE_EXT))
   problems.push(`wrongly flagged: ${h}`);
+// A theme.css-named fixture runs the file-name logic: token blocks before and after the
+// helpers must pass; a line ending in `/* banned */` must be reported and no other line may.
+{
+  const file = `${dir}/theme/theme.css`;
+  const hit = new Set(scan([file], FIXTURE_EXT).map((h) => Number(h.split(":")[1])));
+  readFileSync(file, "utf8")
+    .split("\n")
+    .forEach((line, i) => {
+      const banned = line.trimEnd().endsWith("/* banned */");
+      if (banned && !hit.has(i + 1)) problems.push(`${file}:${i + 1}: not caught: ${line.trim()}`);
+      if (!banned && hit.has(i + 1))
+        problems.push(`${file}:${i + 1}: wrongly flagged: ${line.trim()}`);
+    });
+}
 if (problems.length > 0) fail("tokens: FAILED, the check's own fixtures:", problems);
 
 console.log("tokens: no hardcoded color, shadow or surface");
