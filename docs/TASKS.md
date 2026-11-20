@@ -2162,7 +2162,7 @@ Ref: ui-kit (reuse).
   0.3 and 0.4b.)
 - Done when: verify passes on the repo and fails on a throwaway stale path and a bare
   `localhost:8787` (both proved, probes removed).
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20 Raphael: `.claude/commands/new-feature.md` fixed; it now names
@@ -2218,6 +2218,27 @@ Ref: ui-kit (reuse).
         missing names.
       - [minor] `scripts/check-stale-refs.mjs:100`: `(?!\/api)` passes
         `localhost:8787/apix`. `(?!\/api(?:\/|\b))` is tighter. Low risk, so a note only.
+  - 2026-11-20 (retry 2): fixed both [must]s and both minors in
+    `scripts/check-stale-refs.mjs`. A guide below the root now also resolves a token whose
+    first segment is a folder of its own directory (`src/...`) against that directory, and
+    flags it when neither the root nor the guide-relative reading exists; the web guide's
+    example `src/routes/reports.tsx` is in `EXAMPLES` as `apps/web/src/routes/reports.tsx`.
+    `TOP` is now derived from the first segment of every tracked or untracked file
+    (`git ls-files`) plus an explicit `EXTRA_TOP` list (turbo.json, pnpm-workspace.yaml,
+    vitest.config.ts, playwright.config.mts, .oxlintrc.json, .oxfmtrc.json). The 8787
+    lookahead is now `(?!\/api(?:\/|\b))`. Proved through the default (no-argument) path,
+    all forms: an untracked `docs/recipes/zz-probe.md` (root-anchored
+    `apps/web/src/gone.ts`, bare `localhost:8787/`), a temporary line in
+    `apps/web/AGENTS.md` (guide-relative `src/routes/gone.tsx`) and in
+    `services/api/AGENTS.md` (`src/features/gone/x.ts`): exit 1, all four hits listed;
+    probes removed (guides restored with `git checkout`, recipe probe deleted); verify
+    passes on the clean repo. Decisions the PRD left open: a misspelt top-level file name
+    that is not in `EXTRA_TOP` and not a tracked first segment (e.g. `vitest.config.mts`) is
+    still not caught, since a stale name cannot be derived from tracked files; I probed it
+    and it passed clean, so the list must grow when a new root config file is added. A
+    `/apix` probe was on the same line as a bare hit, so the tighter lookahead was not
+    proved on its own. Stubs: none. Wish: shell allowing `node ...; echo $?` so exit codes
+    can be shown directly.
 
 ## 1.9 Web env from the root file
 - Read: PRD §2.6
