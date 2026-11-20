@@ -2456,9 +2456,64 @@ Ref: ui-kit (reuse).
 - Done when: the six steps of the 0.G gate are logged for this phase, even if a decision
   is "nothing"; the card closes with
   `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: gate steps.
+    1. Wishes found in Phase 1 logs: shell limits (no `&&`, `sed`, redirects, `node ...;
+       echo $?`; 1.2, 1.8; the owner already allowed `.potato/tmp` scripts in `0e895e3`); a
+       check that fails when a UI component is missing from the preview (1.3); token check
+       blind to template-string and `style={{}}` colors, and a real CSS parser (1.4, 1.4a);
+       a fixture for the icons check, and a required-forms list for fixtures (1.4); a verify
+       check for JSX text literals (1.6, 1.7); a check that a nav node `key` matches a route
+       static data key (1.6, 1.7); English `sr-only` strings in `@qlastakit/ui` not
+       translatable (1.6); the jsdom hang on the menu in the routed shell (1.6); a `/task`
+       step to diff every reused reference file before closing (1.10).
+    2. Parked list (PRD §8): no wish matches a trigger (no second project, no new adapter,
+       no theme request); nothing comes back. Gaps in what Phase 1 shipped become one card:
+       2.1a.
+    3. Retro. Returns: 1.2, 1.3, 1.4 (twice, then `/advise` split it into 1.4a), 1.4a, 1.5,
+       1.6 (twice), 1.7, 1.8, 1.10. Blocked: 1.1 waited for its owner precondition (expected,
+       nothing).
+       Repeated and mechanical: a ban proved for fewer forms than the repo uses (0.4b, 1.4
+       three times, 1.4a, 1.8) cost about six retries and the standard already written did
+       not stop it -> card 2.1a gives the icons and stale-refs checks fixtures and makes
+       verify fail on a `check-*` ban with none (check-tokens has them). Untranslated
+       strings (1.6 three `[must]`s) and a nav key typo that silently drops the highlight
+       (wished twice) -> card 2.1a (literal check, nav key test). Judgement, three lines
+       added to `docs/STANDARDS.md` now: diff reused reference files before closing and log
+       each difference (1.2 and 1.10); a "renders" runtime criterion exercises what mounts
+       on interaction (1.3); order and timing tests use a path that cannot pass another way
+       (1.5, 1.6; the test-name standard was broken three times, and this is the sharper
+       form both returns asked for). Nothing for: 1.4's "no hardcoded X has no end for a
+       pattern check", which was a card-writing fault `/tasks` owns and `/advise` fixed by
+       the split. AGENTS.md: nothing to delete (every section was used); no navigation
+       pointer needed.
+    4. Limits: 2.1a passes (no owner-only criterion; the ban class cost six retries; one
+       card, three bounded guards with finite form lists, so it does not repeat 1.4's open
+       ended criterion). Phase 2 now has 14 cards plus the gate, over the accepted 13; if
+       2.1a returns, `/advise` should split it. Dropped or parked, with the reason: preview
+       completeness check (once, dev-only page); token check for template strings and a CSS
+       parser (no card needs them, trigger is a card that builds such colors); `sr-only`
+       strings in the ui package (the 1.6 pseudo-locale sweep already fails on an English
+       string in any screen that renders them, so the first card that does hits it); jsdom
+       menu hang (no card needs the test); shell-limit wishes (the owner's allowlist, not a
+       card). Line counts, reproducible with `git diff --shortstat
+       4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- <paths>`: tooling = `scripts e2e
+       .github mise.toml .oxlintrc.json .oxfmtrc.json vitest.config.ts playwright.config.mts
+       services/api/test apps/web/vitest.config.ts services/api/vitest.config.ts` = 1009
+       (was 531 at the 0.G gate; the token and stale-ref checks and their fixtures); product
+       = `apps/web/src services/api/src packages/ts/{core,db,ui}/src`, excluding tests,
+       `routeTree.gen.ts`, `test-setup`, css, json, fonts and svg = 4442 (was 641; the UI
+       kit and shell). Tooling is still well under product.
+    5. Scope: no Phase 1 card added an idea-app or product feature. The notes page is the
+       reference feature; the shell, i18n, page container and component preview are kit
+       infrastructure.
+    6. Decisions: the above, plus "nothing" for AGENTS.md pruning, parked items and the
+       shell wishes. Carried from Phase 0 and still open: 0.8 stays `Awaiting sign-off`
+       until CI has run green once on GitHub (billing lock, see the 0.G log); no Phase 1
+       card is unsigned.
+  - Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green.
 
 # Phase 2: Accounts
 
@@ -2469,6 +2524,22 @@ Ref: supastarter (study): auth, mail, organizations.
 - Read: PRD §3.5
 - Done when: `/vet supastarter` has written a report for the auth, mail, organizations
   and settings paths `docs/REFERENCES.md` lists, and no verdict needs an owner decision.
+- Status: todo
+- Retries: 0
+- Log:
+
+## 2.1a Verify guards
+- Read: docs/STANDARDS.md, `scripts/check-tokens.mjs`, `apps/web/AGENTS.md`
+- Build: three small guards, each with committed fixtures that verify runs. (1) The icons
+  check in `verify.sh` and `scripts/check-stale-refs.mjs` each get banned and allowed
+  fixtures, and verify fails if a `scripts/check-*` ban has no fixture folder. (2) A check
+  that fails on an untranslated string in `apps/web/src` (not tests, not `src/dev`): a JSX
+  text literal, or a string literal in `title`, `placeholder`, `aria-label`, `alt` or
+  `label`; fixtures hold a banned and an allowed line for each form. (3) A web test that
+  every nav node's `key` matches a route's static data key.
+- Done when: each guard fails on its banned fixture line and passes on its allowed one, a
+  probe of one real form for each (an extra icon dependency, a stale path, a literal in
+  `index.tsx`, a mistyped nav key) makes verify fail, and `scripts/verify.sh` passes.
 - Status: todo
 - Retries: 0
 - Log:
