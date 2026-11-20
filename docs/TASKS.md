@@ -1357,8 +1357,8 @@ Ref: ui-kit (reuse).
 - Build: no hardcoded color, shadow, border or surface in components; a verify check.
 - Done when: verify's token-purity check passes; runtime: a throwaway test theme changes
   the whole preview page without editing a component.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans
     `packages/ts/ui/src/components` and `apps/web/src` (tests skipped) for hex colors,
@@ -1381,6 +1381,61 @@ Ref: ui-kit (reuse).
     per line; scope is components plus the whole web app, not `theme.css` (that is where
     token values belong). Stubs: none. Wish: the check does not see colors built in
     template strings or `style={{}}` objects; extend it if a card needs that.
+  - Review: returned 2026-11-20
+    - Checked: `scripts/verify.sh` passes (`tokens: no hardcoded color, shadow or surface`).
+      Runtime (reviewer's throwaway Playwright script in `.potato/tmp`, deleted; `vite dev` on
+      3198, stopped): `/dev/components` 200. I overrode every color, shadow and gradient
+      custom property on `:root` (54, read from the live stylesheets) in a
+      `[data-theme='probe']` block and set it on `<html>`. After transitions settled (1 s),
+      237 of 237 elements in all 27 sections changed color, background, border or shadow,
+      body went `oklch(1 0 0)` to `rgb(255, 0, 0)`, and there were 0 page errors. The runtime
+      criterion is met. The Log's one unchanged `--solid` Button and a Tabs trigger stay the
+      same if you snapshot straight away, but both have `transition-all` and change once it
+      ends.
+      Probes (deleted) ran `node scripts/check-tokens.mjs <dir>` on a probe `.tsx` and
+      `.css`. Caught: `ring-red-500`, `bg-red-500/50`, `hover:shadow-xl`,
+      `data-[x=y]:bg-zinc-100`, `inset-shadow-sm`, `text-red-500`, `bg-radial`.
+      Missed: see below.
+    - Spec:
+      - [must] `scripts/check-tokens.mjs:17-31,35`: the check misses forms the card names
+        ("border", "the whole web app"):
+        - `EXT` is JS/TS only, so CSS files are never read, even inside a scanned root.
+          `apps/web/src/styles.css` is in the web app root. A probe `.css` with
+          `body { box-shadow: 0 1px 2px #000; color: #333; }` passes.
+        - Side borders are missed: `border-t-black`, `border-e-red-500`,
+          `border-x-gray-200`. The palette rule needs `border-` directly before the color,
+          and components use side borders (`border-e`, `border-s`, `border-t` in `card`,
+          `input-group`, `sheet`, `sidebar`, `table`), so a side-border color is the next
+          form a component writes.
+        - Tailwind v4 shadow forms are missed: `shadow-lg/20` (opacity modifier),
+          `shadow-lg!` and `!shadow-md` (important). The stock-shadow lookahead or prefix
+          rejects `/` and `!`.
+        - Also missed: `ring-offset-blue-500`, `text-[red]` (named color as an arbitrary
+          value), `bg-[var(--color-red-500)]` (Tailwind palette variable).
+        Fix: scan `.css` in the roots too (exclude `theme.css` by name, where token values
+        belong), allow a side or offset part between the property and the color, accept
+        `/NN` and `!` on shadows, and flag `--color-<palette>-` variables. Prove each form
+        with a probe and log it.
+      - [minor] Scope: `packages/ts/ui/src/*.ts` outside `components/` is not scanned. That
+        is where PRD §3.5's defect ("shadows applied by a helper outside the components")
+        would live. The vet found no such helper today. `cn.ts` already passes the rules
+        (probe), so scanning all of `packages/ts/ui/src` costs nothing.
+      - [minor] No committed test covers `check-tokens.mjs`. The proof was a throwaway
+        probe, so nothing stops a later regex edit from silently dropping a form. A small
+        fixture test (each banned form fails, each token form such as `shadow-card` or
+        `shadow-none` passes) would keep the forms proven.
+    - Standards:
+      - [must] Line 4 ("a lint or verify ban is proved with a probe for every form the repo
+        really uses"): the Log's probe was one file with four classes, and it missed the
+        `.css` extension and side-border forms above, both used in the repo. Line 1: the
+        Log's "scope is components plus the whole web app" claims more than the code does,
+        since the web app's CSS is not scanned.
+    - Repeat across cards: this is 0.4b's finding again (a ban proved for one form while
+      another form the repo uses got through). Standards line 4 did not stop it. For the
+      phase gate: make it a check. Each verify ban ships a committed fixture of banned and
+      allowed forms that verify runs.
+    - Note: the reviewer could not confirm port 3198 is free. The dev server was stopped
+      with TaskStop, and the port check needed approval.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
