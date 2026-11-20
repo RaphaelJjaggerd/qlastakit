@@ -2132,6 +2132,22 @@ Ref: ui-kit (reuse).
     - [minor] `apps/web/AGENTS.md:46-47`: `routeTree.gen.ts` is tracked in git, so the
       regenerated file goes into the commit with the route. Say so, so nobody reverts it
       as noise or leaves it out.
+- Review: approved 2026-11-20 (verify passes)
+  - Spec: both earlier findings are fixed (`apps/web/AGENTS.md:46-47` and `:52-54`). The
+    reviewer followed the recipe as now written and nothing else: (1) `src/routes/reports.tsx`
+    plus `pnpm --filter @qlastakit/web build` (route tree regenerated, `reports` chunk
+    built); (2) `nav.reports` and `reports.title` in `en.json` and a nav node with only the
+    seven fields the recipe names. Full `scripts/verify.sh` passed with the page in place
+    (typecheck, lint, tokens, tests, contract). Probe removed, tree clean. The seven fields
+    match `NavNode` (`src/config/navigation.config.ts:7-20`; `descriptionKey` is optional and
+    rightly left out), and "`[]` means any signed-in user" matches `hasAuthority`
+    (`src/access.ts:27-28`).
+  - Standards: the retry-2 log corrects the first log's false "using only the recipe" claim
+    and says what was not re-run on the throwaway. That meets the project standard.
+    - [minor] `docs/TASKS.md`: the retry-2 entry sits above the `Review: returned` block
+      instead of after it, so the log reads out of order. This is the second time (0.G noted
+      the same for its retry-1 entry). For the phase gate: `/task` should append retry
+      entries after the latest `Review:` block.
 
 ## 1.8 Stale-reference check
 - Precondition (human): the owner fixes the stale path in `.claude/commands/new-feature.md`
