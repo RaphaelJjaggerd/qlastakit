@@ -1756,6 +1756,49 @@ Ref: ui-kit (reuse).
     open: only CSS files get comment blanking (class strings in `.ts` are unaffected); brace
     depth ignores braces in strings. Stubs: none. Wish: still a line-based reader, so a
     declaration split over lines is checked per line; a CSS parser would close it.
+  - Review: approved 2026-11-20
+    - Checked: `scripts/verify.sh` passes (`tokens: no hardcoded color, shadow or surface`,
+      fixtures included). Done-when probe, run myself: `@utility lift { @apply shadow-md; }`
+      added to the real `theme.css` after `surface-panel` failed the repo check
+      (`theme.css:313: stock shadow`). I took it out, and `git status` is clean. All three
+      `[must]`s from the return are fixed in the code and have fixture lines: comments are
+      blanked, not skipped by line start (`banned.css` has both `*` forms and the
+      comment-then-rule form); `theme.css` is scanned by helper block, and the
+      `theme/theme.css` fixture has real token values before and after the helpers. Those
+      values must pass, and the lines marked `/* banned */` must be caught, so the file-name
+      logic is under the self-test. The named-color list is the full CSS Color 4 list plus
+      the system colors. Probes (in `.potato/tmp/r14a`, deleted) ran
+      `node scripts/check-tokens.mjs <file>`. Passed as they should: `var(--field)`,
+      `accent-color: auto`, `border-color: transparent`, `outline: none`. Caught: `color: Mark`,
+      `color: RED`, `border: 1px solid var(--border), red`,
+      `/* a */ .g { color: red; } /* c */`, and `background: linear-gradient(#000 0 0)` after
+      a `mask:` in the same rule.
+    - Spec: no `[must]`.
+      - [minor] `scripts/check-tokens.mjs:85-99`: `theme.css` is now scanned only inside
+        `@utility` and `@layer base`, so everything else in the file is skipped, not just
+        token blocks. These pass in a `theme.css`-named probe: a top-level
+        `.card { box-shadow: 0 0 2px black; }`, `@layer components { .x { color: red; } }`,
+        and `@keyframes pulse { from { background: white; } }`. A plain rule placed after the
+        first `@utility` was caught before this diff, so this is a small regression. The
+        return offered this design as one fix, so it is not a return. For the gate: skip a
+        block by what it holds (`@theme`, or a block of only `--custom: value` lines) and scan
+        everything else.
+      - [minor] `scripts/check-tokens.mjs:72`: `MASK_DECL`'s `[^;}]*` can run past `{`, so
+        a selector with `mask:` in it removes the idiom from the rule after it.
+        `.mask:hover { background: linear-gradient(#000 0 0); }` (solid black) passes.
+        Leave `{` out of the class too.
+      - [minor] `scripts/check-tokens.mjs:79`: comments are blanked without checking for
+        strings, so `.e { content: "/*"; color: red; } /* x */` passes. The Log names the
+        same limit for braces, but not for comments. This is an edge case. A CSS parser (the
+        Log's wish) would close both.
+    - Standards: no `[must]`.
+      - [minor] Line 1: `scripts/check-tokens.mjs:64-66` still says "everything from the
+        first `@utility` on is scanned; the token blocks above it are skipped". The next two
+        lines and the code say the opposite. Delete the stale sentence.
+    - For the 1.G gate: this time the fixtures covered every form the return named, and the
+      self-test now runs the file-name logic. The gaps above are outside the repo's current
+      idioms. The repeat pattern (a ban's proof misses a form the repo uses) did not happen
+      this round.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
