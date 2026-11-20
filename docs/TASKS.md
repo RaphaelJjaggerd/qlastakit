@@ -2265,9 +2265,22 @@ Ref: ui-kit (reuse).
   a web test that the server-side API base URL comes from the root env file, run from the
   repo root. (Added by the 0.G retro: three findings on this wiring in 0.4b and 0.6.)
 - Done when: the test passes from the repo root and from `apps/web`; verify passes.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: built `apps/web/root-env.ts` (`rootEnvDir` from `import.meta.url`, and
+    `loadRootEnv(mode)` which reads the root env file and copies `API_INTERNAL_URL` into
+    `process.env`, a real env var winning); `vite.config.ts` uses both, so `envDir` and the
+    proxy's `API_PORT` no longer depend on the cwd. Test `src/root-env.test.ts` (3 tests):
+    the root resolves to the repo root, the server-side URL comes from a root `.env.<mode>`
+    file, a real env var wins. Passes from the repo root (`pnpm exec vitest run --project
+    web`) and from `apps/web` (`pnpm --filter @qlastakit/web exec vitest run
+    src/root-env.test.ts`); `verify.sh` passes. Decisions the PRD left open: the logic moved
+    into its own file so the test does not import the TanStack Start plugin; the test writes
+    and deletes a throwaway `.env.rootenvtest` at the root (not a real mode, never touches
+    `.env`); it runs in the node environment, so `test-setup.ts` now skips the `matchMedia`
+    shim when there is no `window`; `root-env.ts` added to the web tsconfig include. Stubs:
+    none. Wish: none.
 
 ## 1.10 Page chrome and container
 - Read: PRD §3.1, §3.4
