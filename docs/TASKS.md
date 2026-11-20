@@ -1972,6 +1972,20 @@ Ref: ui-kit (reuse).
       - [minor] `routes/sign-in.tsx:5`, `shell/access-denied.tsx:3`: the `react-i18next`
         import sits after local imports, while `index.tsx`, `nav-user.tsx` and
         `stacked-side-nav.tsx` put it with the packages. Keep one order.
+  - 2026-11-20 (retry 2): fixed all returns. `RouteError` no longer falls back to
+    TanStack's English `ErrorComponent`: it renders a translated screen (`error.title`,
+    `error.body`, `error.retry`, with `reset` on the button; the thrown message is not shown),
+    and the pseudo-locale test renders it. The title test now awaits the root route's real
+    `head()` and expects `{ title: "⟦App⟧" }` (name says exactly that). The open user menu
+    is checked under the pseudo-locale (`Log out`), and a new `nav-panel.i18n.test.tsx` mocks
+    a nav tree with a `collapse` node and checks the open panel (title, `Close panel`, item
+    title and description). Dropped the no-op `afterEach`; `react-i18next` import order fixed
+    in `sign-in.tsx` and `access-denied.tsx`. Decisions the PRD left open: the menu test
+    renders `NavUser` inside `SidebarProvider` alone, because opening the menu inside the
+    full routed shell hangs jsdom (synchronous, not diagnosed); the panel test mocks the nav
+    config because no real `collapse` node exists yet. Stubs: none. Wish: a look at the jsdom
+    hang on the menu inside the routed shell if a later card needs that test. `verify.sh`
+    passes.
 
 ## 1.7 Web agent guide
 - Read: PRD §3.4
