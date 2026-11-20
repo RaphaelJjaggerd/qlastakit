@@ -2082,9 +2082,23 @@ Ref: ui-kit (reuse).
 - Build: prime directives and the "add a page" recipe in the web app's agent guide.
 - Done when: the builder adds a throwaway page using only the recipe, in two steps, and
   removes it; the task log lists the two steps taken.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: rewrote `apps/web/AGENTS.md`: four prime directives (additive, reuse the
+    building blocks, no hardcoded colours/shadows/durations, typed), the existing rules
+    (message keys, `protect`, no business logic, `/api` proxy) and the "add a page" recipe.
+    Proof, a throwaway `/reports` page using only the recipe, two steps: (1) route file
+    `src/routes/reports.tsx` with `createFileRoute("/reports")({ ...protect("reports"),
+    component })`, then a web build so `routeTree.gen.ts` picks it up (the recipe says so);
+    (2) message keys `nav.reports` and `reports.title` in `src/messages/en.json` plus a node
+    in `navigationConfig` whose `key` is `reports`. Typecheck, lint and the web tests passed
+    with it; then removed it (file deleted, the three edited files reverted) and
+    `scripts/verify.sh` passes. Decisions the PRD left open: the route-tree regeneration is
+    folded into step 1, and the message keys go with the nav node in step 2, since the nav
+    title key is typed from `en.json`. Stubs: none. Wish: the web app has no check that a
+    nav node's `key` matches a route's static data key; a typo would silently drop the active
+    highlight.
 
 ## 1.8 Stale-reference check
 - Precondition (human): the owner fixes the stale path in `.claude/commands/new-feature.md`
