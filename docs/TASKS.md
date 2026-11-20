@@ -2670,9 +2670,13 @@ Ref: supastarter (study): auth, mail, organizations.
 - Read: PRD §3.5
 - Done when: `/vet supastarter` has written a report for the auth, mail, organizations
   and settings paths `docs/REFERENCES.md` lists, and no verdict needs an owner decision.
-- Status: todo
+- Status: blocked
 - Retries: 0
 - Log:
+  - 2026-11-20: blocked, waiting for: the Phase 1 gate (1.G) signed in `docs/TASKS.md` on
+    `origin/main`. `origin/main` is at cf77ecb (the phase-0 merge); `phase-1` (where the
+    work sits, HEAD ccce6de) has not been merged, and no `phase-2` branch exists. Owner:
+    merge `phase-1` to `main`, push, then set this card back to `todo`.
 
 ## 2.1a Verify guards
 - Read: docs/STANDARDS.md, `scripts/check-tokens.mjs`, `apps/web/AGENTS.md`
