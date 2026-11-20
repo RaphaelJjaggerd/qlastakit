@@ -1265,8 +1265,8 @@ Ref: ui-kit (reuse).
 - Read: PRD §2.5
 - Build: a dev-only route rendering every component.
 - Done when: runtime: it renders in dev and is absent from the production build.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: built `/dev/components` (`apps/web/src/routes/dev.components.tsx`), which
     lazy-loads `apps/web/src/dev/component-preview.tsx`, one labelled section
@@ -1283,6 +1283,45 @@ Ref: ui-kit (reuse).
     in the preview (Tabler is wired by 1.5). Stubs: none. Wish: a check that fails when a
     UI component is missing from the preview (today a new component must be added by hand;
     the file header says so).
+  - Review: returned 2026-11-20
+    - Checked: `scripts/verify.sh` passes. `pnpm --filter @qlastakit/web build` passes; the
+      `dev.components` chunks are stubs (`() => null`, client 0.09 kB, server 0.17 kB), and
+      a grep of `dist` for preview text (`data-preview`, `Component preview`, `Heads up`,
+      `Hover me`) finds nothing. Runtime, prod (reviewer's throwaway Playwright script,
+      deleted): `vite preview` serves `/` with 200 and `/dev/components` with 404 and no
+      preview markup, and client-side navigation from `/` to `/dev/components` shows "Not
+      Found", so the `notFound()` branch the Log did not run works. Runtime, dev: `vite dev`,
+      `/dev/components` loads with 27 `data-preview` sections, one per file in
+      `packages/ts/ui/src/components`, and no page errors on load. Then each overlay or
+      toggle was opened on a fresh page: Sheet, Select, Tooltip, Collapsible and Tabs open
+      and the page keeps its 27 sections.
+    - Spec:
+      - [must] `apps/web/src/dev/component-preview.tsx:191-196`: clicking "Open menu" crashes
+        the whole preview. React throws `Base UI: MenuGroupContext is missing. Menu group
+        parts must be used within <Menu.Group> or <Menu.RadioGroup>`, the error reaches no
+        route error boundary ("wasn't caught by any route"), and the page drops from 27
+        sections to 0. `DropdownMenuLabel` is `MenuPrimitive.GroupLabel`
+        (`packages/ts/ui/src/components/dropdown-menu.tsx:54-62`), so it must sit inside a
+        `DropdownMenuGroup`. The menu content only mounts when opened, which is why the
+        load-only check missed it. So the DropdownMenu content (label, items, separator)
+        never renders, and "a dev-only route rendering every component" is not met. 1.4's
+        runtime proof also uses this page. Fix: wrap the label (and its items) in
+        `DropdownMenuGroup`. Then open every overlay in the runtime check (dropdown, sheet,
+        select, tooltip, collapsible, tabs) and log each one.
+      - [minor] No committed test covers the preview. `apps/web` already has vitest, jsdom
+        and Testing Library, so a test that renders `ComponentPreview`, checks there is one
+        `data-preview` per file in `packages/ts/ui/src/components` (the Log's wish), and
+        opens the dropdown would have caught this and would keep catching it.
+    - Standards: no findings. The file headers and Log claim only what was run. The Log
+      says the prod `notFound()` branch was read, not run, and "no console or page errors"
+      is true for what was tested (load only).
+    - Repeat across cards: a runtime criterion was proved only on the path the builder ran
+      (here, page load and not interaction; 0.5 had a similar gap between the claim and
+      the test). For the phase gate: a UI runtime check that says "renders" exercises every
+      piece of the UI that mounts on interaction.
+    - Note: the reviewer's dev and preview servers ran on ports 3191 to 3193 and were killed
+      by `taskkill /t`. The reviewer could not confirm the ports are free (port listing
+      was denied here).
 
 ## 1.4 Token purity
 - Read: PRD §2.5, §3.5
