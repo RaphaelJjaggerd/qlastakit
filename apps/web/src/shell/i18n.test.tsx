@@ -1,61 +1,23 @@
-// The pseudo-locale test (PRD 6): every message becomes "⟦…⟧" in a locale that exists only
-// here, then the shell screens render in it. Any visible text, aria-label or placeholder that
-// is not wrapped came from somewhere other than the message files. Data (the user's name and
-// email) is not shell text and is allowed through.
+// The pseudo-locale test (PRD 6): the shell screens render in the pseudo locale and the shared
+// sweep (`pseudo-locale.ts`) fails on any text that did not come from the message files.
 import { render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import userEvent from "@testing-library/user-event";
 import { SidebarProvider } from "@qlastakit/ui";
 import { beforeAll, expect, test, vi } from "vitest";
-import { i18n, resources } from "../i18n";
 import { getRouter } from "../router";
 import { Route } from "../routes/__root";
 import { createStubSession, type Session } from "../session";
 import { AccessDenied, RouteError } from "./access-denied";
 import { NavUser } from "./nav-user";
+import { expectOnlyMessages, member, usePseudoLocale } from "./pseudo-locale";
 
 vi.mock("@qlastakit/api-client", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   configureApi: () => {},
 }));
 
-const member: Session = {
-  user: { name: "Mia Member", email: "mia@example.com" },
-  authority: ["member"],
-};
-const data = new Set([member.user.name, member.user.email, "MM"]);
-
-beforeAll(async () => {
-  const pseudo = Object.fromEntries(
-    Object.entries(resources.en.translation).map(([key, value]) => [key, `⟦${value}⟧`]),
-  );
-  i18n.addResourceBundle("pseudo", "translation", pseudo);
-  await i18n.changeLanguage("pseudo");
-});
-
-/** Every piece of text a user can see or hear in the rendered page. */
-function shellStrings(root: HTMLElement) {
-  const found: string[] = [];
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const text = node.textContent?.trim();
-    if (text) found.push(text);
-  }
-  for (const el of root.querySelectorAll("[aria-label],[placeholder],[title]")) {
-    for (const attr of ["aria-label", "placeholder", "title"]) {
-      const value = el.getAttribute(attr)?.trim();
-      if (value) found.push(value);
-    }
-  }
-  return found.filter((text) => !data.has(text));
-}
-
-function expectOnlyMessages(root: HTMLElement) {
-  const strings = shellStrings(root);
-  expect(strings.length).toBeGreaterThan(0);
-  const loose = strings.filter((text) => !(text.startsWith("⟦") && text.endsWith("⟧")));
-  expect(loose).toEqual([]);
-}
+beforeAll(usePseudoLocale);
 
 async function renderAt(path: string, session: Session | null) {
   const router = getRouter(createStubSession(session));

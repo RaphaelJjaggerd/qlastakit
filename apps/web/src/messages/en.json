@@ -8,7 +8,6 @@
   "access.denied.body": "You have no permission to visit this page.",
   "error.title": "Something went wrong",
   "error.body": "This page could not be shown. Try again in a moment.",
-  "error.retry": "Try again",
   "auth.signIn.title": "Sign in",
   "auth.signIn.body": "Sign-in is a placeholder until accounts arrive.",
   "auth.signIn.continue": "Continue as the stub user",

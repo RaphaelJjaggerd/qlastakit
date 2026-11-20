@@ -1941,7 +1941,7 @@ Ref: ui-kit (reuse).
   - a test named "shows only message-file text" runs the sweep; any other test is named
     for the strings it checks.
   - the route error screen renders no control that does nothing.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-20: built i18next 27 + react-i18next 18 in the web app. `src/i18n.ts` replaces
@@ -2044,6 +2044,17 @@ Ref: ui-kit (reuse).
     new code (a retry button, a presence-only test). The card now has a closed surface
     list and criteria that name both open `[must]`s. Both returns stand; I do not
     disagree with either.
+  - 2026-11-20 (retry 3, per hint): removed the "Try again" button and the `error.retry`
+    key; the route error screen now renders a heading and body only (no control). Moved the
+    pseudo-locale setup (`usePseudoLocale`), the `member` fixture and the sweep
+    (`expectOnlyMessages`) into one helper, `shell/pseudo-locale.ts`, used by `i18n.test.tsx`
+    and `nav-panel.i18n.test.tsx`. The open nav panel now runs the same sweep over
+    `document.body` in the test named "shows only message-file text"; the second panel test
+    is renamed for the four strings it checks, and the redundant `queryByLabelText` is gone.
+    Decisions the PRD left open: the helper is a non-test file inside `shell/`. Stubs: none.
+    Not re-proved: that the sweep fails on a hardcoded string in the panel (the sweep code is
+    the same one proved in the first attempt). Wish: a verify check for JSX text literals;
+    a sharper standard on test names for the gate. `verify.sh` passes.
 
 ## 1.7 Web agent guide
 - Read: PRD §3.4

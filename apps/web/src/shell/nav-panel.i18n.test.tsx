@@ -5,13 +5,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, expect, test, vi } from "vitest";
 import type { NavNode } from "../config/navigation.config";
-import { i18n, resources } from "../i18n";
-import type { Session } from "../session";
-
-const member: Session = {
-  user: { name: "Mia Member", email: "mia@example.com" },
-  authority: ["member"],
-};
+import { expectOnlyMessages, member, usePseudoLocale } from "./pseudo-locale";
 
 const leaf = (key: string, titleKey: NavNode["titleKey"], descriptionKey?: NavNode["titleKey"]) =>
   ({
@@ -49,24 +43,29 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ),
 }));
 
-beforeAll(async () => {
-  const pseudo = Object.fromEntries(
-    Object.entries(resources.en.translation).map(([key, value]) => [key, `⟦${value}⟧`]),
-  );
-  i18n.addResourceBundle("pseudo", "translation", pseudo);
-  await i18n.changeLanguage("pseudo");
-});
+beforeAll(usePseudoLocale);
 
-test("the open secondary nav panel shows only message-file text", async () => {
+async function openPanel() {
   const { StackedSideNav } = await import("./stacked-side-nav");
   const { SidebarProvider } = await import("@qlastakit/ui");
-  render(
+  const view = render(
     <SidebarProvider>
       <StackedSideNav session={member} routeKey={undefined} />
     </SidebarProvider>,
   );
-  expect(screen.queryByLabelText("⟦Notes⟧")).not.toBeNull();
   await userEvent.click(screen.getByLabelText("⟦Notes⟧"));
+  return view;
+}
+
+test("the open secondary nav panel shows only message-file text", async () => {
+  await openPanel();
+  await screen.findByLabelText("⟦Close panel⟧");
+  // The panel may render in a portal, so sweep the whole document body.
+  expectOnlyMessages(document.body);
+});
+
+test("the open secondary nav panel has the group title, close button, item title and description", async () => {
+  await openPanel();
   expect(screen.getByRole("heading", { name: "⟦Notes⟧" })).toBeInTheDocument();
   expect(screen.getByLabelText("⟦Close panel⟧")).toBeInTheDocument();
   expect(screen.getByText("⟦Home⟧")).toBeInTheDocument();
