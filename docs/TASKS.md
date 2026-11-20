@@ -1114,8 +1114,8 @@ Ref: ui-kit (reuse).
   3.2, settings in 3.3). One icon set (Tabler); one app alias; stubs left behind.
 - Done when: the web app builds on the UI package; verify fails on a second icon
   dependency.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: built (reuse, per `docs/references/ui-kit.md`): the 27 primitives copied into
     `packages/ts/ui/src/components` (old stub Button/Input replaced), `cn.ts`, `use-mobile.ts`,
@@ -1142,6 +1142,62 @@ Ref: ui-kit (reuse).
     Stubs: none. Wish: shell commands with `&&`, `sed` or redirects are denied, so file edits
     went through a throwaway Node script. `DESIGN.md` sections on Logo/`app.config` and
     inventory sections for shared/nav/layouts still describe the shell and are for 1.3/1.5/1.7.
+  - Review: returned 2026-11-20
+    - Checked: `scripts/verify.sh` passes. `pnpm --filter @qlastakit/web build` passes (client
+      and SSR; the Instrument Sans woff2 files are in the output). No `"use client"`,
+      `shadow-[` or `@/` left in `packages/ts/ui/src`. Every moved file was compared with
+      `references/ui-kit/` after the A1 import rewrite, ignoring formatting: 19 primitives are
+      identical; the other 8 differ only by F5 (`"use client"` removed) and F4 (shadows),
+      `cn.ts` by the four new names, and `use-mobile.ts` by the rewrite the Log explains. `theme.css` differs from `src/theme.css` only by the four new shadow
+      lines.
+    - Spec:
+      - [must] `scripts/verify.sh:28`: the icon check is a deny-list that misses
+        `@hugeicons/react` and `@hugeicons/core-free-icons`. Hugeicons is one of the icon
+        libraries of the `shadcn` CLI this card added as a dependency (installed
+        `shadcn@4.23.0` has presets with `iconLibrary: "hugeicons"`). Running
+        `shadcn add` with such a preset would add a second icon set and verify would still
+        pass, so "verify fails on a second icon dependency" is not met. `@lucide/*` (for example
+        `@lucide/lab`) is missed too, because the pattern needs `lucide` right after the
+        quote. Fix: cover every shadcn `iconLibrary` (lucide, tabler, hugeicons, phosphor,
+        remixicon) plus a general rule (for example any dependency whose name contains `icon`
+        or `lucide`, except `@tabler/icons-react`). Probe each form and log the probes (project
+        standard: one probe per form the repo uses).
+      - [minor] The card's Build line asks for "one app alias". The Log defers it to 1.5,
+        but the 1.5 card does not mention an alias, and PRD §3.5 names 1.2 as where it is
+        checked ("One alias in the web app's TS config"). Either add it here or add it to the
+        1.5 card's Build line, so the PRD's check has an owner.
+      - [minor] `scripts/verify.sh:28` reads only tracked files (`git ls-files`). A new
+        package's `package.json` that has not been added yet passes the `/task` verify run
+        before its first commit. CI would catch it, but CI has not run yet (0.8 sign-off).
+    - Standards:
+      - [minor] The Log says `"use client"` was "removed from all 9 files". Eight moved files had
+        it (`checkbox`, `dropdown-menu`, `field`, `radio-group`, `separator`, `sidebar`,
+        `table`, `tooltip`). The other two the 1.1 review named (`shared/header.tsx`,
+        `layouts/layout-base.tsx`) were not moved. This is the same kind of count error as
+        1.1's 291-vs-325 line count, after 0.4b and 0.5. It keeps coming back under the
+        "claims only what the code does" standard. The phase gate should make it a check.
+      - [minor] `packages/ts/ui/DESIGN.md:106-114` (shadow table) and `:253` (token reference)
+        do not list the four new shadows. `component-inventory.md:47,58,68` give
+        `src/components/shared`, `.../navigation` and `src/components/layouts` as current
+        paths, but none of them exist in the package. The Log mentions this, but the doc
+        still states them as fact. Mark those sections "not moved yet (1.5)" so the 1.8
+        stale-path check does not trip on them later.
+    - Reference:
+      - [must] `packages/ts/ui/src/theme.css:84-87`: F4 was applied in a different shape from
+        the vet report, and the Log does not say so. F4 asks for theme tokens
+        (`--etched-edge-shadow-x/-y`, `--sidebar-outline-shadow`) that the `shadow-*`
+        utilities map to. Instead, the four `--shadow-*` entries put the literal geometry
+        (`0 1px 0 0 var(--etched-edge)`, ...) in the `@theme inline` mapping section. That
+        breaks the file's own rule (`theme.css:6-10`: "A theme is a set of token VALUES ...
+        copy the two blocks ... change values. Nothing else") and the rule in the
+        `DESIGN.md` this card moved (`DESIGN.md:237-238`: map as
+        `--shadow-x: var(--x-shadow)`, value in sections 3 and 4). Every other kit shadow
+        follows that pattern (`theme.css:76-83`). Because `@theme inline` copies the value
+        into the utility, a theme block can override only the colour (`--etched-edge`), not
+        the shadow. 1.4's throwaway-theme proof depends on this. Fix: add
+        `--etched-h-shadow`, `--etched-v-shadow`, `--sidebar-ring-shadow` and
+        `--sidebar-ring-hover-shadow` (or F4's names) to the light and dark blocks, and map
+        them as `var(...)`.
 
 ## 1.3 Component preview
 - Read: PRD §2.5
