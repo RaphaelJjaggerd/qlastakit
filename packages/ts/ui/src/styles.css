@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/instrument-sans";
+
+/* All design tokens, light and dark, live in theme.css (single source of truth). */
+@import "./theme.css";
+
+/* Let Tailwind see classes used inside the UI package */
+@source ".";

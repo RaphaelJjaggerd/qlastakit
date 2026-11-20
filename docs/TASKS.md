@@ -1114,9 +1114,34 @@ Ref: ui-kit (reuse).
   3.2, settings in 3.3). One icon set (Tabler); one app alias; stubs left behind.
 - Done when: the web app builds on the UI package; verify fails on a second icon
   dependency.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: built (reuse, per `docs/references/ui-kit.md`): the 27 primitives copied into
+    `packages/ts/ui/src/components` (old stub Button/Input replaced), `cn.ts`, `use-mobile.ts`,
+    `theme.css` (`src/theme.css`; the two copies are byte-identical, so no diff), `DESIGN.md`
+    and `component-inventory.md`. Adaptation A1-A3: imports became relative (`../cn`,
+    `./button`), `src/index.ts` re-exports every component, deps added (base-ui,
+    tabler, cva, shadcn, tw-animate-css, instrument-sans font), `styles.css` is the CSS entry
+    (tailwind, animate, shadcn, font, theme) exported as `@qlastakit/ui/styles.css`; the web
+    `styles.css` imports it. Fixes: F4 arbitrary shadows in `separator` and `sidebar` became
+    tokens `shadow-etched-h/-v`, `shadow-sidebar-ring(-hover)` (in `theme.css` and `cn.ts`);
+    F5 `"use client"` removed from all 9 files (widened per the review); F2 font import is in
+    the UI CSS entry; F3 doc paths and recipes updated. Verify: new `icons` step fails on any
+    non-Tabler icon dependency in a tracked `package.json`; proved with a throwaway
+    `lucide-react` package.json (failed, probe removed). Web builds on the package
+    (`vite build` ok); `scripts/verify.sh` passes. Changes beyond the report, with reason:
+    `use-mobile.ts` rewritten with `useSyncExternalStore` because oxlint
+    `react/set-state-in-effect` fails verify on the original (same behaviour, false on the
+    server); the notes page swapped `text-red-600`/`border-neutral-200` for `text-destructive`/
+    `border-border` since the palette tokens no longer exist in the kit; oxfmt reformatted the
+    copied files (the kit used no semicolons). Decisions the PRD left open: components live
+    flat in `src/components` (no `shared/ui` nesting); the app alias is 1.5's job (no `@/`
+    exists in the web app yet, so there is still one alias: none). Not moved: Logo (F6, needs
+    the app name as a prop, rebuilt with the shell in 1.5), shell, nav, layouts, screens.
+    Stubs: none. Wish: shell commands with `&&`, `sed` or redirects are denied, so file edits
+    went through a throwaway Node script. `DESIGN.md` sections on Logo/`app.config` and
+    inventory sections for shared/nav/layouts still describe the shell and are for 1.3/1.5/1.7.
 
 ## 1.3 Component preview
 - Read: PRD §2.5

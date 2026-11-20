@@ -34,10 +34,10 @@ function Home() {
           Add
         </Button>
       </form>
-      {failed && <p className="text-sm text-red-600">Could not reach the notes API.</p>}
+      {failed && <p className="text-sm text-destructive">Could not reach the notes API.</p>}
       <ul className="space-y-2">
         {(notes.data ?? []).map((n) => (
-          <li key={n.id} className="rounded-md border border-neutral-200 p-3">
+          <li key={n.id} className="rounded-md border border-border p-3">
             {n.title}
           </li>
         ))}
