@@ -1922,8 +1922,8 @@ Ref: ui-kit (reuse).
 - Read: PRD §2.4
 - Build: i18next wired; all shell text through message files.
 - Done when: the pseudo-locale web test passes.
-- Status: done
-- Retries: 1
+- Status: todo
+- Retries: 2
 - Log:
   - 2026-11-20: built i18next 27 + react-i18next 18 in the web app. `src/i18n.ts` replaces
     the stub: its own instance, English as the only shipped locale, synchronous init
@@ -1986,6 +1986,33 @@ Ref: ui-kit (reuse).
     config because no real `collapse` node exists yet. Stubs: none. Wish: a look at the jsdom
     hang on the menu inside the routed shell if a later card needs that test. `verify.sh`
     passes.
+  - Review: returned 2026-11-20 (verify passes; all three earlier [must]s are fixed: the
+    route error screen is translated and tested, and the title test fails if `head()`
+    goes back to a literal)
+    - Spec:
+      - [must] `apps/web/src/shell/access-denied.tsx:25`: the new "Try again" button calls
+        the boundary's `reset`, which only clears `CatchBoundary` state
+        (`CatchBoundary.js:10`). For a loader or `beforeLoad` error (for example a failed
+        `loadSession`) the match stays `status: "error"` and `MatchInner` throws again
+        (`Match.js:113-123`), so the button does nothing. During SSR `reset` is `undefined`
+        (`Match.js:118`), so the button does nothing there either. The diff added a button
+        that says "Try again" and does not retry. Call `router.invalidate()` (TanStack's
+        documented retry for route errors, which also resets the boundary), or drop the
+        button.
+    - Standards:
+      - [must] `apps/web/src/shell/nav-panel.i18n.test.tsx:60`: the test is named "the open
+        secondary nav panel shows only message-file text", but it only checks that four
+        pseudo strings are present. A hardcoded English string added to the panel would
+        still pass. Project standard: a test name says what it asserts. **This is the third
+        time** (0.5, the first 1.6 return, now). Run the same `expectOnlyMessages` sweep
+        the other test uses on the open panel, or rename the test to what it checks. The
+        phase gate should make this a check or a sharper standard.
+      - [minor] `nav-panel.i18n.test.tsx:11,52` and `i18n.test.tsx:22,28`: the pseudo-locale
+        bundle setup and the `member` fixture are copied in both files. Possible duplicated
+        code; one shared test helper would keep the two in step.
+      - [minor] `nav-panel.i18n.test.tsx:68`: `expect(queryByLabelText(...)).not.toBeNull()`
+        right before `getByLabelText` on the same label adds nothing; `getBy` already
+        throws.
 
 ## 1.7 Web agent guide
 - Read: PRD §3.4
