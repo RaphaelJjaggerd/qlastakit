@@ -4,8 +4,9 @@ import { Button, Input } from "@qlastakit/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
+import { protect } from "@/access";
 
-export const Route = createFileRoute("/")({ component: Home });
+export const Route = createFileRoute("/")({ ...protect("home"), component: Home });
 
 function Home() {
   const queryClient = useQueryClient();

@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { routeTree } from "./routeTree.gen";
+import { createStubSession, type SessionSource } from "./session";
+import { RouteError } from "./shell/access-denied";
 
 // The browser always uses /api (the Vite dev proxy or the deploy's proxy rule). Server-side
 // code has no origin, so it reaches the API through the internal URL (PRD 2.6).
@@ -16,10 +18,15 @@ function serverApiUrl(): string {
 
 configureApi(typeof window === "undefined" ? serverApiUrl() : "/api");
 
-export function getRouter() {
+// Stub session until 2.4a; one per process is fine for a stub.
+const stubSession = createStubSession();
+
+export function getRouter(sessionSource: SessionSource = stubSession) {
   const queryClient = new QueryClient();
   return createRouter({
     routeTree,
+    context: { sessionSource },
+    defaultErrorComponent: RouteError,
     scrollRestoration: true,
     Wrap: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

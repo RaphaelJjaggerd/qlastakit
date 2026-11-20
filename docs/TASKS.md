@@ -1812,7 +1812,7 @@ Ref: ui-kit (reuse).
   the guard is tested against the stub session.
 - Done when: web tests, run against the stub session, prove a protected route never
   renders without a session and the first render has the right layout.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-20 Raphael: partial start kept, uncommitted, after the loop hit the usage
@@ -1835,6 +1835,7 @@ Ref: ui-kit (reuse).
       - The web app does not list `@tabler/icons-react` as a dependency
         (`shell/nav-icons.tsx:1`, typecheck).
       - `session.ts` fails `oxfmt --check`.
+  - 2026-11-20: finished the partial start. Built the stacked-side shell (dark icon rail, secondary panel for `collapse` nodes, NavUser with Log out), the side auth layout, a blank layout (dev preview), layout derived during render from the leaf match's static data else the config default (`shell/root-layout.tsx`; no store, no effect), `/sign-in` placeholder route (auth-side; signs in the stub), `/` protected through `protect("home")`, the access-denied screen as the router's default error component (`RouteError`), session on router context from the root before-load, and the one alias `@/*` (tsconfig paths, Vite `resolve.tsconfigPaths` in the app and Vitest configs). Added `@tabler/icons-react` to the web app. Tests (`shell/shell.test.tsx`, real route tree, stub session): protected route with no session redirects to sign-in and never renders; a member on an admin-only route sees Access denied, not the page; first render of `/` has `stacked-side` layout and nav; `/sign-in` has `auth-side` and no nav. `verify.sh` and `pnpm smoke` pass. Decisions the PRD left open: `SessionSource` gained `signIn()`/`signOut()` (stub only; 2.4a replaces them with Better Auth); `protect(key, authority)` also sets the route key; new token `--rail-active-surface` + `surface-rail-active` utility (the token check bans `bg-linear-*`); nav `Link` paths are cast to a route literal because config paths are plain strings; only the stacked-side and auth-side layouts (plus blank) were moved, the other 5 shells and 2 auth layouts are not; the Logo links to `/`; the user menu lost the reference's Upgrade/Account/Billing/Notifications items (no feature behind them yet) and the avatar image. Not run: the sign-in/log-out flow in a browser (tests cover it only by router state). Stubs: session (2.4a), `i18n.ts` (1.6). Wish: a typed way to say `to` from config paths; the reference's `SidebarMenuButton` tooltip needs no work here.
 
 ## 1.6 i18n
 - Read: PRD §2.4

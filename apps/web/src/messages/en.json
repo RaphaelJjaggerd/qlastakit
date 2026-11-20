@@ -1,0 +1,12 @@
+{
+  "app.name": "qlastakit",
+  "nav.home": "Home",
+  "nav.account": "Account",
+  "nav.closePanel": "Close panel",
+  "user.menu.logout": "Log out",
+  "access.denied.title": "Access denied",
+  "access.denied.body": "You have no permission to visit this page.",
+  "auth.signIn.title": "Sign in",
+  "auth.signIn.body": "Sign-in is a placeholder until accounts arrive.",
+  "auth.signIn.continue": "Continue as the stub user"
+}

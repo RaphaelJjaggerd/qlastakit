@@ -22,6 +22,7 @@ const twMerge = extendTailwindMerge({
         "etched-v",
         "sidebar-ring",
         "sidebar-ring-hover",
+        "rail-active",
       ],
       font: ["heading"],
       ease: ["sidebar"],

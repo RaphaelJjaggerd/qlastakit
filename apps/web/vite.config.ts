@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
   if (env.API_INTERNAL_URL) process.env.API_INTERNAL_URL ??= env.API_INTERNAL_URL;
   return {
     envDir,
+    resolve: { tsconfigPaths: true },
     server: { proxy: { "/api": api } },
     plugins: [tailwindcss(), tanstackStart(), viteReact()],
   };

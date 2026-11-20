@@ -7,6 +7,7 @@ import { lazy, Suspense } from "react";
 const Preview = import.meta.env.DEV ? lazy(() => import("../dev/component-preview")) : null;
 
 export const Route = createFileRoute("/dev/components")({
+  staticData: { key: "dev-components", layout: "blank" },
   beforeLoad: () => {
     if (!import.meta.env.DEV) throw notFound();
   },
