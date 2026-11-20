@@ -1357,8 +1357,8 @@ Ref: ui-kit (reuse).
 - Build: no hardcoded color, shadow, border or surface in components; a verify check.
 - Done when: verify's token-purity check passes; runtime: a throwaway test theme changes
   the whole preview page without editing a component.
-- Status: done
-- Retries: 1
+- Status: todo
+- Retries: 2
 - Log:
   - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans
     `packages/ts/ui/src/components` and `apps/web/src` (tests skipped) for hex colors,
@@ -1455,6 +1455,59 @@ Ref: ui-kit (reuse).
     (`color: red`) and to colors built in template strings or `style={{}}` objects. For the
     0.G-style gate: the reviewer's "each verify ban ships a fixture" is now true for this
     check; the icons check in `verify.sh` has none.
+  - Review: returned 2026-11-20
+    - Checked: `scripts/verify.sh` passes (`tokens: no hardcoded color, shadow or surface`,
+      fixtures included). This diff touches only `scripts/`, `.oxfmtrc.json` and the card, so
+      the runtime theme result from the previous review (237 of 237 elements changed) still
+      holds for the unchanged components. Every form from the first return is now caught
+      (fixtures plus my own probes). Probes (in `.potato/tmp`, deleted) ran
+      `node scripts/check-tokens.mjs <file>` on a `.css` and a `.tsx`. Also caught:
+      `shadow-inner`, `md:shadow-md`, `[&>*]:shadow-sm`, `shadow-black/10`, `text-white/80`,
+      `inset-ring-red-500`, `divide-x-gray-200`, `text-shadow-lg/20`, `bg-conic-180`,
+      `outline-white`, `bg-[white]/50`, `cn("shadow-md", x)`, `@apply bg-white;`,
+      `@apply border-t-gray-200;`, `@apply shadow-lg/20;`, `drop-shadow(...)` in CSS.
+    - Spec:
+      - [must] `scripts/check-tokens.mjs:37` (`css shadow`): the rule flags the token form
+        it is meant to allow. `\s*` backtracks to zero characters, so `(?!none\b|var\()`
+        looks at the space and always passes. `.c { box-shadow: var(--shadow-card); }` and
+        `.c { box-shadow: none; }` both fail the check. Only `box-shadow:var(...)` with no
+        space passes, and oxfmt writes the space. A web app stylesheet that uses a shadow
+        token the right way cannot pass verify. Also `text-shadow: none` is flagged by
+        `other shadow` (`\btext-shadow\b`, line 36) whatever the value is. Fix: put the
+        whitespace inside the lookahead (`:(?!\s*(?:none\b|var\())`), and leave the CSS
+        property `text-shadow:` out of `other shadow`. Add these lines to the allowed fixture as CSS
+        (`box-shadow: var(--shadow-card);`, `box-shadow: none;`, `text-shadow: none;`).
+      - [must] `scripts/check-tokens.mjs:34` (`stock shadow`): `@apply shadow-md;` and
+        `@apply !shadow-md;` pass. The lookahead `(?=[\s"'`]|$)` does not accept `;`, so a
+        stock shadow at the end of an `@apply` line gets through. Only `shadow-md }` and the
+        `/NN` forms are caught, the second by luck (`[^\s"'`]+` eats the `;`). `@apply` is
+        how this repo writes Tailwind in CSS (`theme.css:294-323`), and this card's point was
+        to scan CSS. `banned.css` has no `@apply` line. Fix: accept `;` (and `,` and `)`) in
+        the lookahead, and add `@apply shadow-md;` and `@apply !shadow-md;` to
+        `banned.css`.
+      - [minor] Plain-CSS named colors (`color: red`, `background: white`,
+        `border: 1px solid black`, `linear-gradient(white, black)`) and
+        `box-shadow: var(--x), 0 0 0 1px black` pass. The Log lists this as a wish, which is
+        honest, and the scanned CSS files hold only `@import` today. Leave it for a later
+        card or the gate.
+      - [minor] `theme.css` is skipped as a whole file, but it also holds the `@utility`
+        helpers and `@layer base` (`theme.css:260-325`). That is where PRD §3.5's "shadow
+        applied by a helper outside the components" would live now. For example,
+        `@utility lift { @apply shadow-md; }` there passes. Scanning `theme.css` from the
+        `@utility` section on (after the token blocks) would close that gap. The first
+        return asked for this skip, so it is not a `[must]`.
+      - [minor] `EXT` now takes `.txt` in the repo scan too, not only in fixtures. This is
+        harmless today, but it does more than the comment says.
+    - Standards:
+      - [must] Line 1: the Log says the CSS rule flags `box-shadow:`/`text-shadow:` "that
+        is not `none` or `var(...)`", but the code flags both (see above). Line 4: the
+        allowed fixture has no CSS line and `banned.css` has no `@apply` line, so the forms
+        this retry added were not proved for the file type it added.
+    - Repeat across cards: this is the third time (0.4b, 1.4 return 1, now) that a ban was
+      proved for some forms while another form the repo uses got through. It is also the
+      first time an allowed form was wrongly blocked. For the 1.G gate: a verify ban's
+      fixtures must hold banned and allowed lines for every file type the ban scans, and each
+      repo idiom (`@apply`, `cn(...)`, variant prefixes) must have a line.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
