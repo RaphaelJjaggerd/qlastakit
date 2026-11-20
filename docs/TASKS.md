@@ -1812,8 +1812,8 @@ Ref: ui-kit (reuse).
   the guard is tested against the stub session.
 - Done when: web tests, run against the stub session, prove a protected route never
   renders without a session and the first render has the right layout.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20 Raphael: partial start kept, uncommitted, after the loop hit the usage
     limit mid-card. Finish it; do not start over.
@@ -1836,6 +1836,58 @@ Ref: ui-kit (reuse).
         (`shell/nav-icons.tsx:1`, typecheck).
       - `session.ts` fails `oxfmt --check`.
   - 2026-11-20: finished the partial start. Built the stacked-side shell (dark icon rail, secondary panel for `collapse` nodes, NavUser with Log out), the side auth layout, a blank layout (dev preview), layout derived during render from the leaf match's static data else the config default (`shell/root-layout.tsx`; no store, no effect), `/sign-in` placeholder route (auth-side; signs in the stub), `/` protected through `protect("home")`, the access-denied screen as the router's default error component (`RouteError`), session on router context from the root before-load, and the one alias `@/*` (tsconfig paths, Vite `resolve.tsconfigPaths` in the app and Vitest configs). Added `@tabler/icons-react` to the web app. Tests (`shell/shell.test.tsx`, real route tree, stub session): protected route with no session redirects to sign-in and never renders; a member on an admin-only route sees Access denied, not the page; first render of `/` has `stacked-side` layout and nav; `/sign-in` has `auth-side` and no nav. `verify.sh` and `pnpm smoke` pass. Decisions the PRD left open: `SessionSource` gained `signIn()`/`signOut()` (stub only; 2.4a replaces them with Better Auth); `protect(key, authority)` also sets the route key; new token `--rail-active-surface` + `surface-rail-active` utility (the token check bans `bg-linear-*`); nav `Link` paths are cast to a route literal because config paths are plain strings; only the stacked-side and auth-side layouts (plus blank) were moved, the other 5 shells and 2 auth layouts are not; the Logo links to `/`; the user menu lost the reference's Upgrade/Account/Billing/Notifications items (no feature behind them yet) and the avatar image. Not run: the sign-in/log-out flow in a browser (tests cover it only by router state). Stubs: session (2.4a), `i18n.ts` (1.6). Wish: a typed way to say `to` from config paths; the reference's `SidebarMenuButton` tooltip needs no work here.
+  - Review: returned 2026-11-20
+    - Checked: `verify.sh` passes. A throwaway probe (`apps/web/src/zz-review-probe.test.tsx`,
+      run through `verify.sh`, then removed): a component whose `useState("stacked-side")` is
+      overwritten by a `useEffect` reads `auth-side` straight after RTL `render()`.
+    - Spec:
+      - [must] `apps/web/src/shell/shell.test.tsx:70-82`: the "first render" layout tests do
+        not prove the done criterion. RTL `render()` wraps in `act()`, which flushes effects
+        and the re-render they cause before it returns (the probe above). So the ui-kit's
+        effect-writes-store layout (PRD §3.5) passes both tests. Test 3 also checks only `/`,
+        which uses the default layout, so it can't tell derived from defaulted anyway.
+        Prove it where no effect runs: after `router.load()`, `renderToString` the
+        `RouterProvider` for a route that overrides the default (`/sign-in` -> `auth-side`)
+        and assert `data-layout` in that markup. The header comment at `:1-3` ("Each render
+        is the first one") claims more than the tests prove (STANDARDS line 1).
+      - [minor] `apps/web/src/shell/access-denied.tsx:16-19`: `RouteError` rethrows every
+        other error. As the default error component of every route, each route boundary
+        rethrows to its parent, up to TanStack's global catch boundary. Any other loader or
+        before-load error now shows the bare default error with no shell, plus the dev
+        warning "wasn't caught by any route". Return `<ErrorComponent error={error} />`.
+      - [minor] The log says the tests use the "real route tree"; the access-denied test
+        (`shell.test.tsx:48-68`) builds its own tree. It also checks the page is absent
+        only after `findByText`, so an after-render guard would pass it too.
+      - [minor] PRD §3.1 (route static data declares page chrome) and §3.4 (one page
+        container renders it): not built, not logged as deferred, and no later card names
+        them. Log which card owns them.
+    - Standards:
+      - [minor] Possible speculative generality: `shell/nav-icons.tsx` maps `account` and
+        `settings`, and `messages/en.json` has `nav.account`; nothing uses them.
+    - Reference (ui-kit, reuse):
+      - [must] Differences from the reference that are neither a vet fix/adaptation nor
+        logged with a reason:
+        - `shell/stacked-side-nav.tsx`: the reference auto-opens the secondary panel when the
+          current route sits under a `collapse` node
+          (`navigation/app-stacked-side-nav.tsx:62-71`). Dropped, so a deep link to a
+          sub-item leaves its panel shut. If it was dropped to avoid an effect, derive it
+          during render (an open key that falls back to `current.key` when `current.type` is
+          `collapse`) and log that.
+        - Same file: the secondary panel dropped the sub-item description line (ref
+          `:211-235`) and the skip of `title` children (ref `:207-209`).
+        - `shell/nav-user.tsx:45-54`: the trigger dropped the name and email block and the
+          open-state classes; the dropdown label dropped its avatar; the "CN" fallback became
+          initials. The log covers only the removed menu items and the avatar image.
+        - `shell/logo.tsx`: the `size` prop and the `sizes` map were dropped.
+        - `shell/layouts.tsx:31`: the auth-side layout gained `min-h-screen`; `LayoutBase`
+          (the layout context carrying `type`) was dropped.
+        Each may be right; under `reuse` each needs a fix, an adaptation or a logged reason.
+      - Fine: the rail-active gradient and shadow tokens (logged, F4), `shadow-etched-h` (F4),
+        the Logo name as a prop (F6), the user from the session and Log out wired (F9), the
+        layout derived during render (F10), org roles (F11).
+    - Repeat: a log line or test header that claims more than the test proves (0.4b, 0.5,
+      now 1.5) is already a standard. The gate should consider a mechanical form, e.g. a
+      render-order test must use a render path that runs no effects.
 
 ## 1.6 i18n
 - Read: PRD §2.4
