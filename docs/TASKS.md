@@ -2414,6 +2414,42 @@ Ref: ui-kit (reuse).
     `page-container.tsx` and `footer.tsx`. Import moved to the top of `app.config.ts`.
     Stubs: no `extraHeader` slot. Wish: a `/task` step to diff every reused reference file
     before closing (as the review asked of the gate). `verify.sh` passes.
+  - Review: approved 2026-11-20 (verify passes)
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, icons, tokens, stale refs, tests,
+      contract). `apps/web/src/shell/page-container.tsx` was compared line by line with the
+      reference `page-container.tsx`, `footer.tsx`, `container.tsx` and the three
+      `theme.constant.ts` constants. Both reference [must]s from the first return are fixed:
+      the outer, body and inner classes, the constants, the `contained` body wrap, `pb-0`
+      without a footer, the header row classes and the gutterless `mt-4`, the footer `h-16`,
+      gutter and `container` wrap, and the footer default `true` all match the reference.
+      The kept differences (h1, `div` for `main`, footer content, dropped reassemble, Meta
+      and lazy titles) are logged with reasons and listed in the new vet row. No old
+      `app.footer` key or `max-w-6xl` is left in the tree.
+    - Spec:
+      - No findings. The Done-when is met: `shell.test.tsx` renders `/` and asserts the
+        declared header and container type come through the one container. Footer-off and
+        `background` now have behavioural tests. `/dev/components` declares its chrome and
+        lost its own `main`/`h1`.
+    - Standards:
+      - [minor] `apps/web/AGENTS.md:48`: the re-wrapped paragraph still has one line longer
+        than the lines around it (`` `@qlastakit/ui` for building blocks. Run ... so ``).
+    - Reference (`reuse`):
+      - [minor] `page-container.tsx:52-54`: the header's left wrapper is a `<header>`. In the
+        reference it is a plain `<div>`. It is a defensible landmark choice, but neither the
+        Log nor the vet row lists it.
+      - [minor] `page-container.tsx:46-50`: the reference header's `contained` option (adds
+        `container mx-auto` to the header row) was dropped. The drop list names reassemble,
+        `Meta`, lazy titles and `extraHeader`, not this one. Add it to the vet row's drop list
+        (no route needs it) or port it.
+      - [minor] `page-container.tsx:82-84`: `FooterContent` adds `text-sm text-muted-foreground`,
+        and the reference has neither. It also drops the reference's
+        `flex items-center justify-between flex-auto w-full` wrapper. The wrapper only split
+        the text from the links that are now gone, so dropping it follows from logged change
+        (3). The two added classes are a style change with no reason given. Log them or drop
+        them.
+      - Repeat note for the gate: the first return's pattern (small reference differences
+        not logged) shrank to these three, but it did happen again. The Wish for a `/task`
+        diff-before-close step is the right fix.
 
 ## 1.G Phase 1 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
