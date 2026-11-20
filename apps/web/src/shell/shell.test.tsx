@@ -1,7 +1,10 @@
-// The guard and layout tests the PRD (3.5) names, run against the stub session and the real
-// route tree. Each render is the first one: `RouterProvider` awaits the route's before-load
-// first, so a protected page that renders anyway would show up in the first DOM.
+// The guard and layout tests the PRD (3.5) names, run against the stub session. The guard
+// tests use the real route tree (the denied one a small tree of its own, since no real route
+// needs an authority yet). The layout tests render with `renderToString`, which runs no
+// effects, so the markup is the first render; RTL `render()` flushes effects before it returns
+// and could not tell a derived layout from one an effect writes.
 import { render, screen } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import {
   createMemoryHistory,
   createRootRouteWithContext,
@@ -27,13 +30,18 @@ const member: Session = {
   authority: ["member"],
 };
 
-async function open(path: string, session: Session | null) {
+async function loaded(path: string, session: Session | null) {
   const router = getRouter(createStubSession(session));
   router.update({
     context: router.options.context,
     history: createMemoryHistory({ initialEntries: [path] }),
   });
   await router.load();
+  return router;
+}
+
+async function open(path: string, session: Session | null) {
+  const router = await loaded(path, session);
   render(<RouterProvider router={router} />);
   return router;
 }
@@ -50,11 +58,15 @@ test("a session without the authority sees access denied, not the page", async (
     beforeLoad: loadSession,
     component: Outlet,
   });
+  const pageRendered = vi.fn();
   const secret = createRoute({
     getParentRoute: () => root,
     path: "/admin",
     ...protect("admin-only", ["admin"]),
-    component: () => <p>secret admin page</p>,
+    component: () => {
+      pageRendered();
+      return <p>secret admin page</p>;
+    },
   });
   const router = createRouter({
     routeTree: root.addChildren([secret]),
@@ -65,18 +77,22 @@ test("a session without the authority sees access denied, not the page", async (
   render(<RouterProvider router={router} />);
   expect(await screen.findByText("Access denied")).toBeInTheDocument();
   expect(screen.queryByText("secret admin page")).not.toBeInTheDocument();
+  expect(pageRendered).not.toHaveBeenCalled();
 });
 
 test("the first render of a signed-in route has the stacked-side layout and the nav", async () => {
-  const router = await open("/", member);
-  expect(router.state.location.pathname).toBe("/");
-  const layout = document.querySelector("[data-layout]");
-  expect(layout?.getAttribute("data-layout")).toBe("stacked-side");
-  expect(await screen.findByRole("link", { name: "Home" })).toBeInTheDocument();
+  const router = await loaded("/", member);
+  const html = renderToString(<RouterProvider router={router} />);
+  expect(html).toContain('data-layout="stacked-side"');
+  expect(html).toContain('aria-label="Home"');
 });
 
-test("the sign-in route has the auth-side layout and no nav", async () => {
-  await open("/sign-in", null);
-  expect(document.querySelector("[data-layout]")?.getAttribute("data-layout")).toBe("auth-side");
-  expect(screen.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
+test("the first render of the sign-in route is already auth-side, with no nav", async () => {
+  // The default layout is stacked-side, so this only passes if the route's own layout is
+  // picked during render.
+  const router = await loaded("/sign-in", null);
+  const html = renderToString(<RouterProvider router={router} />);
+  expect(html).toContain('data-layout="auth-side"');
+  expect(html).not.toContain('data-layout="stacked-side"');
+  expect(html).not.toContain('aria-label="Home"');
 });

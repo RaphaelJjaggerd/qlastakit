@@ -4,18 +4,28 @@ interface LogoProps {
   className?: string;
   /** Show the app name next to the mark. */
   showText?: boolean;
+  size?: "sm" | "md" | "lg";
   /** "rail": inverted mark for the dark icon rail. */
   tone?: "default" | "rail";
   /** The app name, from config through the message files. Never hardcode it here. */
   name: string;
 }
 
-export function Logo({ className, showText = false, tone = "default", name }: LogoProps) {
+const sizes = { sm: "size-7", md: "size-8", lg: "size-10" };
+
+export function Logo({
+  className,
+  showText = false,
+  tone = "default",
+  size = "md",
+  name,
+}: LogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div
         className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+          "flex shrink-0 items-center justify-center rounded-lg",
+          sizes[size],
           tone === "rail" ? "bg-rail-foreground text-rail" : "bg-primary text-primary-foreground",
         )}
       >

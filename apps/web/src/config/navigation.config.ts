@@ -9,6 +9,8 @@ export interface NavNode {
   /** Target path; empty for groups. */
   path: string;
   titleKey: MessageKey;
+  /** Optional second line under a sub-item in the secondary panel. */
+  descriptionKey?: MessageKey;
   icon: IconKey;
   /** `title` is an organizational heading, `collapse` opens a secondary panel. */
   type: "item" | "collapse" | "title";

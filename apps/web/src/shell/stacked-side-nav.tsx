@@ -37,9 +37,13 @@ export function StackedSideNav({
   session: Session | null;
   routeKey: string | undefined;
 }) {
-  const [openKey, setOpenKey] = useState<string | null>(null);
+  // undefined: follow the route (a collapse node's panel is open while the route is under it,
+  // derived during render, no effect). A click sets a key, or null for closed.
+  const [picked, setOpenKey] = useState<string | null | undefined>(undefined);
   const allowed = (node: NavNode) => (session ? hasAuthority(session, node.authority) : false);
   const current = findTopLevel(navigationConfig, routeKey);
+  const openKey =
+    picked === undefined ? (current?.type === "collapse" ? current.key : null) : picked;
   const openItem = navigationConfig.find((n) => n.key === openKey);
   const secondary = openItem?.subMenu.filter(allowed) ?? [];
 
@@ -144,20 +148,29 @@ export function StackedSideNav({
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {secondary.map((sub) => (
-                    <SidebarMenuItem key={sub.key}>
-                      <SidebarMenuButton
-                        isActive={routeKey === sub.key}
-                        className="h-auto py-2 data-active:bg-panel data-active:text-foreground data-active:shadow-raised"
-                        render={
-                          <Link to={sub.path as To}>
-                            <NavIcon icon={sub.icon} />
-                            <span className="font-medium">{t(sub.titleKey)}</span>
-                          </Link>
-                        }
-                      />
-                    </SidebarMenuItem>
-                  ))}
+                  {secondary
+                    .filter((sub) => sub.type !== "title")
+                    .map((sub) => (
+                      <SidebarMenuItem key={sub.key}>
+                        <SidebarMenuButton
+                          isActive={routeKey === sub.key}
+                          className="h-auto py-2 data-active:bg-panel data-active:text-foreground data-active:shadow-raised"
+                          render={
+                            <Link to={sub.path as To}>
+                              <NavIcon icon={sub.icon} />
+                              <div className="flex flex-1 flex-col text-left">
+                                <span className="font-medium">{t(sub.titleKey)}</span>
+                                {sub.descriptionKey && (
+                                  <span className="mt-0.5 text-xs text-muted-foreground">
+                                    {t(sub.descriptionKey)}
+                                  </span>
+                                )}
+                              </div>
+                            </Link>
+                          }
+                        />
+                      </SidebarMenuItem>
+                    ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

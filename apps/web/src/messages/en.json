@@ -1,7 +1,6 @@
 {
   "app.name": "qlastakit",
   "nav.home": "Home",
-  "nav.account": "Account",
   "nav.closePanel": "Close panel",
   "user.menu.logout": "Log out",
   "access.denied.title": "Access denied",

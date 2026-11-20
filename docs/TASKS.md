@@ -1812,7 +1812,7 @@ Ref: ui-kit (reuse).
   the guard is tested against the stub session.
 - Done when: web tests, run against the stub session, prove a protected route never
   renders without a session and the first render has the right layout.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20 Raphael: partial start kept, uncommitted, after the loop hit the usage
@@ -1888,6 +1888,7 @@ Ref: ui-kit (reuse).
     - Repeat: a log line or test header that claims more than the test proves (0.4b, 0.5,
       now 1.5) is already a standard. The gate should consider a mechanical form, e.g. a
       render-order test must use a render path that runs no effects.
+  - 2026-11-20 (retry 2): fixed every finding. [must] layout tests now `loaded()` the router and `renderToString` the `RouterProvider` (no effects run): `/sign-in` must be `auth-side` (default is `stacked-side`, so only a layout derived from the route passes) and `/` `stacked-side` with the Home link; header comment rewritten to say what is proven. Access-denied test also asserts the page component never rendered (a spy), and its header now says it builds its own small tree (no real route has an authority yet) while the other guard tests use the real tree. `RouteError` returns `<ErrorComponent {...props} />` for other errors. Removed unused `account`/`settings` icons and `nav.account`. Reference (reuse) differences, restored: secondary panel auto-opens for a route under a `collapse` node, derived during render (`picked` state, `undefined` follows the route, no effect); sub-item description line (new optional `descriptionKey` on `NavNode`) and the skip of `title` children; NavUser trigger name/email block and open-state classes, and the dropdown label avatar; Logo `size` prop and `sizes` map. Kept with a reason: initials instead of the placeholder "CN" fallback (a real user, no avatar image yet); `min-h-screen` on the auth-side layout (its `h-full` has no sized parent in the TanStack root, so the panel collapsed); `LayoutBase` dropped (it only carried the layout `type` for a layout store, which PRD §3.4 removes; `data-layout` replaces it); removed menu items and avatar image as logged. Page chrome (§3.1 static data, §3.4 page container): not built here; new card 1.10 owns it. `verify.sh` and `pnpm smoke` pass. Stubs: session (2.4a), `i18n.ts` (1.6). Wish: none.
 
 ## 1.6 i18n
 - Read: PRD §2.4
@@ -1931,6 +1932,18 @@ Ref: ui-kit (reuse).
   a web test that the server-side API base URL comes from the root env file, run from the
   repo root. (Added by the 0.G retro: three findings on this wiring in 0.4b and 0.6.)
 - Done when: the test passes from the repo root and from `apps/web`; verify passes.
+- Status: todo
+- Retries: 0
+- Log:
+
+## 1.10 Page chrome and container
+- Read: PRD §3.1, §3.4
+- Ref: ui-kit
+- Build: route static data declares page chrome (header, footer, container type,
+  background) and one page container renders it. Found by 1.5's review; no earlier card
+  owned it.
+- Done when: a web test proves a route's declared header and container type render
+  through the one page container, and `/` uses it.
 - Status: todo
 - Retries: 0
 - Log:

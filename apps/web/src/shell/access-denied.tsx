@@ -1,3 +1,4 @@
+import { ErrorComponent, type ErrorComponentProps } from "@tanstack/react-router";
 import { AccessDeniedError } from "../access";
 import { t } from "../i18n";
 
@@ -12,8 +13,8 @@ export function AccessDenied() {
   );
 }
 
-/** The router's default error component: access denied gets its screen, the rest rethrows. */
-export function RouteError({ error }: { error: unknown }) {
-  if (error instanceof AccessDeniedError) return <AccessDenied />;
-  throw error;
+/** The router's default error component: access denied gets its screen, the rest the default view. */
+export function RouteError(props: ErrorComponentProps) {
+  if (props.error instanceof AccessDeniedError) return <AccessDenied />;
+  return <ErrorComponent {...props} />;
 }
