@@ -16,6 +16,7 @@
       "Bash(npx:*)",
       "Bash(bash scripts/*)",
       "Bash(scripts/verify.sh)",
+      "Bash(bash .potato/tmp/*)",
       "Bash(docker compose:*)",
       "Bash(docker ps:*)",
       "Bash(ls:*)",
