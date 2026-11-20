@@ -1375,8 +1375,8 @@ Ref: ui-kit (reuse).
     touches no component and no theme file; run it again only if it does.
   - At review, a banned form outside the scope list that gets through is a note on 1.4a,
     not a return. A token form in scope that is wrongly flagged is still a return.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans
     `packages/ts/ui/src/components` and `apps/web/src` (tests skipped) for hex colors,
@@ -1546,6 +1546,52 @@ Ref: ui-kit (reuse).
     no component and no theme file. Decision the PRD left open: the lookahead takes `;` but
     not `,` or `)`, because `,` flagged the word "shadow," in a comment in `cn.ts`. Stubs:
     none. Wish: none.
+  - Review: returned 2026-11-20
+    - Checked: `scripts/verify.sh` passes (`tokens: no hardcoded color, shadow or surface`).
+      The diff (`3c90d4d`, `7627a80`) touches only `scripts/check-tokens.mjs`, the token
+      fixtures and this card, with no component or theme file, so the runtime result still
+      holds. Both open `[must]`s are fixed in the code. Probes (in `.potato/tmp`, deleted)
+      ran `node scripts/check-tokens.mjs <file>`. Caught: every "also caught" form from the
+      second return, plus `@apply hover:shadow-md;` and `@apply md:bg-white;`. Passed:
+      `box-shadow:var(--shadow-card);`, `box-shadow: var(--shadow-card) !important;`,
+      `@apply hover:shadow-card;`, `cn("shadow-card", x)`. The regexes are right. The open
+      items are the fixtures and one scan criterion.
+    - Spec:
+      - [must] Done when "at least one line each for `@apply`, `cn(...)` and a variant
+        prefix": no fixture has a `cn(...)` line (`banned.txt`, `allowed.txt`,
+        `banned.css`, `allowed.css`). `cn(...)` is how components write classes. The CSS
+        fixtures also have no variant line (`@apply hover:shadow-md;` banned,
+        `@apply hover:shadow-card;` allowed), though both file types are in scope. Fix: add
+        banned `cn("shadow-md", x)` and `cn("bg-white", c)`, allowed
+        `cn("shadow-card", c && "text-foreground")`, and a variant `@apply` line in each CSS
+        fixture.
+      - [must] Done when "every form named in the two returns below has a line": the second
+        return's "also caught" list is not in the fixtures. Missing: `shadow-inner`,
+        `md:shadow-md`, `[&>*]:shadow-sm`, `shadow-black/10`, `text-white/80`,
+        `inset-ring-red-500`, `divide-x-gray-200`, `text-shadow-lg/20`, `bg-conic-180`,
+        `outline-white`, `bg-[white]/50`, `cn("shadow-md", x)`, and in CSS `@apply bg-white;`,
+        `@apply border-t-gray-200;`, `filter: drop-shadow(...)`. All of them are caught today
+        (probe). Without a line, a later regex edit can drop any of them silently, and that
+        is the risk this criterion exists to close. Add one line each.
+      - [must] Done when "the repo scan reads `.txt` only for the fixtures":
+        `scripts/check-tokens.mjs:43,62,89`. `EXT` includes `txt`, and the repo scan uses
+        it, so any `.txt` under `packages/ts/ui/src` or `apps/web/src` is scanned. A probe
+        folder holding `notes.txt` with `see #fff` failed `hex color`. The Log does not
+        mention this criterion. Fix: give the repo scan an extension list without `txt`,
+        and let only the fixture and probe calls take `.txt`.
+    - Standards:
+      - [must] Line 4 ("a verify ban is proved for every form the repo really uses"):
+        `cn(...)` is the repo's main class idiom and has no fixture line on either side.
+      - [minor] Line 1: `scripts/check-tokens.mjs:7-9` says "allowed.txt must pass". Since
+        this diff, `allowed.css` must pass too (line 107).
+    - Repeat across cards: this is the fourth time (0.4b, 1.4 return 1, 1.4 return 2, now)
+      that a ban's proof missed forms the card or the repo names. This time the code is
+      right and only the committed fixtures fall short. For the 1.G gate: make fixture
+      coverage a check. For example, verify reads a list of required forms (one per line,
+      from the card) and fails if a fixture has no line for one, so the builder cannot close
+      the card on a partial list.
+    - Note: `Retries` was 0 after two returns (`/advise` split the card and did not set it).
+      I set it to 1 for this return.
 
 ## 1.4a Token check: theme helpers and plain CSS
 - Read: PRD §3.5
