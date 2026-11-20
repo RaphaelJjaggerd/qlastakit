@@ -1922,9 +1922,28 @@ Ref: ui-kit (reuse).
 - Read: PRD §2.4
 - Build: i18next wired; all shell text through message files.
 - Done when: the pseudo-locale web test passes.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: built i18next 27 + react-i18next 18 in the web app. `src/i18n.ts` replaces
+    the stub: its own instance, English as the only shipped locale, synchronous init
+    (`initAsync: false`) so SSR's first render has the text, flat dotted keys (key and
+    namespace separators off), keys typed from `messages/en.json` through
+    `CustomTypeOptions`. Components (`stacked-side-nav`, `nav-user`, `access-denied`,
+    `sign-in`, the notes page) use `useTranslation()`; the root route's document title uses
+    `i18n.t`. Moved the notes page's strings and the title `"App"` into `en.json` (not
+    shell text strictly, but they render inside the shell). Test `shell/i18n.test.tsx`:
+    adds a `pseudo` locale (every value wrapped in `⟦…⟧`), renders `/` (signed in),
+    `/sign-in` and `AccessDenied`, and fails on any text node, `aria-label`, `placeholder`
+    or `title` not wrapped (user name and email are data and allowed). Proved it fails: a
+    hardcoded "Continue" on the sign-in button was reported, then reverted. `verify.sh`
+    passes. Decisions the PRD left open: the pseudo-locale lives only in the test; no
+    language detector or switcher (English only). Stubs: none. Wish: `@qlastakit/ui` has
+    English `sr-only` strings ("Close" in the sheet, "Toggle Sidebar", "More pages") that
+    are not translatable; the shell does not render them today (the rail sidebar is
+    `collapsible="none"`), but the first card that does needs them as props. A verify check
+    that flags JSX text literals in `apps/web/src` would back this test for screens it does
+    not render.
 
 ## 1.7 Web agent guide
 - Read: PRD §3.4

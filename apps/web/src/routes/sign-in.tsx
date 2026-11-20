@@ -2,7 +2,7 @@
 import { Button } from "@qlastakit/ui";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { appConfig } from "@/config/app.config";
-import { t } from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/sign-in")({
   staticData: { key: "sign-in", layout: "auth-side" },
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/sign-in")({
 
 function SignIn() {
   const router = useRouter();
+  const { t } = useTranslation();
   async function signIn() {
     await router.options.context.sessionSource.signIn();
     await router.invalidate();

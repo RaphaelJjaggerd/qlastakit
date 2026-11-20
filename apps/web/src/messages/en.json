@@ -1,5 +1,6 @@
 {
   "app.name": "qlastakit",
+  "app.documentTitle": "App",
   "nav.home": "Home",
   "nav.closePanel": "Close panel",
   "user.menu.logout": "Log out",
@@ -7,5 +8,9 @@
   "access.denied.body": "You have no permission to visit this page.",
   "auth.signIn.title": "Sign in",
   "auth.signIn.body": "Sign-in is a placeholder until accounts arrive.",
-  "auth.signIn.continue": "Continue as the stub user"
+  "auth.signIn.continue": "Continue as the stub user",
+  "notes.title": "Notes",
+  "notes.new.placeholder": "New note",
+  "notes.add": "Add",
+  "notes.error": "Could not reach the notes API."
 }

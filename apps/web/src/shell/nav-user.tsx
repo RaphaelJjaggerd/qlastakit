@@ -15,8 +15,8 @@ import {
   useSidebar,
 } from "@qlastakit/ui";
 import { useRouter } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { appConfig } from "@/config/app.config";
-import { t } from "@/i18n";
 import type { Session } from "@/session";
 
 function initials(name: string) {
@@ -31,6 +31,7 @@ function initials(name: string) {
 export function NavUser({ user }: { user: Session["user"] }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const { t } = useTranslation();
 
   async function logOut() {
     await router.options.context.sessionSource.signOut();

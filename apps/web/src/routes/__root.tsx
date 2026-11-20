@@ -2,6 +2,7 @@
 import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { loadSession, type RouterContext } from "@/access";
+import { i18n } from "@/i18n";
 import { RootLayout } from "@/shell/root-layout";
 import css from "../styles.css?url";
 
@@ -10,7 +11,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "App" },
+      { title: i18n.t("app.documentTitle") },
     ],
     links: [{ rel: "stylesheet", href: css }],
   }),

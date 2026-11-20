@@ -17,10 +17,10 @@ import {
 } from "@qlastakit/ui";
 import { Link } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { hasAuthority } from "@/access";
 import { appConfig } from "@/config/app.config";
 import { findTopLevel, type NavNode, navigationConfig } from "@/config/navigation.config";
-import { t } from "@/i18n";
 import type { Session } from "@/session";
 import { Logo } from "./logo";
 import { NavIcon } from "./nav-icons";
@@ -37,6 +37,7 @@ export function StackedSideNav({
   session: Session | null;
   routeKey: string | undefined;
 }) {
+  const { t } = useTranslation();
   // undefined: follow the route (a collapse node's panel is open while the route is under it,
   // derived during render, no effect). A click sets a key, or null for closed.
   const [picked, setOpenKey] = useState<string | null | undefined>(undefined);
