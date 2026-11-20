@@ -1942,7 +1942,7 @@ Ref: ui-kit (reuse).
     for the strings it checks.
   - the route error screen renders no control that does nothing.
 - Status: done
-- Retries: 0
+- Retries: 2
 - Log:
   - 2026-11-20: built i18next 27 + react-i18next 18 in the web app. `src/i18n.ts` replaces
     the stub: its own instance, English as the only shipped locale, synchronous init
@@ -2055,6 +2055,27 @@ Ref: ui-kit (reuse).
     Not re-proved: that the sweep fails on a hardcoded string in the panel (the sweep code is
     the same one proved in the first attempt). Wish: a verify check for JSX text literals;
     a sharper standard on test names for the gate. `verify.sh` passes.
+  - Review: approved 2026-11-20 (verify passes)
+    - Spec: all four done criteria are met in the code. Every listed surface renders under
+      the pseudo-locale and runs through the one `expectOnlyMessages` sweep: shell and notes,
+      user menu, nav panel, sign-in, access denied, route error. The title is asserted on
+      the real `head()`. The setup and the sweep live in `shell/pseudo-locale.ts`, and both
+      test files use it. Every test named "shows only message-file text" runs the sweep,
+      and the other two tests are named for what they check. The route error screen has no
+      control left. PRD §2.4 is followed (i18next + react-i18next, English only).
+    - [minor] `nav-panel.i18n.test.tsx:60`: still not proved that the panel sweep fails on
+      a hardcoded string. My probe (a literal added to `stacked-side-nav.tsx:138`) was
+      refused a shell permission, so it did not run. From reading the test: it waits for
+      the panel's close button, then walks all of `document.body`, so a literal in the
+      panel would be caught.
+    - Standards: [minor] `pseudo-locale.ts:16`: `usePseudoLocale` has the React hook
+      prefix but is not a hook (it runs in `beforeAll`). A name like
+      `switchToPseudoLocale` would not mislead readers or the hooks lint rules.
+    - [minor] bookkeeping: `Retries` read 0 after two returns, because the earlier reviews
+      did not increment it. Set to 2 here to match the log.
+    - Repeat for the gate: the test-name standard was broken three times (0.5, both 1.6
+      returns) before this fix. The phase gate should turn it into a check or a sharper
+      standard, as both returns asked.
 
 ## 1.7 Web agent guide
 - Read: PRD §3.4
