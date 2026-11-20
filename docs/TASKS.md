@@ -1074,6 +1074,37 @@ Ref: ui-kit (reuse).
     Findings that differ from the PRD: it says 24 components (27 files) and a shadow helper
     outside the components and two icon sets (neither found). Stubs: none. Wish: the scout's
     shell was denied, so no byte-diff of the two `theme.css` copies.
+  - Review: approved 2026-11-20
+    - Checked: `scripts/verify.sh` passes. Spot-checked against `references/ui-kit/`: 27
+      files in `ui/` (correct), only `@tabler/icons-react` (correct), no hex, rgb, oklch or
+      palette colour classes under `src/components` (correct), no shadow helper outside
+      `cn.ts` (correct), no test script in the reference `package.json` (correct). The done
+      criterion is met: every file has a verdict and none needs the owner.
+    - Spec:
+      - [minor] `docs/references/ui-kit.md` F1: the two `theme.css` copies are
+        byte-identical (`git diff --no-index` prints nothing; both are 325 lines). The
+        291-vs-325 claim is wrong, and the diff 1.2 is told to run has nothing to find. 1.2
+        can take `src/theme.css` and skip the diff.
+      - [minor] The `.gitignore` change (`!docs/references/`) is out of the card's scope and
+        is explained only in the commit message, not in this Log.
+    - Standards:
+      - [minor] Log and report line "2 of them need token fixes" is right for `ui/` only.
+        The report's F1 states a line count it did not check (see Spec). That runs close to
+        the 0.4b/0.5 "claims only what was proved" standard.
+    - Reference:
+      - [minor] F5 lists `"use client"` only for `ui/sidebar.tsx:1`. It is also at line 1 of
+        `ui/{checkbox,dropdown-menu,field,radio-group,separator,table,tooltip}.tsx`,
+        `shared/header.tsx` and `layouts/layout-base.tsx`. Under `reuse`, 1.2 either keeps 9
+        meaningless directives or removes them without a listed fix. Widen F5 before 1.2.
+      - [minor] F4/F10 miss three arbitrary shadows:
+        `layouts/app-layout/variants/collapsible-side.tsx:18`, `floating-side.tsx:16`
+        (`shadow-[0_1px_0_0_var(--etched-edge)]` in `headerClassName`) and
+        `navigation/app-stacked-side-nav.tsx:190`. F10 says "keep the variant markup
+        unchanged", which would carry them into 1.5. 1.4's check would still catch them.
+      - [minor] F9 names the hardcoded users in `app-top-nav.tsx` and `app-side-nav.tsx`
+        only. `app-stacked-side-nav.tsx:40` also hardcodes "Jordyn Levin", and stacked-side
+        is the shell 1.5 builds. F9's general rule (take the user from the session) covers
+        it, but the file should be named.
 
 ## 1.2 Move the UI kit
 - Read: PRD §2.5, §3.4, §3.5
