@@ -1889,6 +1889,34 @@ Ref: ui-kit (reuse).
       now 1.5) is already a standard. The gate should consider a mechanical form, e.g. a
       render-order test must use a render path that runs no effects.
   - 2026-11-20 (retry 2): fixed every finding. [must] layout tests now `loaded()` the router and `renderToString` the `RouterProvider` (no effects run): `/sign-in` must be `auth-side` (default is `stacked-side`, so only a layout derived from the route passes) and `/` `stacked-side` with the Home link; header comment rewritten to say what is proven. Access-denied test also asserts the page component never rendered (a spy), and its header now says it builds its own small tree (no real route has an authority yet) while the other guard tests use the real tree. `RouteError` returns `<ErrorComponent {...props} />` for other errors. Removed unused `account`/`settings` icons and `nav.account`. Reference (reuse) differences, restored: secondary panel auto-opens for a route under a `collapse` node, derived during render (`picked` state, `undefined` follows the route, no effect); sub-item description line (new optional `descriptionKey` on `NavNode`) and the skip of `title` children; NavUser trigger name/email block and open-state classes, and the dropdown label avatar; Logo `size` prop and `sizes` map. Kept with a reason: initials instead of the placeholder "CN" fallback (a real user, no avatar image yet); `min-h-screen` on the auth-side layout (its `h-full` has no sized parent in the TanStack root, so the panel collapsed); `LayoutBase` dropped (it only carried the layout `type` for a layout store, which PRD §3.4 removes; `data-layout` replaces it); removed menu items and avatar image as logged. Page chrome (§3.1 static data, §3.4 page container): not built here; new card 1.10 owns it. `verify.sh` and `pnpm smoke` pass. Stubs: session (2.4a), `i18n.ts` (1.6). Wish: none.
+  - Review: approved 2026-11-20
+    - Checked: `verify.sh` passes (typecheck, lint, icons, tokens, test, contract). No
+      `scripts/smoke.sh`; the card's criterion is the web tests, which verify ran. The
+      layout tests now `renderToString` after `router.load()`, so no effect runs, and the
+      `/sign-in` case only passes if the layout comes from the route (the default is
+      `stacked-side`). The access-denied test's spy proves the page never rendered.
+    - Spec: no findings. Every finding from the last return is fixed; page chrome is
+      deferred to 1.10.
+    - Standards:
+      - [minor] `apps/web/src/shell/stacked-side-nav.tsx:42`: the state is `picked` but its
+        setter is still `setOpenKey`. Name them as a pair (`setPicked`).
+    - Reference (ui-kit, reuse):
+      - [minor] `apps/web/src/shell/stacked-side-nav.tsx:42-46`: once the user clicks
+        anything, `picked` stops being `undefined` and stays set while the nav stays
+        mounted. The nav persists across navigation inside `stacked-side`. So after one
+        click (an item link sets `null`), moving inside the app to a route under a
+        `collapse` node (back button, an in-page link) leaves its panel shut. The
+        reference's effect reopens the panel whenever the route's top-level key changes
+        (`app-stacked-side-nav.tsx:64-71`). The log says "restored", which claims more than
+        the code does. The previous return's suggested fix had the same gap. No `collapse`
+        node exists yet, so nothing shows it today. Fix without an effect: store the pick
+        with the route key it was made on, e.g. `{ key, on: current?.key }`, and use it only
+        while `on === current?.key`. Test it when the first `collapse` node lands. 1.10
+        (same Ref, same shell) can take it.
+      - Fine: the restored description line, the skip of `title` children, the NavUser
+        trigger and label blocks, the open-state classes, and the Logo `size`/`sizes`
+        (now matches the reference). Logged with reasons: initials as the fallback,
+        `min-h-screen`, no `LayoutBase`.
 
 ## 1.6 i18n
 - Read: PRD §2.4
