@@ -1054,7 +1054,7 @@ Ref: ui-kit (reuse).
 - Read: PRD §3.4, §3.5
 - Done when: `/vet ui-kit` has written its report with keep, fix or reject per file, and
   no verdict needs an owner decision.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
   - 2026-11-19: blocked, waiting for: the owner unpacks the finished UI project into the
@@ -1062,6 +1062,18 @@ Ref: ui-kit (reuse).
     `YYYY-MM-DD: owner: checked, passes.` and set the card back to `todo`.
   - 2026-11-20 Raphael: finished UI kit unpacked into `references/ui-kit/` (`src/` is
     there). Checked, passes.
+  - 2026-11-20: vetted ui-kit; report in `docs/references/ui-kit.md`, `Vetted:` line set in
+    `docs/REFERENCES.md`. Roughly: 27 UI primitives and the custom components are `keep`
+    (adaptation only: imports, deps), 2 of them need token fixes (`separator`, `sidebar`
+    use arbitrary `shadow-[...]`), `theme.css` and the docs are `fix`, shell, nav, layouts and
+    screens are `fix` (rebuild per PRD §3.4), routes, guards, stores, mock API, axios, app
+    config and stub pages are `reject`. No verdict needs an owner decision. Decisions the PRD
+    left open: `src/theme.css` is canonical over the root `theme.css` (1.2 diffs them). Judged
+    by reading only; nothing in `references/` was run, and the reference has no tests. Not
+    every long class string in the smaller primitives was read; 1.4's check proves them.
+    Findings that differ from the PRD: it says 24 components (27 files) and a shadow helper
+    outside the components and two icon sets (neither found). Stubs: none. Wish: the scout's
+    shell was denied, so no byte-diff of the two `theme.css` copies.
 
 ## 1.2 Move the UI kit
 - Read: PRD §2.5, §3.4, §3.5
