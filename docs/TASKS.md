@@ -1532,6 +1532,20 @@ Ref: ui-kit (reuse).
     first review). 1.4 now has a closed scope list and a fixture criterion that names the
     two open `[must]`s; the CSS gaps both returns left as minors (`theme.css` helpers,
     plain-CSS named colors) moved to 1.4a. Both returns stand; I do not disagree with either.
+  - 2026-11-20 (after split): fixed the two open `[must]`s in `scripts/check-tokens.mjs`.
+    (1) `css shadow` now has the whitespace inside the lookahead
+    (`:(?!\s*(?:none\b|var\())`), so `box-shadow: var(--shadow-card);` and
+    `box-shadow: none;` pass; the `other shadow` class rule no longer matches the CSS
+    property `text-shadow:` (`text-shadow(?!:)`), so `text-shadow: none;` passes and
+    `text-shadow: 0 1px black` is still caught by `css shadow`. (2) `stock shadow` accepts
+    `;` after the class, so `@apply shadow-md;`, `@apply !shadow-md;` and
+    `@apply shadow-lg/20;` are caught. Fixtures: `banned.css` gained those three `@apply`
+    lines and a banned `text-shadow`; new `allowed.css` holds `box-shadow: var(--shadow-card);`,
+    `box-shadow: none;`, `text-shadow: none;` and token `@apply` lines; the self-test scans
+    it. `verify.sh` passes (fixtures included). Runtime criterion not re-run: the diff touches
+    no component and no theme file. Decision the PRD left open: the lookahead takes `;` but
+    not `,` or `)`, because `,` flagged the word "shadow," in a comment in `cn.ts`. Stubs:
+    none. Wish: none.
 
 ## 1.4a Token check: theme helpers and plain CSS
 - Read: PRD §3.5
