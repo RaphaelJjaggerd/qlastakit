@@ -1265,7 +1265,7 @@ Ref: ui-kit (reuse).
 - Read: PRD §2.5
 - Build: a dev-only route rendering every component.
 - Done when: runtime: it renders in dev and is absent from the production build.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: built `/dev/components` (`apps/web/src/routes/dev.components.tsx`), which
@@ -1322,6 +1322,17 @@ Ref: ui-kit (reuse).
     - Note: the reviewer's dev and preview servers ran on ports 3191 to 3193 and were killed
       by `taskkill /t`. The reviewer could not confirm the ports are free (port listing
       was denied here).
+  - 2026-11-20 (retry 2): fixed the [must] and the minor. `DropdownMenuLabel`, separator and
+    items are now inside `DropdownMenuGroup` in `component-preview.tsx`. Added
+    `component-preview.test.tsx`: one `data-preview` per `.tsx` file in
+    `packages/ts/ui/src/components` (the Log's wish, now a test), and it opens the dropdown,
+    sheet, select, tooltip, collapsible and tabs and checks the section count is unchanged.
+    Proved red: on the old code the test fails with "MenuGroupContext is missing"; green on
+    the fix. `test-setup.ts` gained a `matchMedia` stub (jsdom has none; the UI kit's
+    `useIsMobile` needs it). Runtime, dev (throwaway Playwright script in `.potato/tmp`,
+    deleted, vite dev on 3195): Open menu (Account), Open sheet, Select (option Two), Hover
+    me (Tooltip), Toggle (Hidden content) and Tab B (Panel B), each on a fresh page: all
+    worked, 27 sections each time, 0 page errors. `verify.sh` passes. Stubs: none. Wish: none.
 
 ## 1.4 Token purity
 - Read: PRD §2.5, §3.5
