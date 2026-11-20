@@ -1922,8 +1922,8 @@ Ref: ui-kit (reuse).
 - Read: PRD §2.4
 - Build: i18next wired; all shell text through message files.
 - Done when: the pseudo-locale web test passes.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: built i18next 27 + react-i18next 18 in the web app. `src/i18n.ts` replaces
     the stub: its own instance, English as the only shipped locale, synchronous init
@@ -1944,6 +1944,34 @@ Ref: ui-kit (reuse).
     `collapsible="none"`), but the first card that does needs them as props. A verify check
     that flags JSX text literals in `apps/web/src` would back this test for screens it does
     not render.
+  - Review: returned 2026-11-20 (verify passes)
+    - Spec:
+      - [must] `apps/web/src/shell/access-denied.tsx:20`: `RouteError` is the app's
+        `defaultErrorComponent` (`router.tsx:29`) and falls back to TanStack's
+        `ErrorComponent`, which renders hardcoded English ("Something went wrong!",
+        "Show Error" / "Hide Error", `CatchBoundary.js:56,67`). That is shell text a user
+        sees on any route error, it does not come from the message files, the pseudo-locale
+        test does not render it, and the log does not list it as a wish or a stub. The card
+        asks for all shell text through message files.
+      - [must] `apps/web/src/shell/i18n.test.tsx:88`: "the document title comes from the
+        message file" only asserts `i18n.t("app.documentTitle")` returns the pseudo value,
+        which proves i18next, not the root route. Put `{ title: "App" }` back in
+        `routes/__root.tsx:14` and the test still passes, so the title is untested
+        (tautological test). Assert the title the root route actually produces (its
+        `head()` output, or `document.title` after rendering).
+      - [minor] `i18n.test.tsx:66`: the signed-in render never opens the user menu or a
+        nav panel, so `user.menu.logout`, `nav.closePanel` and the panel's title and
+        description keys are never checked under the pseudo-locale. Opening both would make
+        "every shell string" true for the shell that exists.
+    - Standards:
+      - [must] `i18n.test.tsx:88`: the test name claims more than it proves (project
+        standard: a test name says what it asserts; a claim covers only what the test
+        proves). Same pattern as 0.5's "through the running app"; this is a repeat.
+      - [minor] `i18n.test.tsx:33`: `afterEach(() => i18n.changeLanguage("pseudo"))` resets
+        to the language already set; no test changes it. Possible speculative code; drop it.
+      - [minor] `routes/sign-in.tsx:5`, `shell/access-denied.tsx:3`: the `react-i18next`
+        import sits after local imports, while `index.tsx`, `nav-user.tsx` and
+        `stacked-side-nav.tsx` put it with the packages. Keep one order.
 
 ## 1.7 Web agent guide
 - Read: PRD §3.4
