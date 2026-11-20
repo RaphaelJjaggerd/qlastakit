@@ -1920,10 +1920,29 @@ Ref: ui-kit (reuse).
 
 ## 1.6 i18n
 - Read: PRD §2.4
-- Build: i18next wired; all shell text through message files.
-- Done when: the pseudo-locale web test passes.
+- Build: i18next wired; all shell text through message files. "Shell text" is a closed
+  list (set by `/advise`, since "all shell text" has no end for a render test): the text
+  of the surfaces the shell has today.
+  - The signed-in shell at `/` with the notes page.
+  - The open user menu.
+  - The open secondary nav panel (on a mocked nav tree until a real `collapse` node exists).
+  - The sign-in screen, the access-denied screen and the route error screen.
+  - The document title from the root route's `head()`.
+  - Not this card: new behaviour on any of these screens (a retry action on the route
+    error screen included); the English `sr-only` strings inside `@qlastakit/ui` (the
+    first card that renders them); a verify check for JSX text literals (a wish for the
+    gate); the jsdom hang when the user menu opens inside the routed shell.
+- Done when:
+  - the pseudo-locale web test passes, and it renders every surface in the list and runs
+    each through the same sweep (fails on any text node, `aria-label`, `placeholder` or
+    `title` that is not pseudo-wrapped; the title is asserted on the real `head()` output).
+  - the pseudo-locale setup and the sweep live in one shared test helper, used by every
+    pseudo-locale test file.
+  - a test named "shows only message-file text" runs the sweep; any other test is named
+    for the strings it checks.
+  - the route error screen renders no control that does nothing.
 - Status: todo
-- Retries: 2
+- Retries: 0
 - Log:
   - 2026-11-20: built i18next 27 + react-i18next 18 in the web app. `src/i18n.ts` replaces
     the stub: its own instance, English as the only shipped locale, synchronous init
@@ -2013,6 +2032,18 @@ Ref: ui-kit (reuse).
       - [minor] `nav-panel.i18n.test.tsx:68`: `expect(queryByLabelText(...)).not.toBeNull()`
         right before `getByLabelText` on the same label adds nothing; `getBy` already
         throws.
+  - Hint: remove the "Try again" button and its `error.retry` key rather than wiring
+    `router.invalidate()`: retry is new behaviour this card never asked for, and the screen
+    1.5 shipped had none. Move the pseudo-locale setup and `expectOnlyMessages` into one
+    test helper and run that sweep on the open nav panel, which closes the test-name
+    `[must]` and both test minors at once. Change nothing else; the i18next wiring and the
+    other six surfaces passed review.
+  - Advised: 2026-11-20: hint, with the card sharpened. The card was loose, not the
+    approach: "all shell text" with "the test passes" named no surfaces, so the first
+    return added three and the fix for them brought the second return's two `[must]`s in
+    new code (a retry button, a presence-only test). The card now has a closed surface
+    list and criteria that name both open `[must]`s. Both returns stand; I do not
+    disagree with either.
 
 ## 1.7 Web agent guide
 - Read: PRD §3.4
