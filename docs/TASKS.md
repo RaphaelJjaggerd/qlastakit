@@ -2311,8 +2311,8 @@ Ref: ui-kit (reuse).
   owned it.
 - Done when: a web test proves a route's declared header and container type render
   through the one page container, and `/` uses it.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: built `PageChrome` (`headerKey`, `footer`, `container`, `background`) in
     `config/app.config.ts`, a `chrome` field in route static data, `protect(key, authority,
@@ -2329,6 +2329,70 @@ Ref: ui-kit (reuse).
     message key; footer defaults to off and shows `app.footer` ("qlastakit"), a placeholder
     text; `background: plain` kept from the reference. Stubs: no `extraHeader` slot yet.
     Wish: none.
+  - Review: returned 2026-11-20 (verify passes)
+    - Checked: `scripts/verify.sh` passes. The two new tests in `shell.test.tsx` were read.
+      `apps/web/src/shell/page-container.tsx` was compared with
+      `references/ui-kit/src/components/shared/page-container.tsx`, `footer.tsx`,
+      `container.tsx` and `shared/constants/theme.constant.ts`.
+    - Spec:
+      - [minor] `background` is declared and rendered (`page-container.tsx:24`), but no test
+        covers it. The Done-when line does not require one, but the Build line lists it.
+      - [minor] `apps/web/src/dev/component-preview.tsx:101-102` still draws its own `<main>` and
+        `<h1>`. It now sits inside the container's `<main>` with the default gutter on top of
+        its own `p-6`, against the rule this card added to `apps/web/AGENTS.md:46` ("the page
+        draws no heading or `<main>` of its own"). Either give `/dev/components` chrome and drop
+        its own wrappers, or log why it is exempt.
+      - [minor] The `apps/web/AGENTS.md` edit is not in the Log, and `:46` is one long line
+        that the edit did not re-wrap.
+    - Standards:
+      - [minor] `page-container.tsx:27`: stacked-side pages now always render a `<main>`
+        inside `SidebarInset`, which is also a `<main>` (`packages/ts/ui/src/components/
+        sidebar.tsx:289`). That gives two `main` landmarks. The old notes page did the same,
+        and so does the reference, so this card did not cause it. But this card makes it the
+        rule for every page. Choose one (a `div` here, or a non-`main` inset) and log the
+        choice.
+      - [minor] `config/app.config.ts:5`: the `import type { MessageKey }` sits after the
+        `LayoutKey` export, not at the top of the file.
+      - [minor] `messages/en.json:4`: `app.footer` repeats the value of `app.name`. The
+        reference footer shows the app name, so the footer could use `appConfig.nameKey` and
+        skip the new key.
+    - Reference (`reuse`):
+      - [must] `page-container.tsx:28-33`: the container classes are rewritten, and the Log
+        gives no reason. The Log's reason ("could not move unchanged": router, store,
+        `useLayout`, reassemble, lazy titles) covers only the parts that depend on rejected
+        files. The class strings and their constants are plain and portable.
+        `theme.constant.ts` is kept by the vet report (F12 keeps the theme constants). The
+        differences:
+        (a) The gutter `PAGE_CONTAINER_GUTTER_X/Y` (`px-4 sm:px-6 md:px-8 py-4 sm:py-6
+        md:py-8`) became `px-4 py-6 md:px-6`.
+        (b) The `default` width `PAGE_CONTENT_MAX_WIDTH` (`max-w-[90rem]`) became `max-w-6xl`.
+        (c) `contained` changed meaning. In the reference it is `container mx-auto`, the
+        responsive Tailwind container, and the body is wrapped in `Container`. Here it is
+        `max-w-xl`, which the doc comment calls "narrower". This looks chosen to keep the old
+        notes page width, which belongs on the page, not in the container type.
+        (d) `!footer && 'pb-0 sm:pb-0 md:pb-0'` was dropped.
+        (e) The `<main className="h-full">` plus inner `relative h-full flex ...` div became
+        one `<main>`, so `relative` and `h-full` are gone.
+        Fix: take the reference classes and constants unchanged. Put the constants in the web
+        app, or in `@qlastakit/ui` if the layouts share them. Log every difference you keep,
+        with its reason.
+      - [must] `page-container.tsx:35-46`: the header and footer are rewritten, and the Log
+        gives no reason. The header lost `flex items-center justify-between` and the
+        gutterless `mt-4`, and its `<h3>` became `<h1>`. One `<h1>` per page is a defensible
+        fix, but it has to be logged as one. The footer lost the reference `Footer` shape
+        (`h-16`, `PAGE_CONTAINER_GUTTER_X`, the `Container` wrap for `contained`). The footer
+        default changed from `true` (reference) to `false`. The Log calls this "a decision the
+        PRD left open" but gives no reason, and the reference had already decided it. Fix:
+        port the header and footer markup. Log the `h1` change and the footer default with
+        their reasons, or revert them.
+      - [minor] The vet report (`docs/references/ui-kit.md`) has no row for
+        `shared/page-container.tsx` or `shared/footer.tsx`. The card used both without a
+        verdict. Add the rows (keep or fix, plus the fixes this card applies) so the next
+        reviewer has a list to check against.
+      - Repeat: 1.2 was returned for the same problem. Reference code was applied in a
+        different shape from the vet report or the reference, and the Log did not say so. The
+        phase gate should turn this into a standard or a step in `/task`: diff every reused
+        reference file before closing, and log each difference.
 
 ## 1.G Phase 1 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
