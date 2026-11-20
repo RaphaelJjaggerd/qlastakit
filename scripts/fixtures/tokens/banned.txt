@@ -25,3 +25,16 @@ inset-shadow-sm
 bg-gradient-to-r
 bg-linear-to-b
 bg-radial
+shadow-inner
+md:shadow-md
+[&>*]:shadow-sm
+shadow-black/10
+text-white/80
+inset-ring-red-500
+divide-x-gray-200
+text-shadow-lg/20
+bg-conic-180
+outline-white
+bg-[white]/50
+cn("shadow-md", x)
+cn("bg-white", c)

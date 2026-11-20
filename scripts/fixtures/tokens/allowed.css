@@ -4,3 +4,4 @@
 .d { @apply shadow-card; }
 .e { @apply shadow-none border-t border-border; }
 .f { @apply bg-background text-foreground; }
+.g { @apply hover:shadow-card; }

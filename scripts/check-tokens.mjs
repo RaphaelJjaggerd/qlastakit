@@ -5,8 +5,8 @@
 //   node scripts/check-tokens.mjs            check the repo, then the fixtures
 //   node scripts/check-tokens.mjs <paths..>  check these files or folders (probes)
 // Fixtures: scripts/fixtures/tokens/banned.txt and banned.css hold one banned form per
-// line and every line must be reported; allowed.txt must pass. Add a form there with
-// every rule change.
+// line and every line must be reported; allowed.txt and allowed.css must pass. Add a form
+// there with every rule change.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
@@ -40,7 +40,8 @@ const RULES = [
 ];
 
 const SKIP = /\.(?:test|spec)\.[cm]?[tj]sx?$/;
-const EXT = /\.(?:[cm]?[tj]sx?|css|txt)$/;
+const REPO_EXT = /\.(?:[cm]?[tj]sx?|css)$/;
+const FIXTURE_EXT = /\.(?:[cm]?[tj]sx?|css|txt)$/;
 const SKIP_NAMES = new Set(["node_modules", "routeTree.gen.ts", "theme.css"]);
 
 function* files(path) {
@@ -55,11 +56,12 @@ function* files(path) {
 }
 
 // Every hit in `roots`, as "file:line: rule: match".
-function scan(roots) {
+// `.txt` is read only when `ext` is FIXTURE_EXT (fixtures and probes), never in the repo scan.
+function scan(roots, ext = REPO_EXT) {
   const hits = [];
   for (const root of roots) {
     for (const file of files(root)) {
-      if (!EXT.test(file) || SKIP.test(file) || SKIP_NAMES.has(basename(file))) continue;
+      if (!ext.test(file) || SKIP.test(file) || SKIP_NAMES.has(basename(file))) continue;
       readFileSync(file, "utf8")
         .split("\n")
         .forEach((line, i) => {
@@ -80,7 +82,7 @@ function fail(title, lines) {
 }
 
 if (process.argv.length > 2) {
-  const hits = scan(process.argv.slice(2));
+  const hits = scan(process.argv.slice(2), FIXTURE_EXT);
   if (hits.length > 0) fail("tokens: FAILED", hits);
   console.log("tokens: clean");
   process.exit(0);
@@ -98,13 +100,13 @@ const problems = [];
 for (const name of ["banned.txt", "banned.css"]) {
   const file = `${dir}/${name}`;
   const lines = readFileSync(file, "utf8").split("\n");
-  const hit = new Set(scan([file]).map((h) => Number(h.split(":")[1])));
+  const hit = new Set(scan([file], FIXTURE_EXT).map((h) => Number(h.split(":")[1])));
   lines.forEach((line, i) => {
     if (line.trim() && !hit.has(i + 1))
       problems.push(`${file}:${i + 1}: not caught: ${line.trim()}`);
   });
 }
-for (const h of scan([`${dir}/allowed.txt`, `${dir}/allowed.css`]))
+for (const h of scan([`${dir}/allowed.txt`, `${dir}/allowed.css`], FIXTURE_EXT))
   problems.push(`wrongly flagged: ${h}`);
 if (problems.length > 0) fail("tokens: FAILED, the check's own fixtures:", problems);
 

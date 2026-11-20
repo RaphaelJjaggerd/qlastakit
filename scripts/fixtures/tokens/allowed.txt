@@ -5,3 +5,5 @@ hover:shadow-card
 text-[length:var(--text-sm)]
 bg-[var(--surface-raised)]
 border-t-border
+cn("shadow-card", c && "text-foreground")
+cn("hover:bg-accent md:shadow-none", x)

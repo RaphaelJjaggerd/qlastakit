@@ -1375,7 +1375,7 @@ Ref: ui-kit (reuse).
     touches no component and no theme file; run it again only if it does.
   - At review, a banned form outside the scope list that gets through is a note on 1.4a,
     not a return. A token form in scope that is wrongly flagged is still a return.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans
@@ -1592,6 +1592,22 @@ Ref: ui-kit (reuse).
       the card on a partial list.
     - Note: `Retries` was 0 after two returns (`/advise` split the card and did not set it).
       I set it to 1 for this return.
+  - 2026-11-20 (retry 2): fixed the three `[must]`s and the minor. Fixtures: `banned.txt`
+    gained every "also caught" form from the second return (`shadow-inner`, `md:shadow-md`,
+    `[&>*]:shadow-sm`, `shadow-black/10`, `text-white/80`, `inset-ring-red-500`,
+    `divide-x-gray-200`, `text-shadow-lg/20`, `bg-conic-180`, `outline-white`,
+    `bg-[white]/50`) plus `cn("shadow-md", x)` and `cn("bg-white", c)`; `banned.css` gained
+    `@apply bg-white;`, `@apply border-t-gray-200;`, `filter: drop-shadow(...)` and the
+    variant `@apply hover:shadow-md;`; `allowed.txt` gained two `cn(...)` lines (one with a
+    variant and `shadow-none`); `allowed.css` gained `@apply hover:shadow-card;`. Every line
+    is caught or passes (self-test in verify). Scan: split the extension list; the repo scan
+    reads only `ts/tsx/js/css`, and `.txt` is read only for the fixtures and for paths given
+    on the command line. Proved: a throwaway `apps/web/src/_probe_notes.txt` holding
+    `see #fff` passes the repo scan (probe deleted). Header comment now says `allowed.css`
+    must pass too. `verify.sh` passes. Runtime criterion not re-run: the diff touches no
+    component or theme file. Decisions the PRD left open: none. Stubs: none. Wish: the
+    reviewer's idea of a required-forms list that verify checks the fixtures against, for
+    the 1.G gate.
 
 ## 1.4a Token check: theme helpers and plain CSS
 - Read: PRD §3.5
