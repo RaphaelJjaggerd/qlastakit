@@ -69,3 +69,12 @@ One entry per finding: date, what happened, suggested fix.
   `AGENTS.md` and `docs/recipes/` exists would catch it. Left for the 0.G retro.
 - `/task` set 0.4a `blocked` and left `docs/TASKS.md` uncommitted. Fix: commit the
   blocked status, so the tree is clean when the owner comes to sign.
+
+## 2026-11-20: run-tasks.sh, card 1.2
+
+- The builder's retry on 1.2 stopped `in-progress` because running its own probe,
+  `bash .potato/tmp/icon-probe.sh`, was not on the allow list. The working method tells
+  agents to put probes in `.potato/tmp/`, but the allow list let them write scripts there,
+  not run them. Fixed here with `Bash(bash .potato/tmp/*)`. Fix in potato-eng: setup's
+  starting allow list includes running scripts in the scratch folder, next to the scratch
+  folder and its gitignore line.
