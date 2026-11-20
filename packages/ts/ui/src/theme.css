@@ -81,10 +81,10 @@
   --shadow-switch-track: var(--switch-track-shadow);
   --shadow-switch-thumb: var(--switch-thumb-shadow);
   --shadow-switch-thumb-checked: var(--switch-thumb-checked-shadow);
-  --shadow-etched-h: 0 1px 0 0 var(--etched-edge);
-  --shadow-etched-v: 1px 0 0 0 var(--etched-edge);
-  --shadow-sidebar-ring: 0 0 0 1px var(--sidebar-border);
-  --shadow-sidebar-ring-hover: 0 0 0 1px var(--sidebar-accent);
+  --shadow-etched-h: var(--etched-h-shadow);
+  --shadow-etched-v: var(--etched-v-shadow);
+  --shadow-sidebar-ring: var(--sidebar-ring-shadow);
+  --shadow-sidebar-ring-hover: var(--sidebar-ring-hover-shadow);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -175,6 +175,11 @@
   --card-shadow: 6px 10px 24px -12px rgba(0, 0, 0, 0.22), 2px 4px 8px -5px rgba(0, 0, 0, 0.12);
   --popover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --subtle-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  /* elevation: etched lines and sidebar outline (colours come from tokens above) */
+  --etched-h-shadow: 0 1px 0 0 var(--etched-edge);
+  --etched-v-shadow: 1px 0 0 0 var(--etched-edge);
+  --sidebar-ring-shadow: 0 0 0 1px var(--sidebar-border);
+  --sidebar-ring-hover-shadow: 0 0 0 1px var(--sidebar-accent);
 }
 
 /* 4. Default theme, dark ---------------------------------------------------- */
@@ -236,6 +241,10 @@
   --card-shadow: 0 20px 44px -18px rgba(0, 0, 0, 0.8);
   --popover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --subtle-shadow: 0 0 #0000;
+  --etched-h-shadow: 0 1px 0 0 var(--etched-edge);
+  --etched-v-shadow: 1px 0 0 0 var(--etched-edge);
+  --sidebar-ring-shadow: 0 0 0 1px var(--sidebar-border);
+  --sidebar-ring-hover-shadow: 0 0 0 1px var(--sidebar-accent);
 }
 
 /* 5. Utilities --------------------------------------------------------------- */

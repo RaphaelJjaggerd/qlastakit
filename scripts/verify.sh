@@ -25,7 +25,13 @@ run typecheck pnpm typecheck
 run lint      pnpm lint
 
 # PRD 3.5: one icon set. Tabler only; any other icon dependency fails.
-icons=$(git ls-files '*package.json' | xargs grep -nE '"(lucide[a-z-]*|react-icons|@heroicons/[a-z-]+|@phosphor-icons/[a-z-]+|@radix-ui/react-icons|@fortawesome/[a-z-]+|@mui/icons-material|@remixicon/[a-z-]+|remixicon|iconoir-react|feather-icons|react-feather|@iconify/[a-z-]+)"[[:space:]]*:' || true)
+# General rule: any dependency name containing "icon", plus the shadcn icon libraries
+# (lucide, hugeicons, phosphor, remixicon) and the other known sets, except Tabler's.
+# Reads tracked and not-yet-added package.json files, so a new package is checked
+# before its first commit.
+icons=$(git ls-files --cached --others --exclude-standard '*package.json' \
+  | xargs grep -nEi '"[^"]*(icon|lucide|phosphor|remix|feather|fontawesome)[^"]*"[[:space:]]*:' \
+  | grep -v '"@tabler/icons-react"' || true)
 if [ -n "$icons" ]; then
   echo "icons: FAILED, a second icon dependency (only @tabler/icons-react is allowed):"
   echo "$icons"

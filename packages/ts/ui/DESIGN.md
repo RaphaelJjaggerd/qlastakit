@@ -110,6 +110,8 @@ Never use a palette class.
 | `shadow-card` | Cards |
 | `shadow-popover` | Menus, select popups, sheets |
 | `shadow-subtle` | Small lift: checkbox, active sidebar item, active tab, floating layout panel. It is `none` in dark |
+| `shadow-etched-h`, `shadow-etched-v` | The light edge under (horizontal) or beside (vertical) an etched line: `<Separator variant="etched" />`, the sidebar's etched edge |
+| `shadow-sidebar-ring`, `shadow-sidebar-ring-hover` | One-pixel outline on the `outline` sidebar menu button, at rest and on hover |
 | `surface-gradient` | Soft top-to-bottom sheen on panel, card, sidebar |
 | `glow` (or `<Card glow>`) | Diagonal corner glow ring. Opt in, use sparingly. Tune with `--glow-angle`, `--glow-count`, `--glow-width` |
 
@@ -250,4 +252,4 @@ Full list with values: `src/theme.css`. Groups:
 - Fills: `--primary`, `--secondary`, `--muted`, `--accent`, `--raised`, `--recessed`, `--solid`, switch tokens
 - Status: `--destructive`, `--success`, `--warning`
 - Lines: `--border`, `--input`, `--ring`, sidebar border and ring, `--etched-line`, `--etched-edge`, `--glow`
-- Shadows: `--raised-shadow`, `--recessed-shadow`, `--card-shadow`, `--popover-shadow`, `--subtle-shadow`, three switch shadows
+- Shadows: `--raised-shadow`, `--recessed-shadow`, `--card-shadow`, `--popover-shadow`, `--subtle-shadow`, three switch shadows, `--etched-h-shadow`, `--etched-v-shadow`, `--sidebar-ring-shadow`, `--sidebar-ring-hover-shadow`

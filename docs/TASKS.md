@@ -1114,7 +1114,7 @@ Ref: ui-kit (reuse).
   3.2, settings in 3.3). One icon set (Tabler); one app alias; stubs left behind.
 - Done when: the web app builds on the UI package; verify fails on a second icon
   dependency.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: built (reuse, per `docs/references/ui-kit.md`): the 27 primitives copied into
@@ -1126,7 +1126,7 @@ Ref: ui-kit (reuse).
     (tailwind, animate, shadcn, font, theme) exported as `@qlastakit/ui/styles.css`; the web
     `styles.css` imports it. Fixes: F4 arbitrary shadows in `separator` and `sidebar` became
     tokens `shadow-etched-h/-v`, `shadow-sidebar-ring(-hover)` (in `theme.css` and `cn.ts`);
-    F5 `"use client"` removed from all 9 files (widened per the review); F2 font import is in
+    F5 `"use client"` removed from all 8 files (widened per the review); F2 font import is in
     the UI CSS entry; F3 doc paths and recipes updated. Verify: new `icons` step fails on any
     non-Tabler icon dependency in a tracked `package.json`; proved with a throwaway
     `lucide-react` package.json (failed, probe removed). Web builds on the package
@@ -1198,6 +1198,38 @@ Ref: ui-kit (reuse).
         `--etched-h-shadow`, `--etched-v-shadow`, `--sidebar-ring-shadow` and
         `--sidebar-ring-hover-shadow` (or F4's names) to the light and dark blocks, and map
         them as `var(...)`.
+  - 2026-11-20 (retry 1, fixes for the returned review; the builder stopped when running
+    its probe was denied, and the owner's session finished the card):
+    - [must] Icon check: `scripts/verify.sh` fails on any `package.json` key containing
+      `icon`, `lucide`, `phosphor`, `remix`, `feather` or `fontawesome` (any case), except
+      `@tabler/icons-react`. That covers every shadcn `iconLibrary` (lucide, hugeicons,
+      phosphor, remixicon; tabler is the allowed one). Probed with
+      `.potato/tmp/icon-probe.sh`, which runs the same pipeline as the check against one
+      throwaway `packages/ts/_probe/package.json` per form: `@hugeicons/react`,
+      `@hugeicons/core-free-icons`, `@lucide/lab`, `lucide-react`, `@phosphor-icons/react`,
+      `@remixicon/react`, `remixicon` and `react-icons` are each caught; the clean tree and
+      a Tabler-only package report nothing; probe removed. Trade-off: any other key
+      containing `icon` (a script named `build:icons`, say) also fails; none exists.
+    - [must] Shadows: the four new shadows follow the kit's pattern. `--etched-h-shadow`,
+      `--etched-v-shadow`, `--sidebar-ring-shadow` and `--sidebar-ring-hover-shadow` hold
+      the values in the light and dark blocks, and `@theme inline` maps them as
+      `var(...)`, so a theme block can override the whole shadow. The names differ from
+      F4's (`--etched-edge-shadow-x/-y`, `--sidebar-outline-shadow`): one value token per
+      utility, named after the `shadow-*` utility the components already use.
+    - [minor] The check also reads `package.json` files not yet added (`git ls-files
+      --cached --others --exclude-standard`), so a new package fails verify before its
+      first commit.
+    - [minor] App alias: added to card 1.5's Build line. PRD §3.5 names 1.2, but the web
+      app has no alias yet, so 1.5 sets it up with the shell.
+    - [minor] Count: `"use client"` was removed from 8 files, not 9; the first entry is
+      corrected.
+    - [minor] Docs: the `DESIGN.md` shadow table and token reference list the four new
+      shadows. `component-inventory.md` marks shared components, navigation and layouts
+      "not moved yet (1.5)", names their reference-kit folders without backticks (they do
+      not exist in this package), and lists the new shadow utilities.
+    - `scripts/verify.sh` passes; `pnpm --filter @qlastakit/web build` passes. Wish: run
+      scratch probes headless (`Bash(bash .potato/tmp/*)`, added by the owner in
+      `0e895e3`).
 
 ## 1.3 Component preview
 - Read: PRD §2.5
@@ -1221,7 +1253,9 @@ Ref: ui-kit (reuse).
 - Ref: ui-kit
 - Build: the stacked-side app shell and the side auth layout (§2.5), config-driven
   navigation, access checks before render, layout derived from the route, the access
-  denied screen. The session is a stub behind an interface until 2.4a; a placeholder
+  denied screen, and one app alias in the web app's TS config (PRD §3.5; moved here
+  from 1.2, since the web app has no alias yet). The session is a stub behind an
+  interface until 2.4a; a placeholder
   sign-in route in the side auth layout is replaced in 2.4a. Auth does not exist yet, so
   the guard is tested against the stub session.
 - Done when: web tests, run against the stub session, prove a protected route never

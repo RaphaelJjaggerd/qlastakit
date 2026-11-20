@@ -44,7 +44,9 @@ Status key:
 | Icon tile | custom | Monochrome icon square or circle. Tones `muted`, `primary`, `outline` |
 | Setting row | custom | Media + title + description + trailing action |
 
-## Shared components (`src/components/shared`)
+## Shared components: not moved yet (1.5)
+
+In the reference kit under src/components/shared. Card 1.5 rebuilds them in the web app.
 
 | Component | Status | Notes |
 | --- | --- | --- |
@@ -55,7 +57,10 @@ Status key:
 | NavUser | custom, shell | Same. Uses mock user data |
 | AuthorityCheck | custom, shell | No styling |
 
-## Navigation (`src/components/shared/navigation`)
+## Navigation: not moved yet (1.5)
+
+In the reference kit under src/components/shared/navigation. Card 1.5 rebuilds them in the
+web app.
 
 | Component | Status | Notes |
 | --- | --- | --- |
@@ -65,7 +70,9 @@ Status key:
 | VerticalMenuContent, VerticalMenuIcon | custom, shell | Tabler icons |
 | HorizontalMenuContent | custom, shell | Tabler icons |
 
-## Layouts (`src/components/layouts`)
+## Layouts: not moved yet (1.5)
+
+In the reference kit under src/components/layouts. Card 1.5 rebuilds them in the web app.
 
 | Component | Status | Notes |
 | --- | --- | --- |
@@ -78,7 +85,7 @@ Status key:
 | --- | --- |
 | `title-display`, `title-page`, `title-section`, `title-row`, `label-overline` | Type styles |
 | `surface-gradient`, `surface-panel`, `glow` | Tactile surfaces |
-| `shadow-raised`, `shadow-recessed`, `shadow-card`, `shadow-popover`, `shadow-subtle` | Shadows |
+| `shadow-raised`, `shadow-recessed`, `shadow-card`, `shadow-popover`, `shadow-subtle`, `shadow-etched-h`, `shadow-etched-v`, `shadow-sidebar-ring`, `shadow-sidebar-ring-hover` | Shadows |
 | `duration-fast`, `duration-slow`, `ease-sidebar` | Motion |
 
 ## Not part of the system
