@@ -1,0 +1,7 @@
+bg-background text-foreground border-border ring-ring
+border-t border-e border-s border-x
+shadow-none shadow-card
+hover:shadow-card
+text-[length:var(--text-sm)]
+bg-[var(--surface-raised)]
+border-t-border

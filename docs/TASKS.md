@@ -1357,7 +1357,7 @@ Ref: ui-kit (reuse).
 - Build: no hardcoded color, shadow, border or surface in components; a verify check.
 - Done when: verify's token-purity check passes; runtime: a throwaway test theme changes
   the whole preview page without editing a component.
-- Status: todo
+- Status: done
 - Retries: 1
 - Log:
   - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans
@@ -1436,6 +1436,25 @@ Ref: ui-kit (reuse).
       allowed forms that verify runs.
     - Note: the reviewer could not confirm port 3198 is free. The dev server was stopped
       with TaskStop, and the port check needed approval.
+  - 2026-11-20 (retry 2): fixed both [must]s and both minors in `scripts/check-tokens.mjs`.
+    Now scans all of `packages/ts/ui/src` (not just `components/`) and `apps/web/src`, and
+    reads `.css` too; `theme.css` is skipped by name (token values belong there). New forms:
+    side and offset parts (`border-t-black`, `border-e-red-500`, `border-x-gray-200`,
+    `ring-offset-blue-500`), shadow `/NN` and `!` (`shadow-lg/20`, `shadow-lg!`,
+    `!shadow-md`), `text-[red]`, `bg-[var(--color-red-500)]`, and a CSS rule for
+    `box-shadow:`/`text-shadow:` that is not `none` or `var(...)`. Committed fixtures in
+    `scripts/fixtures/tokens` (`banned.txt`, `banned.css`: one banned form per line, 31
+    lines; `allowed.txt`: token forms such as `shadow-card`, `shadow-none`, `border-t`,
+    `border-t-border`); the script runs them on every `verify.sh` and fails if a banned line
+    is not reported or an allowed line is. Proved: scanning the banned fixtures directly
+    gives 38 reports; the repo itself and the allowed fixture pass; `verify.sh` passes. The
+    fixtures are `.txt` (and one `.css`) so typecheck and lint ignore them; `scripts/fixtures`
+    added to oxfmt `ignorePatterns` so the CSS stays one form per line. Decisions the PRD
+    left open: fixture self-test lives inside the script, not a Vitest test (verify runs it
+    with no extra wiring). Stubs: none. Wish: still blind to named colors in plain CSS
+    (`color: red`) and to colors built in template strings or `style={{}}` objects. For the
+    0.G-style gate: the reviewer's "each verify ban ships a fixture" is now true for this
+    check; the icons check in `verify.sh` has none.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
