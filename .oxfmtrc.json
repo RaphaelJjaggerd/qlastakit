@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": false,
+  "ignorePatterns": [
+    "**/dist",
+    "**/.output",
+    "**/routeTree.gen.ts",
+    "contracts/clients/ts/src/gen",
+    "contracts/openapi.json",
+    "**/.turbo",
+    "**/*.md",
+    "references",
+    "pnpm-lock.yaml"
+  ]
+}

@@ -17,6 +17,16 @@ Two rules decide what goes in this file:
 
 <!-- Added by the phase gate from repeated review findings. One line each. -->
 
+- A log line, comment or test header claims only what the code does and the test proves
+  (0.4b logged error mappings that never fired; 0.5 said "through the running app" for a
+  fake-host test).
+- A test name says what it asserts; a test that only sets up state for the next one is named
+  for that and asserts the setup worked.
+- After moving or renaming a path, URL, env var or script, sweep the whole committed tree
+  for the old name before closing, not just the lines a reviewer cites.
+- A lint or verify ban is proved with a probe for every form the repo really uses (extension,
+  alias, relative path), not one (0.4b: `../../db` was banned, `../../db.ts` was not).
+
 ## Smell baseline
 
 Applies even when the list above is empty. Every item is a judgement call,

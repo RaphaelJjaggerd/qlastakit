@@ -1,5 +1,6 @@
-// Request/response shapes for this feature. These become the public contract.
-import { z } from "@hono/zod-openapi";
+// Input and output shapes for notes: the single source for validation, the OpenAPI
+// spec and the generated client.
+import { z } from "zod";
 
 export const Note = z
   .object({
@@ -8,14 +9,14 @@ export const Note = z
     body: z.string(),
     createdAt: z.string().datetime(),
   })
-  .openapi("Note");
+  .meta({ id: "Note" });
 
 export const CreateNote = z
   .object({
     title: z.string().min(1).max(200),
     body: z.string().max(10_000).default(""),
   })
-  .openapi("CreateNote");
+  .meta({ id: "CreateNote" });
 
 export type Note = z.infer<typeof Note>;
-export type CreateNote = z.infer<typeof CreateNote>;
+export type CreateNote = z.input<typeof CreateNote>;

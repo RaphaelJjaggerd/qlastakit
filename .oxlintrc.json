@@ -1,0 +1,100 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react"],
+  "categories": { "correctness": "error" },
+  "overrides": [
+    {
+      "files": ["packages/ts/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@nestjs/*",
+                  "hono",
+                  "hono/*",
+                  "@hono/*",
+                  "express",
+                  "express/*",
+                  "fastify",
+                  "@tanstack/*",
+                  "react",
+                  "react/*",
+                  "react-dom",
+                  "react-dom/*",
+                  "better-auth",
+                  "better-auth/*"
+                ],
+                "message": "Core imports no framework and never better-auth (PRD 4, 2.2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/web/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@qlastakit/core",
+                  "@qlastakit/core/*",
+                  "@qlastakit/db",
+                  "@qlastakit/db/*",
+                  "@qlastakit/api",
+                  "@qlastakit/api/*",
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "postgres",
+                  "@nestjs/*",
+                  "**/services/**",
+                  "**/packages/ts/core/**",
+                  "**/packages/ts/db/**"
+                ],
+                "message": "Apps import only the UI package, the generated client and shared config (PRD 4)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["services/api/src/**/*.controller.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@qlastakit/db",
+                  "@qlastakit/db/*",
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "postgres",
+                  "**/db",
+                  "**/db.*",
+                  "**/db/*"
+                ],
+                "message": "A controller never touches the database; call a core function (PRD 3.1)."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "**/dist",
+    "**/.output",
+    "**/routeTree.gen.ts",
+    "contracts/clients/ts/src/gen",
+    "references"
+  ]
+}

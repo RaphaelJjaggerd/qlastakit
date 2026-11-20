@@ -7,19 +7,29 @@
     "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
     "start": "tsx --env-file-if-exists=../../.env src/index.ts",
     "typecheck": "tsc -p .",
-    "openapi:export": "tsx src/export-openapi.ts"
+    "openapi:export": "tsx --env-file=../../.env.example src/export-openapi.ts"
   },
   "dependencies": {
-    "@hono/node-server": "^2.1.8",
-    "@hono/zod-openapi": "^1.6.3",
+    "@nestjs/common": "^11.2.11",
+    "@nestjs/core": "^11.2.11",
+    "@nestjs/platform-express": "^11.2.11",
+    "@nestjs/swagger": "^11.4.8",
+    "@qlastakit/core": "workspace:*",
     "@qlastakit/db": "workspace:*",
     "drizzle-orm": "^0.45.4",
-    "hono": "^4.13.18",
+    "helmet": "^8.3.0",
+    "nestjs-zod": "^5.6.0",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@qlastakit/config": "workspace:*",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
+    "postgres": "^3.4.7",
     "tsx": "^4.23.15",
     "typescript": "^5.9.0"
   }

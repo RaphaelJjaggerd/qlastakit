@@ -34,10 +34,10 @@ references/
 | supastarter | qlastakit |
 |---|---|
 | Next.js App Router pages | TanStack Start routes |
-| Hono routes with logic inside | `packages/ts/core` functions + thin NestJS controllers |
+| Hono routes with logic inside (we use NestJS, ADR 0004) | `packages/ts/core` functions + thin NestJS controllers |
 | Prisma schema | SQL migration in `db/migrations` + Drizzle mirror |
 | `@repo/*` | `@qlastakit/*` |
-| next-intl | Whatever PRD Q1 picks |
+| next-intl | i18next + react-i18next (PRD §2.4) |
 | Server components fetching data | TanStack Query + generated client |
 
 ## Where to look: supastarter (high value, same building blocks)
@@ -90,14 +90,14 @@ not just read. It is a React Router 7 + Vite project, already tokenized.
 | UI components | `src/components/shared/ui/*` | `packages/ts/ui/src/components/`. They have no router imports, so they move unchanged |
 | Custom components | Logo, Icon tile, Setting row | `packages/ts/ui/src/components/` |
 | Preview page | the plain component preview page | A route in `apps/web` (dev only) |
-| Architecture | `CLAUDE.md`, `src/shared/configs/`, `src/components/route/` | The philosophy to preserve. Read PRD section 6b first: it lists what stays and the only approved changes |
-| Shell and screens | layouts, navigation, auth and settings pages | Rebuilt in `apps/web` on TanStack Router, Better Auth and the generated client. Keep the structure, markup and classes. Replace routing internals, guards, mock API and auth store as section 6b says |
+| Architecture | `CLAUDE.md`, `src/shared/configs/`, `src/components/route/` | The philosophy to preserve. Read PRD §3.4 and §3.5 first: they list what stays and the only approved changes |
+| Shell and screens | layouts, navigation, auth and settings pages | Rebuilt in `apps/web` on TanStack Router, Better Auth and the generated client. Keep the structure, markup and classes. Replace routing internals, guards, mock API and auth store as PRD §3.4 says |
 
 ## potato-eng reference blocks
 
 The tables above say where to look. These blocks give each kit its mode for `/task`
 and `/review`; `/vet` fills in Vetted. Modes follow the rules above: the two vendor kits
-are `study` (rule 3), the UI kit is `reuse` (it is moved in, PRD section 6b lists the
+are `study` (rule 3), the UI kit is `reuse` (it is moved in, PRD §3.4 lists the
 only approved changes).
 
 ## supastarter
@@ -115,5 +115,5 @@ only approved changes).
 ## ui-kit
 - Path: references/ui-kit/
 - Mode: reuse
-- Scope: `theme.css`, `DESIGN.md`, `src/components/shared/ui/*`, the custom components, `src/shared/configs/`, layouts and screens (rebuilt per PRD section 6b)
+- Scope: `theme.css`, `DESIGN.md`, `src/components/shared/ui/*`, the custom components, `src/shared/configs/`, layouts and screens (rebuilt per PRD §3.4)
 - Vetted:

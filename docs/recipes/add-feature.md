@@ -10,20 +10,25 @@ Example: a `projects` feature with list and create.
      created_at timestamptz not null default now()
    );
    ```
-   Run `just db-migrate`.
+   Run `mise run db-migrate`.
 
 2. **TS table.** Add the matching `pgTable` to `packages/ts/db/src/schema.ts`.
 
-3. **API feature.** Copy `services/api/src/features/notes` to `features/projects` and
-   adapt `schema.ts`, `service.ts`, `routes.ts`. Give each route a unique `operationId`.
+3. **Core + API feature.** Copy `packages/ts/core/src/notes` to `projects` (adapt
+   `schema.ts` and `service.ts`, export from `packages/ts/core/src/index.ts`), then copy
+   the `services/api/src/features/notes` folder (controller, providers, module) to
+   `features/projects` and adapt it: the controller is a thin adapter over one core function
+   and never imports the db (verify fails if it does); the providers file binds the db into
+   core. Give each route a unique `operationId` with `@ApiOperation`, and use
+   `createZodDto` + `@ZodResponse` with core's schemas.
 
-4. **Register** it in `services/api/src/app.ts`:
-   `app.route("/", projectsRoutes);`
+4. **Register** the module in `services/api/src/app.module.ts` (`imports: [...]`).
 
-5. **Regenerate the contract:** `just contract`. New functions such as `listProjects()`
-   now exist in `@qlastakit/api-client`.
+5. **Regenerate the contract:** `mise run contract`. New functions and hooks such as
+   `listProjects()` and `listProjectsOptions()` now exist in `@qlastakit/api-client`.
 
-6. **UI.** Add `apps/web/src/routes/projects.tsx`, load data in `loader` with the new
-   client function, build the page with `@qlastakit/ui` components.
+6. **UI.** Add `apps/web/src/routes/projects.tsx`, fetch data with the generated query
+   hooks (`useQuery(listProjectsOptions())`, `useMutation(createProjectMutation())`), build
+   the page with `@qlastakit/ui` components.
 
-7. **Check:** `just check`.
+7. **Check:** `mise run check`.

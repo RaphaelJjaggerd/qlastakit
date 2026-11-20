@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./migrate": "./src/migrate.ts"
   },
   "scripts": {
     "typecheck": "tsc -p .",
+    "migrate": "tsx --env-file-if-exists=../../../.env src/migrate-cli.ts",
     "pull": "drizzle-kit pull"
   },
   "dependencies": {
@@ -16,7 +18,9 @@
   },
   "devDependencies": {
     "@qlastakit/config": "workspace:*",
+    "@types/node": "^22.0.0",
     "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.0"
   }
 }

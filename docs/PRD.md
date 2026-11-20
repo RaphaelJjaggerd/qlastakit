@@ -392,7 +392,8 @@ CI. Docker Compose and the `just` recipes have never been run.
   create and list notes against the existing Hono API. Replace `db/migrate.sh` with a
   small Node migrate script of the same behaviour (ordered files, the `schema_migrations`
   table, one transaction per file), used by local dev, the test setup, CI and the deploy;
-  delete the shell script. Precondition (human): Docker Desktop installed and running.
+  delete the shell script. Precondition (human): a Docker-compatible runtime (Docker Desktop, Kiri,
+  Podman) installed and running.
   The harness starts the app in-process on a free port and calls it with `fetch` (§6), not
   Hono's `app.request()`.
   Read §6. Done: the API tests pass on real Postgres; verify fails with a clear message

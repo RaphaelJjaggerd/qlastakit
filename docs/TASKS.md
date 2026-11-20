@@ -41,9 +41,81 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   type-aware oxlint does not accept this workspace, ship oxlint without it and log why.
 - Done when: `mise run check` passes, no Biome config or justfile remains,
   `scripts/verify.sh` passes.
-- Status: todo
-- Retries: 0
+- Status: done
+- Retries: 1
 - Log:
+  - 2026-11-18 Raphael: mise installed, main pushed.
+  - 2026-11-18: built mise tasks (setup, dev, contract, check, build, db-up, db-down,
+    db-migrate; each one `pnpm` command, long ones are root scripts), pinned oxlint
+    1.94.0, oxfmt 0.79.0 and oxlint-tsgolint 7.0.2007, `.oxlintrc.json` (correctness
+    errors, typescript and react plugins), `.oxfmtrc.json` (same style as the old Biome
+    config); `pnpm lint` = `oxlint --type-aware . && oxfmt --check .`. Removed Biome,
+    justfile and `just` from mise.toml. Type-aware oxlint works on this workspace
+    (proved with a throwaway `no-floating-promises` case). Fixed `just` lines in
+    AGENTS.md, README, verify.sh, api AGENTS.md and two code comments. Decisions the PRD
+    left open: db tasks call `docker compose` / `bash db/migrate.sh` through root pnpm
+    scripts until 0.4a replaces the shell script; oxfmt reformatted two package.json
+    files (key order). Stubs: none. Wish: the agent could delete or edit files under
+    `.claude/` and delete its own throwaway files; `.claude/commands/new-feature.md`
+    still says `just contract`/`just check` (left for 0.9), and a stray
+    `services/api/src/_tmp.ts` (contents `export {};`, uncommitted) needs a human to
+    delete it.
+  - Review: returned 2026-11-18
+    - Checked: `scripts/verify.sh` passes; `mise run check` passes; `mise tasks` lists
+      all eight; no `biome.json` or `justfile` left; type-aware oxlint fires (a throwaway
+      `no-floating-promises` probe was reported as an error).
+    - Spec:
+      - [must] `mise.toml`, `package.json:11` (`db:migrate`): the replacement drops the
+        justfile's `set dotenv-load`, and nothing else loads `.env`. `db/migrate.sh:5`
+        reads `DATABASE_URL` only from the environment, so the README quick start this
+        diff wrote (`cp .env.example .env`, then `mise run db-migrate`, `README.md:12-16`)
+        now fails with "DATABASE_URL is not set". Ran `mise run db-migrate`: that is the
+        error. Restore `.env` loading for the tasks (for example mise's `[env]`
+        `_.file = ".env"`), or log why not and fix the README. The loss is not in the log.
+      - [minor] The justfile's other-language steps (`cargo fetch` / `go work sync` /
+        `uv sync` in setup, `cargo check` / `go vet` / `ruff` in check, `cargo build` in
+        build) were dropped without a log line. `packages/go/README.md:17`,
+        `packages/python/README.md:24` and `packages/rust/README.md:19` still say
+        "`just setup` and `just check` pick up <lang> automatically", which is now false.
+      - [minor] The log says only `.claude/commands/new-feature.md` is left for 0.9, but
+        `just` also remains in `docs/recipes/add-feature.md:13,23,29`,
+        `docs/recipes/add-service.md:14` and `docs/adr/0001-contract-first.md:11`. 0.9 may
+        sweep them; list them in the log.
+    - Standards: no findings.
+    - Note: deleting files is blocked for the reviewer too. Untracked
+      `services/api/src/_review_probe.ts` (now just `export {};`) needs a human to delete
+      it, along with `_tmp.ts`.
+  - 2026-11-18 (retry 1): fixed the [must]: `mise.toml` now has `[env] _.file = ".env"`,
+    so every task (including `db-migrate`) loads `.env`, replacing the justfile's
+    `set dotenv-load`. Proof is partial: `mise run check` still passes with no `.env`
+    present (a missing file is tolerated), but I could not create a `.env` here (writes to
+    it are denied), so the "DATABASE_URL is set" path is not run; the owner should run
+    `cp .env.example .env && mise run db-migrate` once. Minors: the Go, Python and Rust
+    package READMEs now say mise does not cover those languages yet and name the steps
+    the justfile had (`go work sync`/`go vet`, `uv sync`/`ruff`, `cargo fetch`/`cargo
+    check`); those steps were dropped on purpose in 0.1 (no such code exists yet) and
+    this was missing from the first log. Swept the remaining `just` mentions early
+    (`docs/recipes/add-feature.md`, `add-service.md`, `docs/adr/0001-contract-first.md`),
+    left for 0.9: `.claude/commands/new-feature.md:10` (edit to `.claude/` denied).
+    Stubs: none. Wish: write access to `.claude/` and to `.env`, and the ability to
+    delete `services/api/src/_tmp.ts` and `_review_probe.ts` (still untracked, human to
+    remove).
+  - Review: approved 2026-11-18
+    - Checked: `scripts/verify.sh` passes (tests still skipped, expected until 0.2);
+      `mise run check` passes; with no `.env`, `mise env` runs clean (missing file
+      tolerated). The load path the log could not run: a scratch dir outside the repo with
+      the same `[env] _.file = ".env"` and a `.env` holding `DATABASE_URL`; `mise env`
+      exported it. The previous [must] is fixed. The only `just` left outside history is
+      `.claude/commands/new-feature.md:10`, which is logged for 0.9.
+    - Spec:
+      - [minor] `docs/recipes/add-service.md:14` ("Add its commands to the mise tasks")
+        and `packages/{go,python,rust}/README.md` ("add the <lang> steps ... to those mise
+        tasks") read as "put `cargo check` etc. into the mise task". PRD §2.1 locks one
+        `pnpm` command per task (the header of `mise.toml` says so too). Say: add the step
+        to the root `package.json` script that the task calls. 0.9 can do this in its sweep.
+    - Standards: no findings.
+    - Note: untracked `services/api/src/_tmp.ts` and `_review_probe.ts` are still there
+      for a human to delete.
 
 ## 0.2 Test harness
 - Read: PRD §6
@@ -51,9 +123,36 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   for the web app, and a root test script.
 - Done when: `scripts/verify.sh` runs tests (no longer skipped) with at least one
   passing test.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-18: built Vitest 4 at the root (`vitest.config.ts` with `test.projects`:
+    `apps/web`, `services/api`), root `pnpm test` = `vitest run`. Web project: jsdom,
+    Testing Library (react, jest-dom, user-event), `src/test-setup.ts` (jest-dom matchers,
+    cleanup), its own `vitest.config.ts` (react plugin only, no TanStack Start plugin).
+    One passing test (`apps/web/src/harness.test.tsx`: renders the UI `Button`, clicks
+    it). API project is a node env with `passWithNoTests`, no tests yet. `scripts/verify.sh`
+    now runs tests (1 passed). Decisions the PRD left open: the API project's config sits
+    in `services/api/vitest.config.ts` and is not typechecked (outside `src`). Stubs: 0.3
+    adds the core project to the root list, 0.4a adds API Postgres setup and serial files.
+    Wish: none. The untracked `services/api/src/_tmp.ts` and `_review_probe.ts` are still
+    there for a human to delete.
+  - Review: approved 2026-11-18
+    - Checked: `scripts/verify.sh` passes and the test step runs (not skipped): Vitest
+      4.1.12, 1 file and 1 test passed. The test checks behaviour (it renders the UI
+      `Button` in jsdom, clicks it through user-event and expects the handler to run
+      once), so it fails if the DOM env or the click wiring breaks. The
+      `@testing-library/jest-dom/vitest` entry exists in the installed 7.0.1. The tsconfig
+      include change is in scope (it typechecks the new web config).
+    - Spec:
+      - [minor] `vitest.config.ts:1`: the root `package.json` has no `"type": "module"`, so
+        every run prints a Vite warning: "ESM syntax in a file loaded as CommonJS
+        (vitest.config.ts:1:1)". Vite plans to make the native loader the default, and then
+        this config would break. Rename it to `vitest.config.mts`, or set
+        `"type": "module"` at the root if nothing else depends on CJS there.
+    - Standards: no findings.
+    - Note: untracked `services/api/src/_tmp.ts` and `_review_probe.ts` are still there
+      for a human to delete.
 
 ## 0.3 Core package
 - Read: PRD §2.2, §3.1, §4, §6
@@ -61,12 +160,97 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   README-only `packages/ts/auth` and `packages/ts/payments` placeholders.
 - Done when: tests for the notes schemas and coded errors pass (the data path is proven
   in 0.4a); verify fails if core imports a framework or `better-auth`.
-- Status: todo
-- Retries: 0
+- Status: done
+- Retries: 1
 - Log:
+  - 2026-11-18: built `@qlastakit/core` (`packages/ts/core`): `CodedError(code, message)`,
+    notes zod schemas (plain zod, no `.openapi`), `listNotes(db)` / `createNote(db, input)`
+    with the db passed in. Tests: schemas and `CodedError` (core Vitest project added to
+    the root list; 7 tests plus the web one pass). The API notes routes now import core and
+    name its schemas with `.openapi("Note")` / `.openapi("CreateNote")`; contract is
+    unchanged (drift check green). Removed the feature's `schema.ts`/`service.ts`,
+    `lib/errors.ts` (`AppError`) and the `auth` and `payments` README placeholders.
+    The import ban is an oxlint `no-restricted-imports` override for `packages/ts/core/**`
+    (nestjs, hono, express, fastify, tanstack, react, better-auth), so it runs in
+    `pnpm lint` and verify; proved with a throwaway probe importing `hono` and
+    `better-auth` (both reported). Decisions the PRD left open: core depends on
+    `@qlastakit/db` and `drizzle-orm` (PRD 2.2 allows the Drizzle mirror); core errors carry
+    no HTTP status, the Hono `onError` maps code to status (`not_found` 404, else 400) until
+    0.4b; `createNote` takes `unknown` and validates itself, throwing `validation_error`;
+    the Hono default hook still validates first. No fake-db test: the data path is proven
+    in 0.4a. Stubs: none. Wish: permission to delete files from the shell (the probe
+    `packages/ts/core/src/_probe.ts`, now `export {};`, plus `services/api/src/_tmp.ts` and
+    `_review_probe.ts`, are untracked and need a human to delete; the probe file is not
+    committed).
+  - Review: returned 2026-11-18
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      Import ban: a throwaway probe in `packages/ts/core/src/_probe.ts` importing
+      `@nestjs/common`, `@tanstack/react-query`, `react`, `better-auth/plugins`, `express`
+      and `fastify` got six `no-restricted-imports` errors from oxlint; `zod` passed. The
+      probe is back to `export {};`. One zod copy (4.6.7) in the lockfile, so `.openapi()`
+      on core's plain zod schemas works, and the contract did not change.
+    - Spec:
+      - [must] Coded errors are not tested where they matter. `errors.test.ts:5-10` only
+        checks that the `CodedError` constructor keeps its arguments. The one coded error
+        core throws, `createNote` → `validation_error` (`notes/service.ts:18`), has no test,
+        and it needs no database: validation runs before `db` is touched. PRD §6 asks core
+        tests to cover validation and coded errors. Add a test that `createNote` rejects bad
+        input with a `CodedError` whose `code` is `validation_error` (a stub `db` is fine,
+        it is never reached).
+      - [must] Stale agent-guide lines, not fixed and not logged. The card deleted
+        `services/api/src/features/notes/service.ts` and `schema.ts`, but `AGENTS.md:64`
+        (golden rule 2) still says business logic goes in
+        `services/api/src/features/<name>/service.ts`. `docs/recipes/add-feature.md:17-18`
+        still says to copy the notes feature and adapt `schema.ts`, `service.ts` and
+        `routes.ts`. The rules at the top of this file say a card that removes something
+        the agent guide names fixes those lines in the same card. Only
+        `services/api/AGENTS.md` was updated. The next builder will be sent to a file that
+        no longer exists. Point both at `packages/ts/core` (schemas and the core function)
+        plus the API route. Recurs: 0.1 also left stale doc mentions after a removal (its
+        [minor]s on `just` in recipes and package READMEs).
+      - [minor] PRD §3.1 says a core function takes "an org context as arguments".
+        `listNotes(db)` and `createNote(db, input)` take none. That is right for now (notes
+        has no org id, and no org table exists until 2.6a), but the log does not list it as
+        a decision the PRD left open.
+    - Standards:
+      - [minor] Possible primitive obsession: `CodedError.code` (`errors.ts:8`) is a
+        `string`, and `STATUS` in `services/api/src/app.ts:10` is keyed by `string`, so a
+        mistyped code quietly becomes a 400. A union of known codes would let the compiler
+        catch it. This can wait for 0.5's error shape.
+    - Note: untracked `services/api/src/_tmp.ts`, `_review_probe.ts` and
+      `packages/ts/core/src/_probe.ts` are still there for a human to delete.
+  - 2026-11-18 (retry 1): fixed both [must]s. Added `notes/service.test.ts`: `createNote`
+    rejects `{}`, empty title, `null` and a string with a `CodedError` coded
+    `validation_error`, using a throwing db stub (never reached). Fixed the stale guide
+    lines: `AGENTS.md` golden rule 2 now points at `packages/ts/core` with the API route as
+    a thin adapter, and `docs/recipes/add-feature.md` step 3 now copies the core notes
+    folder plus the API `routes.ts`. Decision the PRD left open (the [minor]): core
+    functions take no org context yet, as notes has no org id and no org table exists until
+    2.6a; 2.7 adds it. The `CodedError.code` union is left for 0.5's error shape. Stubs:
+    none. Wish: delete permission for the three untracked probe files (human to remove;
+    not committed). `verify.sh` passes.
+  - Review: approved 2026-11-18
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      `notes/service.test.ts` tests behaviour: the db stub throws a plain `Error` on any
+      access, so the test fails if `createNote` reaches the db before validating, or throws
+      anything other than a `CodedError` coded `validation_error`. Both previous [must]s are
+      fixed. `AGENTS.md` golden rule 2 and `docs/recipes/add-feature.md` step 3 point at
+      files that exist (`packages/ts/core/src/notes/{schema,service}.ts`, `index.ts`, the API
+      `routes.ts`). `services/api/AGENTS.md` matches. The org-context [minor] is now logged.
+    - Spec:
+      - [minor] `AGENTS.md:107` still says "`services/api/src/features/notes` is the
+        reference feature. Copy its shape." That folder now holds only `routes.ts`; the
+        reference feature is `packages/ts/core/src/notes` plus that route. Same in
+        `.claude/commands/new-feature.md:8` (edits to `.claude/` are denied, so 0.9). Point
+        both at the pair. Recurs: the third card in a row with a stale guide pointer after
+        a move (0.1, 0.3 twice). The 0.G gate should weigh a check or a standard for it.
+    - Standards: no findings.
+    - Note: untracked `services/api/src/_tmp.ts`, `_review_probe.ts` and
+      `packages/ts/core/src/_probe.ts` are still there for a human to delete.
 
 ## 0.4a Postgres, migrations and API tests
-- Precondition (human): Docker Desktop is installed and running.
+- Precondition (human): a Docker-compatible runtime (Docker Desktop, Kiri, Podman) is
+  installed and running, with `docker` and `docker compose` on the PATH.
 - Read: PRD §6
 - Build: Compose Postgres; a small Node migrate script replacing `db/migrate.sh` with
   the same behaviour (ordered files, the `schema_migrations` table, one transaction per
@@ -76,9 +260,67 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   API tests that create and list notes against the existing Hono API.
 - Done when: the API tests pass on real Postgres; verify fails with a clear message when
   Postgres is unreachable.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-18: blocked, waiting for: Docker Desktop is installed and running (no dated
+    owner sign-off line in this Log). Owner: add `YYYY-MM-DD: owner: checked, passes.`
+    and set the card back to `todo`.
+  - 2026-11-19 Raphael: Kiri installed and running; `docker` and `docker compose` work,
+    `mise run db-up` starts Postgres, and `mise run db-migrate` (psql now runs inside the
+    container) applied 0001 on the first run and nothing on the second. Checked, passes.
+  - 2026-11-19: built the Node migrate script (`packages/ts/db/src/migrate.ts`, CLI
+    `migrate-cli.ts`, run by `mise run db-migrate` through `pnpm --filter @qlastakit/db
+    migrate`): ordered files, `schema_migrations`, one transaction per file, same
+    behaviour as the shell script; `db/migrate.sh` deleted. API test harness in
+    `services/api/test`: `global-setup.ts` creates the second database (`TEST_DB_NAME`,
+    default `app_test`, same Postgres) and migrates it; `setup.ts` truncates all tables
+    except `schema_migrations` before each test; `harness.ts` starts the app in-process
+    on port 0 and tests use `fetch`; API project has `fileParallelism: false` and
+    `DATABASE_URL` pointed at the test database. `notes.api.test.ts`: list empty,
+    create and list, invalid input (coded error), and a pair proving truncation between
+    tests. Unreachable Postgres: global setup fails with "API tests need Postgres at
+    localhost:5432 and it is not reachable (ECONNREFUSED). Start it with: mise run
+    db-up"; proved by running verify with the container down (verify prints it first).
+    Fixed the stale `db/migrate.sh` mentions in AGENTS.md, ADR 0002 and mise.toml.
+    Decisions the PRD left open: the migrate code lives in the db package and is exported
+    as `@qlastakit/db/migrate` for the test setup; `TEST_DB_NAME` added to
+    `.env.example`; the test setup falls back to the `.env.example` URL when
+    `DATABASE_URL` is unset (0.5 moves this to loading `.env.example`); `vitest.config.ts`
+    in the API imports `./test/urls.ts` with its extension (native config loader).
+    Stubs: none. Wish: shell commands that set an env var inline (to prove the
+    unreachable case against a wrong port) are blocked; I stopped the container instead.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (5 test files, 15 tests, the 5 API tests
+      included). Unreachable: stopped the Compose Postgres (`pnpm db:down`), ran verify; it
+      fails at the test step and prints "API tests need Postgres at localhost:5432 and it
+      is not reachable (ECONNREFUSED). Start it with: mise run db-up". Started it again.
+      First run: dropped `app_test`, ran `pnpm test`; global setup recreated and migrated
+      it, all 15 passed. `mise run db-migrate` on the dev database prints "migrations up
+      to date": the Node script reads the `schema_migrations` rows the shell script wrote.
+      The tests use the test database, not `app`: "does not see the previous test's note"
+      would fail if the app wrote to a database the truncation does not clear. No
+      `db/migrate.sh` mention is left outside history and the PRD/review docs. The Node
+      script is a small improvement on the shell one: the `schema_migrations` insert is
+      now in the same transaction as the file.
+    - Spec:
+      - [minor] `services/api/tsconfig.json:7` includes only `src`, so
+        `test/global-setup.ts`, `test/setup.ts` and `test/urls.ts` are not typechecked
+        (`test/harness.ts` is, through the test file's import). 0.2 logged the same gap for
+        `vitest.config.ts`; this card did not log it. Add `test` to the include (and the
+        config file), or log it. 0.4b rewrites the harness, so it can do this.
+      - [minor] `services/api/test/global-setup.ts:12-18`: any failure of the first query
+        is reported as "not reachable", including a wrong password (`28P01`) or a missing
+        admin database. The code is in the message, so it is still diagnosable, but say
+        "could not connect" or branch on connection codes.
+    - Standards:
+      - [minor] Possible mysterious name: `notes.api.test.ts:43` "starts from empty
+        tables in every test" asserts nothing; it only leaves a note behind for the next
+        test, which holds the claim. Name it for what it does ("leaves a note behind for
+        the next test") and add `expect(res.status).toBe(201)` so the pair cannot pass
+        because the post failed.
+    - Note: the recurring stale-guide finding from 0.1 and 0.3 did not recur: this card
+      fixed its `db/migrate.sh` mentions in the same change.
 
 ## 0.4b NestJS API
 - Read: PRD §2.2, §2.6, §3.1, §3.3, §6
@@ -93,9 +335,188 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   regenerated client keeps the same notes operations; verify fails if a controller
   imports db. Runtime: the API boots and serves the spec at `/api/openapi.json` and the
   docs UI at `/api/docs`.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built NestJS 11 on Express with nestjs-zod 5.6 and @nestjs/swagger 11
+    (Nest 12 is latest but nestjs-zod and swagger-compatible peers stop at 11). Global
+    prefix `/api`; spec at `/api/openapi.json`, docs UI at `/api/docs`; `cleanupOpenApiDoc`
+    applied. Notes and health are controller + module (+ `notes.providers.ts` binding the
+    db into core); Hono removed with its routes files. One error filter keeps the
+    `{ error: { code, message } }` shape. Decorator metadata: none emitted; explicit
+    `@Inject(NOTES)` tokens, `experimentalDecorators` in the API tsconfig, and bodies taken
+    as `unknown` for core to validate. Works identically in tsx (dev, spec export) and
+    Vitest 4 (proved: 15 tests pass, spec export runs, API boots). API tests are unchanged;
+    only the harness base URL gained `/api`. Verify fails if a controller imports db: oxlint
+    override on `services/api/src/**/*.controller.ts` (db package, drizzle, postgres, any
+    `**/db`), proved with a throwaway probe (both imports reported). Runtime: booted the
+    API; `/api/openapi.json` 200, `/api/docs` 200, `/api/health`, `/api/notes`, coded 400
+    and 404. ADR 0004 written. Fixed guide lines (AGENTS.md, README, API AGENTS.md,
+    add-feature recipe). Decisions the PRD left open: spec paths drop `/api` and the spec
+    has server `/api`, so the client's base URL is `/api` and operations keep `/notes`;
+    response schemas get nestjs-zod's `_Output` suffix (`Note_Output`, `NoteListDto_Output`)
+    and the web app does not import those types yet; core zod schemas carry `.meta({ id })`;
+    open `enableCors()` kept until 0.5's allowlist; the web default API URL is now
+    `http://localhost:8787/api` until 0.6 (proxy); API tsconfig now includes `test` and
+    `vitest.config.ts` (closes 0.4a's minor). Stubs: none. Wish: running a server and
+    probing it from the shell (curl, inline env vars) is blocked; I used a scratch Node
+    script. `.claude/commands/new-feature.md` still has stale pointers (0.9).
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      `notes.api.test.ts` is unchanged by the commit; only `harness.ts` gained `/api`.
+      Runtime: started the API with `pnpm --filter @qlastakit/api start` and probed it with
+      a scratch script. `/api/health` 200; `/api/openapi.json` 200 with paths `/health`,
+      `/notes` and server `/api`; `/api/docs` 200 HTML, and its assets
+      (`swagger-ui.css`, `-bundle.js`, `-init.js`) load with the `/api` server; `GET` and
+      `POST /api/notes` 200/201; empty title and missing body give 400 `validation_error`;
+      malformed JSON gives 400 `bad_request`; `/api/nope`, `/notes` and `/openapi.json` give
+      404 `not_found`, all in the `{ error: { code, message } }` shape. The client keeps
+      `getHealth`, `listNotes`, `createNote`. The spec export takes no database: `getDb()`
+      is only called inside the provider's methods. The lint ban: a throwaway
+      `*.controller.ts` probe importing `../../db`, `@qlastakit/db`, `drizzle-orm` and
+      `postgres` got four `no-restricted-imports` errors (probe deleted).
+    - Spec:
+      - [must] The controller-db ban misses imports with an extension. Done-when says
+        "verify fails if a controller imports db". A probe controller importing
+        `../../db.ts` and `../../db.js` passed both `pnpm --filter @qlastakit/api
+        typecheck` and oxlint, so verify would pass. `.oxlintrc.json:51-52` matches only
+        `**/db` and `**/db/*`. This card turned on `allowImportingTsExtensions`
+        (`services/api/tsconfig.json:8`), and the repo already imports with `.ts`
+        (`vitest.config.ts` → `./test/urls.ts`), so `../../db.ts` is a likely path, not a
+        far-fetched one. Add `**/db.*` (or the `.ts`/`.js` forms) to the patterns and probe
+        it again.
+      - [must] Stale agent-guide line. `AGENTS.md:99-100` still gives the spec as
+        `http://localhost:8787/openapi.json`; the card moved it to `/api/openapi.json`, and
+        the old URL now returns 404 (probed). The rule at the top of this file says a card
+        that renames something the guide names fixes those lines in the same card, and the
+        log says the AGENTS.md lines were fixed. Give the API as
+        `http://localhost:8787/api`, the spec as `/api/openapi.json` and the docs as
+        `/api/docs`. **Recurs:** this is the fourth stale-guide finding after a move or
+        rename (0.1, 0.3 twice, now 0.4b). The 0.G gate should turn it into a check: for
+        example, verify could grep the guides for paths and URLs that no longer exist.
+      - [minor] Every non-404 `HttpException` gets the code `bad_request`
+        (`services/api/src/errors.filter.ts:17`), including 413 (body too large) and 405.
+        Map the status to a code, or log this as a 0.5 item.
+      - [minor] The 400 for invalid input no longer carries `issues` (the Hono hook sent
+        them). That matches PRD §2.2 (code and message), but it changes the response and
+        the log does not say so.
+      - [minor] Nothing tests the filter's new `HttpException` branch (unknown route,
+        malformed JSON). 0.5's "API tests prove each one" can cover it; say so in the log.
+    - Standards:
+      - [minor] `services/api/test/harness.ts:12`: `await app.getHttpServer()` awaits a
+        synchronous call. Drop the `await`.
+      - [minor] Possible duplicated source: the health response schema is written inline
+        in `health.controller.ts:6` and not in core, though PRD §3.1 makes core's zod
+        schemas the single source. This was already the case under Hono, so it can wait,
+        but log it.
+    - Note: the `/api` choice (spec paths without `/api`, server `/api`, client base URL
+      `/api`) follows PRD §2.6. The web app's absolute default URL is logged until 0.6.
+  - 2026-11-19 (retry 2): fixed both [must]s. The controller-db ban now also matches
+    `**/db.*`; re-probed a throwaway `*.controller.ts` importing `../../db.ts` and
+    `../../db.js`: both reported (probe deleted). `AGENTS.md` and `README.md` now give the
+    API as `http://localhost:8787/api`, spec `/api/openapi.json`, docs `/api/docs`.
+    Minors: the error filter maps 404, 405 and 413 to `not_found`, `method_not_allowed`,
+    `payload_too_large`, other `HttpException`s stay `bad_request`; dropped the stray
+    `await` in `harness.ts`. Logged, not changed: the 400 for invalid input no longer
+    carries `issues` (matches PRD §2.2: code and message; the Hono hook sent them); the
+    filter's `HttpException` branch has no test yet, 0.5's "API tests prove each one"
+    covers it; the health response schema is still inline in `health.controller.ts`, not
+    in core (as under Hono), to move when core gets a health schema. Stubs: none.
+    Wish: a verify check that greps the guides for URLs and paths that no longer exist
+    (fifth stale-guide finding; for the 0.G gate). `verify.sh` passes.
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes. Lint ban: a throwaway `*.controller.ts` probe
+      importing `../../db.ts`, `../../db.js`, `../../db` and `../../db.mjs` got four
+      `no-restricted-imports` errors (probe deleted). Guides: `AGENTS.md:99-100` and
+      `README.md:20` now give `/api`. Runtime: started the API with `pnpm --filter
+      @qlastakit/api start` and probed it with a scratch script. `/api/health` 200;
+      `/api/openapi.json` 200 with paths `/health`, `/notes` and server `/api`; `/api/docs`
+      200 Swagger UI; `GET` and `POST /api/notes` 200/201; malformed JSON 400
+      `bad_request`; empty title 400 `validation_error`; `/api/nope` and `/notes` 404
+      `not_found`. The 0.4a tests and the client's three operations are unchanged.
+    - Spec:
+      - [must] The committed env template still points the web app at the API root.
+        `.env.example:7` is `VITE_API_URL=http://localhost:8787`, with no `/api`. The
+        README quick start (`README.md:12`) copies it to `.env`. Vite reads `.env` from
+        the repo root (`apps/web/vite.config.ts:7`, `envDir: "../../"`), and
+        `apps/web/src/router.tsx:5` uses `VITE_API_URL ?? "http://localhost:8787/api"`,
+        so the env value wins over the new default. The client then calls
+        `http://localhost:8787/notes` (`sdk.gen.ts` uses `url: '/notes'`), and that
+        returns 404 (probed). Following the documented setup breaks the notes page, the
+        reference feature. The log says the web default is now `/api`, but the committed
+        env file overrides it. Set `VITE_API_URL=http://localhost:8787/api` in
+        `.env.example` until 0.6 moves the client to `/api` through the proxy. Grep for
+        every other committed place that names the API origin. (I did not run the web
+        app; this follows from the four lines cited plus the probe of `/notes`.)
+        **Recurs:** this is the sixth stale-reference finding after a move or rename
+        (0.1, 0.3 twice, 0.4b twice), and the first review of this card missed it too.
+        0.G should make it a check, for example: verify greps committed docs and config
+        (`*.md`, `.env.example`, `*.toml`) for `localhost:8787` not followed by `/api`.
+      - [minor] The log says the filter now maps 405 and 413 to `method_not_allowed` and
+        `payload_too_large`, but neither happens. A 2 MB JSON body gives **500
+        `internal_error`**: Express's body parser throws a plain `http-errors` error with
+        `status` 413, not a Nest `HttpException`, so it falls into the 500 branch. `DELETE
+        /api/notes` gives 404, because Express never sends 405. So the two new
+        `HTTP_CODE` entries (`services/api/src/errors.filter.ts:10-14`) never fire, and a
+        client error is reported as a server error, against PRD §2.2 "codes, not text".
+        Either handle errors that carry a numeric `status`/`statusCode` (4xx) in the
+        filter, or drop the dead entries and log the oversized-body 500 for 0.5. Fix the
+        log line either way, because 0.5 will read it. (My earlier note on this card said
+        413 got `bad_request`; that was wrong too, because it never reached that branch.)
+      - [minor] Any other `HttpException` status, including 5xx, gets `bad_request`
+        (`errors.filter.ts:24`). For example, a thrown `InternalServerErrorException`
+        returns 500 `bad_request`. Fall back to `internal_error` for status ≥ 500.
+    - Standards:
+      - [minor] Possible speculative generality: the unreachable 405/413 entries above.
+        A lookup table for one reachable status (404) is more structure than the code
+        needs.
+    - Note: the round 1 fixes hold. The `/api` design still follows PRD §2.6.
+  - Hint: both attempts fixed only the lines the checker named, so each review found the
+    next stale consumer of the moved API root; sweep the committed tree yourself
+    (`git grep` for `localhost:8787`, `VITE_API_URL`, `openapi.json` and `/docs`, generated
+    files aside), fix every hit starting with `.env.example:7`, and confirm that a fresh
+    copy of `.env.example` gives the web app an API URL ending in `/api`. In the error
+    filter stop adding status mappings, because the error shape is 0.5's card: drop the
+    unreachable 405/413 entries, send an `HttpException` with status 500 or above to
+    `internal_error`, log the oversized-body 500 (Express throws a plain `http-errors`
+    error, not a Nest `HttpException`) as a 0.5 item, and correct the retry 2 log line
+    that claims those mappings work. The NestJS build itself passed both reviews, so
+    change nothing else.
+  - Advised: 2026-11-19: hint. The card and the PRD are sound and the build met its done
+    criteria twice; both returns came from the same path (patching the cited line after
+    the `/api` move with no repo-wide sweep, plus filter work that belongs to 0.5).
+  - 2026-11-19 (retry 3, per hint): swept the committed tree (`8787`, `VITE_API_URL`,
+    `openapi.json`, `/docs`; generated files, PRD and this file aside). The only stale hit
+    was `.env.example:7`, now `VITE_API_URL=http://localhost:8787/api`, so a fresh copy
+    gives the web app an API URL ending in `/api`; every other hit already says `/api`.
+    Error filter: dropped the unreachable 405/413 table; an `HttpException` with status
+    404 is `not_found`, 500 or above is `internal_error`, else `bad_request`. Correction to
+    the retry 2 log line: the 405/413 mappings never worked and are removed. For 0.5: an
+    oversized body is a 500 `internal_error` today, because Express's body parser throws a
+    plain `http-errors` error (status 413), not a Nest `HttpException`; 0.5 owns the error
+    shape and should handle errors carrying a 4xx `status`. Stubs: none. Wish: a verify
+    check that greps committed docs and config for `localhost:8787` not followed by `/api`
+    (for the 0.G gate). `verify.sh` passes.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, tests, contract up to date).
+      Sweep: `git grep` for `8787`, `VITE_API_URL`, `openapi.json` and `/docs` outside
+      generated files, the PRD and this file finds no stale API root; the only bare
+      `8787` hits are `API_PORT` and the listen default. Runtime: booted the API with
+      `pnpm --filter @qlastakit/api start` and probed it with a scratch script (deleted).
+      `/api/health` 200, `/api/openapi.json` 200, `/api/docs` 200 Swagger UI, `GET`/`POST
+      /api/notes` 200/201, empty title 400 `validation_error`, malformed JSON 400
+      `bad_request`, `/api/nope` and `/notes` 404 `not_found`, 2 MB body 500
+      `internal_error` (logged for 0.5). `VITE_API_URL` read from `.env.example` plus
+      `/notes` gives 200. The diff touches only `.env.example`, the filter and this log,
+      as the hint asked.
+    - Spec:
+      - [minor] An `HttpException` with status 500 or above now gets `internal_error`, but
+        it still sends `err.message` (`services/api/src/errors.filter.ts:18`), while the
+        non-HTTP 500 branch hides the message behind "Something went wrong". For 0.5's
+        error shape: decide whether 5xx messages reach the client.
+    - Standards: none.
+    - Note: the stale-reference finding recurs across 0.1, 0.3 and 0.4b. It is already
+      on the 0.G wish list as a verify grep.
 
 ## 0.5 API baseline
 - Read: PRD §2.2, §2.4
@@ -106,9 +527,51 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   the spec export load `.env.example`; dev loads `.env`, copied from it by setup). Every
   later card that adds an env var adds it to `.env.example`.
 - Done when: API tests prove each one, including a refused boot on a bad env.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built `services/api/src/env.ts` (zod schema: NODE_ENV, API_PORT,
+    DATABASE_URL, CORS_ORIGINS, LOG_LEVEL; one error naming every problem; no provider keys
+    yet, each module card adds its own rule there). `createApp({ env?, logStream? })`
+    validates first, then applies helmet, pino-http (JSON line per request, request id from
+    an incoming `x-request-id` or a new UUID, echoed back in the response) and the CORS
+    allowlist (`CORS_ORIGINS`, empty default = no cross-origin caller). Error filter: 4xx
+    from Express (`http-errors` status) now keep their status (413 is `payload_too_large`,
+    other 4xx `bad_request`, 404 `not_found`), so the oversized-body 500 logged in 0.4b is
+    fixed; any 5xx (Nest or not) is logged and sends `internal_error` with the fixed message
+    "Something went wrong", never the thrown message (closes 0.4b's last minor). Tests load
+    `.env.example` (vitest config, `test/urls.ts`) and the spec export runs with
+    `--env-file=../../.env.example`; `.env.example` gained NODE_ENV, CORS_ORIGINS and
+    LOG_LEVEL. `baseline.api.test.ts` (12 tests) proves: bad env refuses (`loadEnv` and
+    `createApp`), boot from `.env.example` alone, helmet headers, CORS allowed/blocked/
+    default-empty, coded 404/400/413, 5xx message hidden, request id generated and reused
+    and present in the log line. Decisions the PRD left open: pino-http directly rather
+    than nestjs-pino (fewer deps); log shape is pino-http's default (`req.id`); the
+    5xx filter test uses a fake host because no route throws a 5xx on purpose; helmet
+    defaults, untuned (Swagger UI docs still load). Not proven: the NODE_ENV=production
+    refusal with `console`/`fake` adapters (no adapter exists until 2.3). Stubs: none.
+    Wish: none.
+  - Review: approved 2026-11-19
+    - verify.sh passes (12 baseline tests run against Postgres). Swagger UI under helmet's
+      default CSP checked statically: @nestjs/swagger's template loads only same-origin
+      `<script src>` files, no inline script, so `/api/docs` is not blocked.
+    - [minor] Spec: `services/api/src/baseline.api.test.ts:33` "boots from .env.example
+      alone" calls `loadEnv()` on `process.env`, which is `.env.example` plus the test
+      overrides plus anything set in the shell. A var set only in a developer's shell
+      would pass here and fail in CI. `loadEnv(exampleEnv)` proves the claim directly.
+    - [minor] Spec: the 5xx filter test (`baseline.api.test.ts:103`) gives a no-op
+      `log.error` and never checks that the error is logged (`errors.filter.ts:40`). The
+      card says server errors are logged. A spy would prove it.
+    - [minor] Spec: PRD §2.2 says "one log shape everywhere", but Nest's own logger
+      (`app.ts:26`, `logger: ["error", "warn"]`) and `index.ts:7` `console.log` still print
+      plain text next to pino's JSON. This follows from using pino-http directly rather
+      than nestjs-pino. A later card (0.7 smoke or 2.x jobs) could route Nest's logger
+      through pino (`bufferLogs` + `useLogger`).
+    - [minor] Standards (mysterious name): in `errors.filter.ts:17-18`, `code` holds
+      `statusCode`, and in this file "code" otherwise means the error code. Call it
+      `statusCode`.
+    - [minor] Standards: the header of `baseline.api.test.ts:2` says each item is
+      "proven through the running app"; the 5xx case uses a fake host.
 
 ## 0.6 TanStack Query
 - Read: PRD §2.5, §2.6, §3.3, §4, §5
@@ -118,9 +581,119 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   no core, db or service code.
 - Done when: the check passes, typecheck passes and the regenerated client is in use by
   the page (0.7's smoke test proves the page in a browser).
-- Status: todo
-- Retries: 0
+- Status: done
+- Retries: 1
 - Log:
+  - 2026-11-19: built TanStack Query in the web app. Hey API's `@tanstack/react-query`
+    plugin added to the client codegen (generates `listNotesOptions`, `listNotesQueryKey`,
+    `createNoteMutation`, exported from `@qlastakit/api-client`; `@tanstack/react-query` is a
+    dep of the web app and the client). The notes page uses `useQuery` / `useMutation`
+    instead of a loader. `QueryClientProvider` is the router's `Wrap`. Base URL is `/api` in
+    the browser; the Vite dev server proxies `/api` to `localhost:$API_PORT` with no prefix
+    stripping; server-side code uses the new `API_INTERNAL_URL` (in `.env.example`, replacing
+    `VITE_API_URL`). Check: an oxlint `no-restricted-imports` override for `apps/web/**`
+    bans `@qlastakit/core`, `db`, `api`, drizzle, postgres, nestjs and relative paths into
+    `services/` and `packages/ts/core|db`; proved with a throwaway probe (all reported,
+    probe deleted). `apps/web/AGENTS.md` updated. `verify.sh` passes. Decisions the PRD left
+    open: Hey API's zod plugin not added (docs checked from memory only; the core zod
+    schemas stay the single source and nothing in the web app needs runtime validation yet);
+    the notes page fetches on the client only (no SSR prefetch), so SSR renders an empty
+    list; `API_INTERNAL_URL` is read in `router.tsx` for the server-side base URL, nothing
+    server-side calls the API until 2.4a. Not run: the page in a browser and the proxy
+    (0.7's smoke test proves them). Stubs: none. Wish: a shell that allows heredocs and
+    `sed -i` on repo files.
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Lint ban: a throwaway `apps/web/src/review-probe.ts` importing `@qlastakit/core`,
+      `@qlastakit/db/schema`, `@qlastakit/api`, relative paths into `services/api`,
+      `packages/ts/core` and `packages/ts/db`, `drizzle-orm`, `@nestjs/common` and
+      `postgres` got nine `no-restricted-imports` errors; `@qlastakit/ui` and
+      `@qlastakit/api-client` passed (probe deleted). The page uses `listNotesOptions` /
+      `createNoteMutation` from the regenerated client. No runtime criterion on this card.
+    - Spec:
+      - [must] `API_INTERNAL_URL` from the root `.env` never reaches server-side code in
+        dev. `apps/web/src/router.tsx:11` reads `process.env.API_INTERNAL_URL`. Vite does not
+        put non-`VITE_` vars into `process.env`. TanStack Start's own env plugin does
+        (`@tanstack/start-plugin-core/dist/esm/vite/load-env-plugin/plugin.js:8`,
+        `Object.assign(process.env, loadEnv(config.mode, config.root, ""))`), but it reads
+        `config.root`, which is `apps/web`, not `envDir: "../../"`. `apps/web` has no
+        `.env`, so the value in the root `.env` is ignored and only the hard-coded fallback
+        `"http://localhost:8787/api"` works. `apps/web/AGENTS.md:14-15` says "Server-side
+        code uses `API_INTERNAL_URL` from the root `.env`", which is not true. Changing the
+        var in `.env` does nothing until 2.4a's before-load check trips on it. `vite.config.ts`
+        already runs `loadEnv(mode, envDir, "")` from the root for the proxy, so the same
+        values can reach `process.env` from there. Prove it with a test or a printed value,
+        not by reading the code.
+      - [must] The card's Build line says "Check Hey API's zod plugin docs", and so does PRD
+        §3.1 (line 196, "check its current docs in 0.6") and §7 (line 418). The log says
+        "docs checked from memory only". So the open decision not to add the plugin rests on
+        a check that was not done. Read the current page
+        (https://heyapi.dev/openapi-ts/plugins/zod, linked in `docs/PRD_REVIEW.md:487`)
+        and log what it says (whether it fits the `@hey-api/*` version in use, what it
+        generates). Either decision is fine if it is logged with a reason.
+      - [minor] The fallback at `apps/web/src/router.tsx:11` hides a missing
+        `API_INTERNAL_URL` everywhere, the deploy included: SSR would quietly call
+        `localhost:8787`. The API refuses to boot on a bad env (0.5). The web server side
+        could fail loudly the same way, or at least not fall back outside dev.
+      - [minor] `contracts/clients/ts/package.json:13-15` makes `@tanstack/react-query` a
+        `dependency` of the client. A library that only works with the app's own
+        `QueryClientProvider` should list it as a `peerDependency` (plus a devDependency for
+        its typecheck), so it can never resolve to a second copy.
+    - Standards: no findings.
+    - **Recurs:** this is the second `[must]` on the web app's env wiring from the root
+      `.env` (0.4b: the `.env` value overrode the new default; 0.6: the `.env` value never
+      arrives). The phase gate could add a web test that the server-side base URL comes
+      from the root env file.
+  - 2026-11-19 (retry 2): fixed both [must]s and both minors. (1) `vite.config.ts` now
+    copies `API_INTERNAL_URL` from the root env (the `loadEnv(mode, envDir)` it already ran
+    for the proxy) into `process.env` when no real env var is set. Proved with a throwaway
+    script (deleted) that resolved the web Vite config from `apps/web` with a root
+    `.env.probe` (mode `probe`, deleted) holding `http://probe.example/api`: after
+    resolving, `process.env.API_INTERNAL_URL` printed that value (before the fix it would
+    stay undefined). (2) Hey API zod plugin: `heyapi.dev/openapi-ts/plugins/zod` returned
+    404 today; a web search found only preview mirrors of the docs, which say: add `'zod'`
+    to `plugins`, it generates request/response/definition schemas (per-output options,
+    `metadata`), has Zod v4 support in newer docs, `validator: true` on the sdk plugin
+    validates responses, and parts were labelled beta. The installed `@hey-api/openapi-ts`
+    0.99.0 lists zod in its package.json. Not verified against the canonical page, so
+    this is partial. Decision stays: not added, because the web app has no form to
+    validate yet and the core schemas remain the single source; revisit in 2.4a when the
+    first forms arrive. (3) `router.tsx`: server-side base URL has no quiet fallback
+    outside dev; `import.meta.env.DEV` keeps `localhost:8787/api`, otherwise it throws
+    "API_INTERNAL_URL is not set". (4) `@tanstack/react-query` in the api-client is now a
+    peer dependency plus a devDependency. `verify.sh` passes. Stubs: none. Wish: an
+    allowed way to run a node probe and read `.env` files; no web test yet that the
+    server base URL comes from the root env (the reviewer's gate suggestion, for 0.G).
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Runtime proof of the first [must], run by the reviewer: a throwaway script (deleted)
+      started the web Vite dev server in middleware mode with a root `.env.reviewprobe`
+      (deleted) holding `http://reviewprobe.example/api` and no `API_INTERNAL_URL` in the
+      shell. It imported `src/router.tsx` through the `ssr` environment's module runner. With
+      cwd `apps/web` (how `turbo run dev` runs it), `process.env.API_INTERNAL_URL` inside SSR
+      and the client's `baseUrl` were both the probe value. Fixed.
+    - Spec: the zod-plugin [must] is closed. The check was attempted, what was found is
+      logged, it is marked partial, and the decision has a reason, which is what the return
+      asked for. The reviewer could not fetch the page here, so the 404 is taken from the log.
+    - [minor] Spec: `apps/web/vite.config.ts:6,9` `loadEnv(mode, "../../")` resolves
+      against the process cwd, not the config file. Started from the repo root (the same
+      probe without `chdir`), it loads no root env: `process.env.API_INTERNAL_URL` stayed
+      undefined in SSR and the dev fallback `localhost:8787/api` was used without any warning.
+      `API_PORT` for the proxy has the same problem (it already did before this card). This
+      matters for 0.7 if Playwright's `webServer` starts vite from the root. Resolve `envDir`
+      from `import.meta.url`.
+    - [minor] Spec: the zod plugin "revisit in 2.4a" is only written in this log. Card 2.4a
+      does not mention it, and its Read list leaves out §3.1, so it will not come up there.
+      Its forms use Better Auth's client anyway, so the first generated-client form is
+      probably a later card. Carry it to whichever card builds the first such form, or to 0.G.
+    - [minor] Spec: the production branch (`router.tsx:14`, throws when the var is unset
+      outside dev) has not been run. Reading the code, it is correct. 4.1's Docker run is
+      the natural place to prove it.
+    - Standards: no findings.
+    - **Recurs:** this is the third finding on the web app's env wiring from the root `.env`
+      (0.4b, 0.6 return, and the cwd-relative `envDir` here). The test 0.G was asked to add
+      (the server-side base URL comes from the root env file) should also run from the repo
+      root.
 
 ## 0.7 Smoke test
 - Read: PRD §6
@@ -129,9 +702,56 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   not a build); the only pre-step is the migrate script on the test database. No
   start-and-stop shell script: one `pnpm` command runs it.
 - Done when: runtime: the smoke command passes.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built the Playwright smoke test: `pnpm smoke` (= `playwright test`),
+    `playwright.config.mts`, `e2e/smoke.spec.mts` (open `/`, fill "New note", click Add,
+    expect the note in the list), `e2e/global-setup.mts` (the one pre-step: re-exports the
+    API test global setup, which creates and migrates the test database). Playwright's
+    `webServer` starts the API (`pnpm --filter @qlastakit/api start`, port 8799,
+    `DATABASE_URL` = the test database) and the web dev server (vite dev, port 3100, so the
+    `/api` proxy applies; `API_PORT` and `API_INTERNAL_URL` point at 8799) and stops them.
+    Runtime: `pnpm smoke` passed twice (1 test, about 8s), and `scripts/verify.sh` passes.
+    Decisions the PRD left open: ports 8799/3100 so it never collides with a running dev
+    stack (`reuseExistingServer: false`); config and files are `.mts` because the root
+    package is CommonJS (the same Vite warning 0.2 logged for the Vitest config); the note
+    title carries a timestamp since the test database is not truncated by the smoke run;
+    the test waits for `networkidle` before clicking, because a click before hydration
+    submitted the form natively and the first run failed; `test-results/` and
+    `playwright-report/` gitignored; only Chromium installed (`playwright install
+    chromium`, CI in 0.8 needs the same step). Not done: the sign-up/verify/sign-in steps
+    (2.4a/2.4b extend this test); smoke is not part of `verify.sh` (CI runs it, 0.8).
+    Stubs: none. Wish: none.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Runtime, run by the reviewer: `pnpm smoke` passed twice in a row (1 test, about 7s
+      each). With `reuseExistingServer: false`, the second run passing shows both servers
+      were stopped after the first. A throwaway probe (deleted) queried both databases
+      afterwards: the two `smoke <ts>` notes are in `app_test` and none are in `app`, so the
+      browser went through the Vite proxy to the smoke API on 8799 and not to a dev stack.
+      The test checks real behaviour: the page has no optimistic update
+      (`apps/web/src/routes/index.tsx:16` only invalidates), so the note appears only after
+      it comes back from the API. The previous review's cwd-relative `envDir` minor does not
+      affect this card: `pnpm --filter … exec` runs vite in `apps/web`, and `API_PORT` /
+      `API_INTERNAL_URL` come in as real env vars, which win over the file values.
+    - Spec:
+      - [minor] `package.json:23` adds `tsx` to the root devDependencies. No root script
+        uses it and the log does not mention it. Remove it, or log why it is needed.
+      - [minor] `playwright.config.mts` and `e2e/*.mts` are not typechecked. `pnpm
+        typecheck` is `turbo run typecheck` over workspace packages, and the root has no
+        tsconfig, so these files only get oxlint. Playwright strips types without checking
+        them. 2.4a makes this test bigger, so a root (or `e2e/`) tsconfig in the typecheck
+        run would be worth adding before then.
+      - [minor] Running the smoke from a fresh clone needs `pnpm exec playwright install
+        chromium`, and that step is written only in this log. `AGENTS.md` Commands and
+        `mise.toml` do not mention `pnpm smoke`. Carry it to 0.8 (CI needs the same step) and
+        0.9 (docs sweep).
+      - [minor] `e2e/smoke.spec.mts:8` waits for `networkidle` to know the page has
+        hydrated. Playwright's docs advise against `networkidle`, and on a slow CI runner it
+        can resolve before hydration has finished. A real hydration signal, such as the Add
+        button enabled only after mount, would be more reliable. Watch for flakiness in 0.8.
+    - Standards: no findings.
 
 ## 0.8 CI
 - Read: PRD §6
@@ -140,9 +760,52 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
 - Done when: the workflow file runs the verify steps and the 0.7 smoke command with a
   Postgres service.
 - Sign-off (owner, after close): the owner pushed `phase-0` and the run was green.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: built `.github/workflows/ci.yml`: runs on pushes to `phase-*` and on PRs,
+    one job on ubuntu with a `postgres:17` service (same user, password and database as
+    `.env.example`, so tests and the smoke run boot from it alone). Steps: checkout, pnpm
+    (version from `packageManager`), Node 22 with pnpm cache, `pnpm install
+    --frozen-lockfile`, `bash scripts/verify.sh` (typecheck, lint, tests on the Postgres
+    service, contract drift), `playwright install --with-deps chromium`, `pnpm smoke`;
+    logs and Playwright output upload as an artifact on failure. `verify.sh` passes
+    locally. Not run: the workflow itself (needs a push to GitHub; that is the owner's
+    sign-off). Decisions the PRD left open: one job rather than two, so install and the
+    Postgres service are shared; concurrency group cancels superseded runs. Stubs: none.
+    Wish: the 0.7 reviewer's notes for 0.9 still stand (document `pnpm smoke` and the
+    Chromium install in AGENTS.md Commands). Watch the smoke's `networkidle` wait for
+    flakiness on the runner.
+  - Awaiting sign-off: the owner pushed `phase-0` and the run was green.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes locally (typecheck, lint, test, contract up to
+      date). The workflow YAML parses (one job, 8 steps). The done criterion is static and
+      met: `.github/workflows/ci.yml:41` runs `bash scripts/verify.sh` (typecheck, lint,
+      tests, contract drift) and `:43` runs `pnpm smoke`, with a `postgres:17` service.
+      Cross-checked against the repo, not the log: Node 22 and pnpm (from `packageManager`)
+      match `mise.toml`; `postgres:17` matches `infra/docker-compose.yml`; the service
+      user, password and port match `DATABASE_URL` in `.env.example`, which
+      `services/api/test/urls.ts` falls back to when no `.env` exists, so tests and the
+      smoke global setup reach it. The smoke `webServer` entries pass `API_PORT`,
+      `DATABASE_URL` and `API_INTERNAL_URL` as env, so the API's
+      `--env-file-if-exists=../../.env` and Vite need no `.env` on the runner. The contract
+      drift check works on a clean checkout. The 0.7 note to add the Chromium install in
+      CI is done (`:42`). Not run by the reviewer: the workflow on GitHub (needs a push,
+      outward-facing); that is the owner's sign-off, correctly left open.
+    - Spec:
+      - [minor] `.github/workflows/ci.yml:3-6`: a push to a `phase-*` branch that has an
+        open PR triggers both `push` and `pull_request`, and the concurrency group keys on
+        `github.ref` (`refs/heads/phase-0` vs `refs/pull/N/merge`), so every phase-PR push
+        runs CI twice. Harmless but doubles minutes; the card asked for both triggers, so
+        not a defect. Consider keying concurrency on the head branch if it matters.
+      - [minor] No `permissions:` block, so the job gets the repository's default
+        `GITHUB_TOKEN` scope, which can be write. `permissions: contents: read` is enough
+        for checkout, cache and artifact upload.
+      - [minor] Chromium and its system deps download on every run (no Playwright browser
+        cache). Fine at this size; revisit if the run gets slow.
+      - [minor] Carried from 0.7: the `networkidle` hydration wait
+        (`e2e/smoke.spec.mts:8`) is unproven on a CI runner until the owner's run.
+    - Standards: no findings.
 
 ## 0.9 Docs match the code
 - Read: PRD §3, §4, §5
@@ -150,16 +813,60 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   and mise; stale pointers ("section 6b", "PRD Q1", next-intl) point at §3.4 and §3.5.
 - Done when: no doc mentions Hono, Biome or `just` except as history; the add-feature
   recipe's steps match the layout.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-19: swept the committed tree (`git grep` for hono, biome, `just`, "6b", "PRD Q",
+    next-intl). Fixed: `docs/REFERENCES.md` (section 6b → PRD §3.4/§3.5, next-intl row →
+    i18next per PRD §2.4, Hono row notes NestJS and ADR 0004); `docs/recipes/add-feature.md`
+    (step 6 uses the generated query hooks, not a `loader`; step 5 names the hooks);
+    `docs/recipes/add-service.md` and the Go, Python and Rust package READMEs (add steps to
+    the root `package.json` scripts the mise tasks call, closing 0.1's minor; dropped the
+    "0.1 dropped them with `just`" history); `AGENTS.md` Commands (`pnpm smoke` and the
+    Chromium install, 0.7's minor). What is left is history or intentional: the Hono import
+    ban in `.oxlintrc.json`, the translation-table row, ADR 0004. Decisions the PRD left
+    open: none. Not done: `.claude/commands/new-feature.md:10` still names
+    `features/notes/routes.ts` (should be `notes.controller.ts`); edits under `.claude/` are
+    denied to the agent, so the owner changes that one line. Stubs: none. Wish: write access
+    to `.claude/`. `verify.sh` passes.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date).
+      Re-ran the sweep over the committed tree, excluding `references/`, TASKS.md and the
+      lockfile. Hono, Biome and `just` now appear only as history: PRD §2.1/§7,
+      PRD_REVIEW.md, ADR 0004, the REFERENCES.md translation row (marked "we use NestJS,
+      ADR 0004") and the Hono import ban in `.oxlintrc.json`. "section 6b", "PRD Q1" and
+      next-intl are gone. REFERENCES.md:40 matches PRD §2.4 (i18next + react-i18next). I
+      checked the add-feature recipe against the code. `packages/ts/core/src/notes/{schema,service}.ts`,
+      `features/notes/{notes.controller,notes.providers,notes.module}.ts` and
+      `app.module.ts` `imports: [...]` all exist. The controller uses `@ApiOperation`,
+      `createZodDto` and `ZodResponse`. The generated `listNotesOptions` and
+      `createNoteMutation` exist in `contracts/clients/ts/src/gen/@tanstack/react-query.gen.ts`
+      and `apps/web/src/routes/index.tsx` uses them as step 6 says. The next migration
+      number, 0002, is correct. The language READMEs and add-service step 7 match `mise.toml`:
+      every task is one `pnpm` command.
+    - Spec:
+      - [minor] `.claude/commands/new-feature.md:10` still says `features/notes/routes.ts`.
+        The builder logged this as left for the owner. It does not name Hono, Biome or `just`,
+        so the done criterion holds, but `/new-feature` points agents at a file that does
+        not exist. Owner: change it to `notes.controller.ts`.
+      - [minor] `docs/recipes/add-service.md:14`: `build` is listed among the scripts "the
+        mise tasks call", but `mise.toml` has no `build` task. Only the root `pnpm build`
+        script exists. Either drop `build` or say "root scripts (and the mise tasks that
+        call them)".
+      - [minor] `docs/recipes/add-feature.md:5-11`: the example `projects` table has no
+        org id. PRD §3.1 says every product table has one, and 2.7's org-id check will
+        reject this example. This was already wrong before 0.9 and orgs do not exist yet, but
+        2.7 should update the recipe.
+      - [minor] `docs/recipes/add-feature.md:34` ends with `mise run check`, which skips
+        tests and contract drift. The Definition of done in AGENTS.md is `scripts/verify.sh`.
+    - Standards: no findings.
 
 ## 0.G Phase 0 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
 - Done when: all six steps below are logged, even if a decision is "nothing"; the card
   closes with `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`.
-- Status: todo
-- Retries: 0
+- Status: done
+- Retries: 1
 - Steps:
   1. Wishes: read every task log in this phase and list each "wish the project had X".
   2. Parked list: for each parked item in PRD §8, does a logged wish match its trigger?
@@ -181,6 +888,160 @@ Generated from `docs/PRD.md` §7 on 2026-11-18. Rules from §7 every card obeys:
   5. Scope: no card in this phase added an idea-app or product feature.
   6. Log every decision, including "nothing".
 - Log:
+  - 2026-11-19: gate steps.
+    1. Wishes found in logs: write access to `.claude/` and `.env`, and shell deletes of
+       probe files (0.1, 0.3, 0.9; the probes are gone now, only `.claude/commands/new-feature.md:10`
+       is left, owner edit: `features/notes/routes.ts` -> `notes.controller.ts`, and `:8` the
+       reference-feature pointer); inline env vars and server probing from the shell (0.4a,
+       0.4b); heredocs and `sed -i` (0.6); a verify check for stale references (0.4b);
+       a web test that the server base URL comes from the root env (0.6); document
+       `pnpm smoke` (0.8, done in 0.9).
+    2. Parked list (PRD §8): no logged wish matches a trigger; nothing comes back. Gaps in
+       what Phase 0 shipped become cards: 1.8 and 1.9 below.
+    3. Retro. Repeated and mechanical: stale references after a move or rename (six
+       findings, 0.1, 0.3 twice, 0.4b three) -> card 1.8 (verify check). Web env wiring from
+       the root `.env` (0.4b, 0.6 twice) -> card 1.9 (test plus `envDir` fix). Files outside
+       `src` not typechecked (0.2, 0.4a, 0.7) -> a line added to card 2.4a (root tsconfig for
+       the Playwright files), no card of its own. Judgement: three lines added to
+       `docs/STANDARDS.md` (claims match what code and tests prove; test names say what
+       they assert; sweep the tree after a rename). AGENTS.md: nothing to delete; no
+       navigation pointer needed. Carried, not carded: Hey API zod plugin revisit (0.6) goes to
+       the first card with a generated-client form, none identified yet; Nest's logger
+       through pino (0.5 minor) waits for 2.2 jobs; production branch of the web
+       `API_INTERNAL_URL` check is proved in 4.1.
+    4. Limits: 1.8 and 1.9 pass (no owner-only criterion, the stale-reference class cost
+       retries in three cards, tooling stays small). Phase 1 now has 9 cards plus the gate.
+       Line counts (git-tracked, approximate): tooling (scripts, e2e, CI, mise, lint config,
+       vitest/playwright config, API test harness) 482; product source (web, API, core,
+       db, ui `src`) 933.
+    5. Scope: no card in Phase 0 added an idea-app or product feature (notes is the
+       reference feature, kept by the PRD).
+    6. Decisions: the above; "nothing" for AGENTS.md pruning and for parked items.
+  - 2026-11-19 (retry 1, fixes for the returned review):
+    - [must] Step 3, the four retry-costing `[must]`s with no decision:
+      0.1 `.env` loading lost in the mise swap: mechanical, but fixed in 0.1 by `[env]
+      _.file`, and the web-side part is already card 1.9; nothing new. 0.3 coded errors
+      tested only through the constructor: judgement, covered by the standard "test names
+      say what they assert / claims match what tests prove"; nothing new. 0.4b controller-db
+      ban missed `.ts`/`.js`: mechanical, fixed in 0.4b with a wider pattern; the class is
+      "a lint ban proved with a probe that skips the forms the repo uses", which is a
+      judgement call, so one line added to STANDARDS.md (probe every import form). 0.6 "check
+      the docs" done from memory: judgement, covered by the "claims match what was done"
+      standard; the zod-plugin revisit is dropped as a carried item (no card builds a
+      generated-client form yet; whoever adds the first one reads the Hey API zod page then,
+      and 0.6's log has the findings).
+    - [must] Carried items now sit on their cards: Nest's logger through pino added to card
+      2.2, the web production `API_INTERNAL_URL` branch added to card 4.1. The review's
+      third item, the zod revisit, is the "dropped" above.
+    - Minors: 0.4a's blocked state was an expected precondition wait (Docker), nothing.
+      Shell-permission wish (six cards): the owner should widen the committed
+      `.claude/settings.json` allowlist for deleting files under `.claude/tmp`-style probe
+      dirs, `sed -i` on repo files and `.claude/` edits; the agent does not change its own
+      permissions, so no card. Typecheck of `e2e/` and `playwright.config.mts` went to 2.4a
+      instead of a Phase 1 card: this departs from step 3 on purpose, because 2.4a is the
+      card that makes those files grow. Line counts, reproducible: tooling = `wc -l` over
+      `git ls-files scripts e2e .github mise.toml .oxlintrc.json .oxfmtrc.json
+      vitest.config.ts playwright.config.mts services/api/test apps/web/vitest.config.ts
+      services/api/vitest.config.ts` = 531 (the earlier 482 was an estimate); product = `wc
+      -l` over tracked non-test `.ts`/`.tsx` under `apps/web/src`, `services/api/src`,
+      `packages/ts/{core,db,ui}/src` = 641 (the earlier 933 counted other file types).
+      Card 1.8 scope now includes `.claude/commands/*.md`. Not done: the
+      `.claude/commands/new-feature.md` edit (agent edits under `.claude/` are denied).
+  - Open for the owner: card 0.8's sign-off (push `phase-0`, CI green; the `networkidle`
+    wait in the smoke test is unproven on a runner) and the `.claude/commands/new-feature.md`
+    edit.
+  - Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green.
+  - Review: returned 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date). No
+      runtime criterion. I re-read every Phase 0 log and review against the six steps. The
+      wish list, the parked-list decision, the three STANDARDS lines (each backed by two or
+      more findings: 0.4b/0.5 claims, 0.4a/0.5 test names, 0.1/0.3/0.4b sweeps), cards 1.8
+      and 1.9, and the count of 9 cards plus the gate all match the logs.
+    - Spec:
+      - [must] Step 3 is incomplete. It asks for a decision on "each finding that appeared
+        more than once, or that cost a retry". Four `[must]`s that cost a retry have no
+        decision in the log, not even "nothing":
+        0.1 `.env` loading dropped in the mise swap (TASKS.md:68). Env wiring is the
+        retro's own class, yet the retro lists only 0.4b and 0.6.
+        0.3 coded errors tested only through the constructor (TASKS.md:193), a test that
+        proves presence, not behaviour.
+        0.4b the controller-db ban missed `.ts`/`.js` imports (TASKS.md:379). The lint ban
+        was proved with a probe that did not cover the forms the repo uses.
+        0.6 "check the zod plugin docs" done from memory (TASKS.md:627). The retro carries
+        the plugin revisit but does not classify the finding.
+        For each one, say mechanical (a card), judgement (a STANDARDS line) or "nothing,
+        because ...". The done criterion is "all six steps are logged, even if a decision is
+        'nothing'".
+      - [must] Two "carried" decisions are not on the cards they name.
+        "Nest's logger through pino waits for 2.2 jobs" (TASKS.md:909-910): card 2.2 (Jobs)
+        does not mention it.
+        "the production branch of the web `API_INTERNAL_URL` check is proved in 4.1"
+        (TASKS.md:910-911): card 4.1 (Dockerfiles) does not mention it.
+        `/task` reads the card, not the 0.G log, so neither will happen. By the first
+        project standard, a log line claims only what is true. Add a line to each card, as
+        was done for 2.4a, or log them as dropped. **Recurs:** the 0.6 review raised this
+        same problem for the zod-plugin revisit, which only its log mentioned
+        (TASKS.md:685). That revisit is still only in a log ("none identified yet").
+      - [minor] Step 3 says to read every `blocked` reason. 0.4a was blocked waiting for its
+        Docker precondition (TASKS.md:266), and the retro does not mention it. Log
+        "expected precondition wait, nothing".
+      - [minor] The most repeated wish has no decision. Six cards (0.1, 0.3, 0.4a, 0.4b,
+        0.6, 0.9) asked for shell permissions: deleting probe files, inline env vars, server
+        probes, heredocs, `sed -i`, `.env` and `.claude/` writes. `.claude/settings.json`
+        is committed, so an allowlist change by the owner is one possible action. Log
+        whether the owner should make it, or "nothing" with a reason.
+      - [minor] Step 3 sends a mechanical finding to "a card in the next phase". Typechecking
+        the root `e2e/` and `playwright.config.mts` files was folded into Phase 2's 2.4a
+        instead. The reason is logged, which is fine, but say plainly that this departs from
+        the step.
+      - [minor] Step 4's line counts (tooling 482, product 933) do not say which files they
+        cover. I counted `scripts/`, `e2e/`, `.github/`, `mise.toml`, `.oxlintrc.json`, the
+        vitest and playwright configs and `services/api/test` and got 512. 1.G cannot
+        compare against a number it cannot reproduce. Record the command.
+      - [minor] Card 1.8's scope (`AGENTS.md`, `README.md`, `docs/recipes`, app/service
+        guides) leaves out `.claude/commands/*.md`, where the one known stale path is
+        (`.claude/commands/new-feature.md:10`). Its "verify passes on the repo" would pass
+        with that line still wrong. Add `.claude/commands` to the scope, or say why it is
+        out.
+    - Standards: no findings. The three new lines are judgement calls with examples, not
+      mechanical rules. Mechanical rules would belong in verify.
+  - Review: approved 2026-11-19
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, test, contract up to date). No
+      runtime criterion. Both `[must]`s are fixed. All four retry-costing findings now have
+      a decision. The pino line is on 2.2 (TASKS.md:1167) and the `API_INTERNAL_URL` proof
+      is on 4.1 (TASKS.md:1462); I checked that one against `apps/web/src/router.tsx:9-14`.
+      The zod revisit is logged as dropped, with a reason. The log's other claims hold:
+      `mise.toml:12-14` has `[env] _.file`, `.oxlintrc.json:81-83` bans `**/db.*`, and
+      `.claude/settings.json` is committed. Both line counts come out at the logged numbers
+      (531, 641) when I re-run them. All six review minors are answered.
+    - Spec:
+      - [minor] Card 1.8's "verify passes on the repo" now depends on an owner edit
+        (`.claude/commands/new-feature.md:10`; agent edits under `.claude/` are denied). The
+        dependency is only in the Build prose, so the unattended loop will reach 1.8 and
+        block. Give 1.8 a `Precondition (human)` line, as 1.1 has. Step 4 drops any card
+        whose criteria only the owner can meet, and this edit came after step 4 ran.
+      - [minor] TASKS.md:1121-1122 says `new-feature.md` `:8`, "the reference-feature
+        pointer", is stale too. It is not. Lines 8-10 already point at the core folder plus
+        the route. Only the `routes.ts` path on `:10` is wrong. A path-existence check would
+        not fail on `:8`.
+      - [minor] The 0.3 decision quotes "test names say what they assert / claims match what
+        tests prove". That merges two standards, and neither one covers "a test that proves
+        presence, not behaviour". The accurate decision is "nothing: `/review` already
+        counts presence-only tests as missing".
+      - [minor] The product count (641) includes the generated `routeTree.gen.ts` (68) and
+        `test-setup.ts` (5), but the log says "non-test". 1.G should leave both out, or say
+        it counts them.
+      - [minor] The retry-1 entry was placed above the first `Review: returned`, not after
+        it. Read by position, the card then has a Review line after its latest dated entry,
+        which is the review selector's "already reviewed" signal. 0.4b and 0.6 put retries
+        after the return. Do the same.
+    - Standards: no findings. The new STANDARDS line is a judgement call with a concrete
+      example (0.4b), and it is backed by a finding that cost a retry.
+  - 2026-11-19 Raphael: signed off without CI. GitHub Actions is blocked by a billing
+    lock on the account, so the workflow has not run. `scripts/verify.sh` and `pnpm smoke`
+    pass locally on `phase-0`; the branch is pushed and PR #1 is open. Owner exception to
+    the gate rule: 0.8 stays `Awaiting sign-off` until CI has run green once on GitHub,
+    and Phase 1 starts with it open.
 
 # Phase 1: UI kit in the web app
 
@@ -193,9 +1054,12 @@ Ref: ui-kit (reuse).
 - Read: PRD §3.4, §3.5
 - Done when: `/vet ui-kit` has written its report with keep, fix or reject per file, and
   no verdict needs an owner decision.
-- Status: todo
+- Status: blocked
 - Retries: 0
 - Log:
+  - 2026-11-19: blocked, waiting for: the owner unpacks the finished UI project into the
+    references folder (no dated owner sign-off line in this Log). Owner: add
+    `YYYY-MM-DD: owner: checked, passes.` and set the card back to `todo`.
 
 ## 1.2 Move the UI kit
 - Read: PRD §2.5, §3.4, §3.5
@@ -257,6 +1121,31 @@ Ref: ui-kit (reuse).
 - Retries: 0
 - Log:
 
+## 1.8 Stale-reference check
+- Read: PRD §6
+- Build: a `scripts/verify.sh` check that fails on stale references in committed docs and
+  config: backticked repo paths in `AGENTS.md`, `README.md`, `docs/recipes`, app/service
+  agent guides and `.claude/commands/*.md` that do not exist (the known stale one is
+  `.claude/commands/new-feature.md:10`, `features/notes/routes.ts`, and `:8`, the
+  reference-feature pointer; the owner fixes them or the check fails), and `localhost:8787` not followed by `/api` in `*.md`,
+  `.env.example` and `*.toml`. (Added by the 0.G retro: six stale-reference findings in 0.1,
+  0.3 and 0.4b.)
+- Done when: verify passes on the repo and fails on a throwaway stale path and a bare
+  `localhost:8787` (both proved, probes removed).
+- Status: todo
+- Retries: 0
+- Log:
+
+## 1.9 Web env from the root file
+- Read: PRD §2.6
+- Build: resolve `envDir` in `apps/web/vite.config.ts` from `import.meta.url`, not the cwd;
+  a web test that the server-side API base URL comes from the root env file, run from the
+  repo root. (Added by the 0.G retro: three findings on this wiring in 0.4b and 0.6.)
+- Done when: the test passes from the repo root and from `apps/web`; verify passes.
+- Status: todo
+- Retries: 0
+- Log:
+
 ## 1.G Phase 1 gate
 - Read: PRD §8, docs/STANDARDS.md, scripts/verify.sh
 - Done when: the six steps of the 0.G gate are logged for this phase, even if a decision
@@ -283,7 +1172,9 @@ Ref: supastarter (study): auth, mail, organizations.
 - Read: PRD §2.2, §2.4, §3.3
 - Build: pg-boss with its worker inside the API process, and the job pattern every later
   job follows: retries, and the job id as the idempotency key (§2.4). Comes before email
-  so auth emails go through the queue from the first send and are never reworked.
+  so auth emails go through the queue from the first send and are never reworked. Also
+  (0.G): route Nest's own logger and the boot `console.log` through pino (`bufferLogs` +
+  `useLogger`), so there is one log shape (PRD §2.2; 0.5's minor).
 - Done when: tests with a test job prove a failed job is retried and a job running twice
   has its effect once.
 - Status: todo
@@ -312,7 +1203,8 @@ Ref: supastarter (study): auth, mail, organizations.
   out; those auth screens rebuilt on it; the session replaces the 1.5 stub. The web auth
   client declares the `personal` field by hand, never importing the server's `auth`
   type. The notes endpoints require a session from here on; the API tests get a sign-in
-  helper.
+  helper. Also (0.G): the root `playwright.config.mts` and `e2e/*.mts` get a tsconfig in
+  the typecheck run, since this card makes the smoke test bigger.
 - Done when: 1.5's "a protected route never renders without a session" web test passes
   again, now against the real Better Auth session (same test, stub replaced); runtime:
   the smoke test signs up, signs in and creates a note.
@@ -575,6 +1467,9 @@ Ref: supastarter (study): payments, storage, AI.
   prefix stripping); the smoke test targets the proxy; the auth rate limiter stays on.
   The API container's start command runs the 0.4a migrate script, then starts the API.
   One CI job builds both images; the container smoke stays one local `pnpm` command.
+  Also (0.G): prove the web container's production branch of the server-side base URL
+  (`apps/web/src/router.tsx` throws when `API_INTERNAL_URL` is unset outside dev): start
+  the web container without it and see the failure, then with it and see the page load.
 - Done when: runtime: the smoke test passes against the containers through the proxy.
 - Status: todo
 - Retries: 0

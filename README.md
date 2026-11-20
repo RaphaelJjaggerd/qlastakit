@@ -6,24 +6,24 @@ SQL, and shared code is grouped by language so Rust, Go or Python can join any t
 
 ## Quick start
 
-Needs Node 22+, pnpm 10, Docker, and (recommended) [just](https://github.com/casey/just)
-and [mise](https://mise.jdx.dev).
+Needs [mise](https://mise.jdx.dev) (installs Node 22 and pnpm 10) and Docker.
 
 ```sh
 cp .env.example .env
-just setup
-just db-up && just db-migrate
-just dev
+mise install
+mise run setup
+mise run db-up && mise run db-migrate
+mise run dev
 ```
 
 Open http://localhost:3000. The notes page reads and writes through the API
-(http://localhost:8787) to Postgres.
+(http://localhost:8787/api) to Postgres.
 
 ## Layout
 
 ```
 apps/web                 TanStack Start web app
-services/api             Hono API (business logic lives here)
+services/api             NestJS API (business logic lives here)
 contracts/openapi.json   generated API contract
 contracts/clients/ts     generated TS client (@qlastakit/api-client)
 db/migrations            plain SQL, source of truth for the schema
