@@ -1333,6 +1333,24 @@ Ref: ui-kit (reuse).
     deleted, vite dev on 3195): Open menu (Account), Open sheet, Select (option Two), Hover
     me (Tooltip), Toggle (Hidden content) and Tab B (Panel B), each on a fresh page: all
     worked, 27 sections each time, 0 page errors. `verify.sh` passes. Stubs: none. Wish: none.
+  - Review: approved 2026-11-20
+    - Checked: `scripts/verify.sh` passes. Runtime, prod: `pnpm --filter @qlastakit/web build`
+      emits only stub `dev.components` chunks (client 0.09 kB, server 0.17 kB), and a grep of
+      `dist` for `data-preview`, `Component preview`, `Hover me` and `Hidden content` finds
+      nothing. Runtime, dev (reviewer's throwaway Playwright script in `.potato/tmp`, deleted;
+      `vite dev` on 3197, stopped): load, dropdown (Account label and Profile item), sheet,
+      select (picked Two), tooltip, collapsible and Tab B, each on a fresh page: 200, 27
+      sections, 0 page or console errors. Test strength (probes deleted): before any
+      interaction none of the texts the test waits for (Account, Sheet description, option
+      Two, Tooltip, Hidden content, Panel B) is in the DOM, so each assertion proves the open
+      worked; the pre-fix dropdown markup throws "MenuGroupContext is missing", so the red
+      claim holds. `use-mobile.ts:7` does call `matchMedia`, so the stub's comment is true.
+    - Spec: no findings. The returned [must] and [minor] are fixed.
+      - [minor] `apps/web/src/dev/component-preview.test.tsx:10-14`: the test compares counts
+        only, so a duplicated section would hide a missing component. Comparing the sorted
+        `data-preview` names with the file names (kebab to Pascal) would close that.
+    - Standards: no findings. Test names say what they assert; the Log claims only what was
+      run.
 
 ## 1.4 Token purity
 - Read: PRD §2.5, §3.5
