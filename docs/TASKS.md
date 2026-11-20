@@ -1354,11 +1354,29 @@ Ref: ui-kit (reuse).
 
 ## 1.4 Token purity
 - Read: PRD §2.5, §3.5
-- Build: no hardcoded color, shadow, border or surface in components; a verify check.
-- Done when: verify's token-purity check passes; runtime: a throwaway test theme changes
-  the whole preview page without editing a component.
+- Build: no hardcoded color, shadow, border or surface in components; a verify check
+  (`scripts/check-tokens.mjs`) with committed fixtures. Scope is a closed list (set by
+  `/advise`, since "no hardcoded anything" cannot be proved by a pattern check):
+  - Tailwind class strings in `.ts`/`.tsx` under `packages/ts/ui/src` and `apps/web/src`.
+  - `.css` in those roots except `theme.css`: `@apply` lines, `box-shadow` and
+    `text-shadow` declarations, hex colors and color functions.
+  - Not this card: the helper section of `theme.css` and named colors in plain CSS (both
+    1.4a); colors built in template strings or `style={{}}` objects (a wish for the gate).
+- Done when:
+  - verify's token-purity check passes on the repo.
+  - The fixtures hold banned lines and allowed lines for both file types the check scans
+    (class strings and CSS), with at least one line each for `@apply`, `cn(...)` and a
+    variant prefix. Every form named in the two returns below has a line. That includes
+    allowed CSS `box-shadow: var(--shadow-card);`, `box-shadow: none;`, `text-shadow: none;`
+    and banned CSS `@apply shadow-md;`, `@apply !shadow-md;`.
+  - The repo scan reads `.txt` only for the fixtures.
+  - Runtime (a throwaway test theme changes the whole preview page without editing a
+    component): proved by the first review, 237 of 237 elements. It holds while the diff
+    touches no component and no theme file; run it again only if it does.
+  - At review, a banned form outside the scope list that gets through is a note on 1.4a,
+    not a return. A token form in scope that is wrongly flagged is still a return.
 - Status: todo
-- Retries: 2
+- Retries: 0
 - Log:
   - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans
     `packages/ts/ui/src/components` and `apps/web/src` (tests skipped) for hex colors,
@@ -1508,6 +1526,30 @@ Ref: ui-kit (reuse).
       first time an allowed form was wrongly blocked. For the 1.G gate: a verify ban's
       fixtures must hold banned and allowed lines for every file type the ban scans, and each
       repo idiom (`@apply`, `cn(...)`, variant prefixes) must have a line.
+  - Advised: 2026-11-20: split. The card was wrong, not the approach: "no hardcoded color,
+    shadow, border or surface" has no end for a pattern check, so each return fixed the
+    named forms and the next review found new ones (the runtime criterion passed at the
+    first review). 1.4 now has a closed scope list and a fixture criterion that names the
+    two open `[must]`s; the CSS gaps both returns left as minors (`theme.css` helpers,
+    plain-CSS named colors) moved to 1.4a. Both returns stand; I do not disagree with either.
+
+## 1.4a Token check: theme helpers and plain CSS
+- Read: PRD §3.5
+- Build: extend `scripts/check-tokens.mjs` (split from 1.4 by `/advise`; these are the
+  minors of 1.4's second return):
+  - Scan `packages/ts/ui/src/theme.css` from its helper section on (`@utility`,
+    `@layer base`); the token blocks stay skipped. This is where PRD §3.5's "shadows
+    applied by a helper outside the components" would live now.
+  - Flag named colors in plain CSS declarations (`color: red`, `background: white`,
+    `border: 1px solid black`, `linear-gradient(white, black)`) and a hardcoded layer
+    after a token in a shadow (`box-shadow: var(--x), 0 0 0 1px black`).
+- Done when: verify passes on the repo; the fixtures hold a banned line for each form
+  above and an allowed line for each token form the helper section of `theme.css` really
+  uses; a throwaway `@utility lift { @apply shadow-md; }` added to `theme.css` fails
+  verify (proved, probe removed).
+- Status: todo
+- Retries: 0
+- Log:
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
