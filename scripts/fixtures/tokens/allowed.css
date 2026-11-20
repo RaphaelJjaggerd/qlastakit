@@ -5,3 +5,11 @@
 .e { @apply shadow-none border-t border-border; }
 .f { @apply bg-background text-foreground; }
 .g { @apply hover:shadow-card; }
+.h { background-image: var(--surface-gradient); }
+.i { padding: var(--glow-width, 1px); transition-duration: var(--duration-fast); }
+.j { background: repeating-conic-gradient(from var(--glow-angle, 45deg), transparent 0deg, var(--glow) 90deg); }
+.k { -webkit-mask: linear-gradient(#000 0 0) content-box; }
+.l { background: transparent; border-color: currentColor; }
+.m { @apply border-border outline-ring/50; }
+.n { @apply bg-panel ring-1 ring-foreground/10; }
+@utility lift { @apply shadow-card; }

@@ -1,6 +1,7 @@
 // Token-purity check (PRD 3.5, card 1.4): UI code and web app code carry no hardcoded
 // color, shadow, gradient or surface. Everything comes from a semantic token defined in
-// packages/ts/ui/src/theme.css (the one file skipped, because token values belong there).
+// packages/ts/ui/src/theme.css (its token blocks are skipped, because token values belong
+// there; its helper section, from the first `@utility` on, is scanned).
 // Exits 1 and lists every hit.
 //   node scripts/check-tokens.mjs            check the repo, then the fixtures
 //   node scripts/check-tokens.mjs <paths..>  check these files or folders (probes)
@@ -18,6 +19,11 @@ const PROPS =
 // border-x-, ring-offset-, inset-ring- ...
 const PART = "(?:(?:[xytblrse]|offset|inset)-)?";
 const NAMED = `white|black|${PALETTE}`;
+
+// Named CSS colors in plain declarations (color: red; border: 1px solid black).
+const CSS_NAMED = `white|black|gray|grey|silver|maroon|olive|navy|aqua|gold|brown|tan|coral|crimson|salmon|khaki|ivory|beige|lavender|magenta|turquoise|${PALETTE}`;
+const CSS_PROP =
+  "[\\w-]*color|background(?:-image)?|border(?:-[a-z-]+)?|outline|fill|stroke|box-shadow|text-shadow|filter|text-decoration";
 
 const RULES = [
   ["hex color", /#[0-9a-fA-F]{3,8}\b/],
@@ -37,12 +43,28 @@ const RULES = [
   ["other shadow", /\b(?:drop-shadow|inset-shadow|text-shadow(?!:))/],
   ["css shadow", /\b(?:box|text)-shadow:(?!\s*(?:none\b|var\())/],
   ["gradient", /\bbg-(?:linear|gradient|radial|conic)/],
+  // Plain CSS only (third entry). One line per declaration; a value split over lines is not read.
+  [
+    "named color",
+    new RegExp(
+      `(?:^|[;{\\s])(?:${CSS_PROP})\\s*:[^;}]*?(?<![\\w-])(?:${CSS_NAMED})(?![\\w.(-])`,
+      "i",
+    ),
+    "css",
+  ],
 ];
+
+// Helper section of theme.css (PRD 3.5): everything from the first `@utility` on is scanned;
+// the token blocks above it are skipped. `linear-gradient(#000 0 0)` is the mask-alpha idiom
+// (the color is never painted), so it is not a hardcoded color.
+const THEME = "theme.css";
+const THEME_HELPERS = /^@(?:utility|layer base)\b/;
+const MASK_IDIOM = /linear-gradient\(#000 0 0\)/g;
 
 const SKIP = /\.(?:test|spec)\.[cm]?[tj]sx?$/;
 const REPO_EXT = /\.(?:[cm]?[tj]sx?|css)$/;
 const FIXTURE_EXT = /\.(?:[cm]?[tj]sx?|css|txt)$/;
-const SKIP_NAMES = new Set(["node_modules", "routeTree.gen.ts", "theme.css"]);
+const SKIP_NAMES = new Set(["node_modules", "routeTree.gen.ts"]);
 
 function* files(path) {
   if (statSync(path).isFile()) {
@@ -62,10 +84,22 @@ function scan(roots, ext = REPO_EXT) {
   for (const root of roots) {
     for (const file of files(root)) {
       if (!ext.test(file) || SKIP.test(file) || SKIP_NAMES.has(basename(file))) continue;
-      readFileSync(file, "utf8")
-        .split("\n")
+      const lines = readFileSync(file, "utf8").split("\n");
+      const isCss = file.endsWith(".css");
+      // theme.css: skip the token blocks, scan from the helper section on.
+      let first = 0;
+      if (basename(file) === THEME) {
+        first = lines.findIndex((l) => THEME_HELPERS.test(l));
+        if (first < 0) first = lines.length;
+      }
+      lines
+        .map((line) => line.replace(MASK_IDIOM, ""))
         .forEach((line, i) => {
-          for (const [name, re] of RULES) {
+          if (i < first) return;
+          // Full-line CSS comments are prose ("not a plain colour or shadow").
+          if (isCss && /^\s*(?:\/\*|\*)/.test(line)) return;
+          for (const [name, re, only] of RULES) {
+            if (only === "css" && !isCss) continue;
             const m = re.exec(line);
             if (m) hits.push(`${file.replaceAll("\\", "/")}:${i + 1}: ${name}: ${m[0].trim()}`);
           }

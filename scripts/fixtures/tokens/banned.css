@@ -10,3 +10,9 @@
 .j { @apply border-t-gray-200; }
 .k { filter: drop-shadow(0 1px 2px black); }
 .l { @apply hover:shadow-md; }
+.m { color: red; }
+.n { background: white; }
+.o { border: 1px solid black; }
+.p { background: linear-gradient(white, black); }
+.q { box-shadow: var(--x), 0 0 0 1px black; }
+@utility lift { @apply shadow-md; }

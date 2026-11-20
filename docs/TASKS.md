@@ -1648,9 +1648,30 @@ Ref: ui-kit (reuse).
   above and an allowed line for each token form the helper section of `theme.css` really
   uses; a throwaway `@utility lift { @apply shadow-md; }` added to `theme.css` fails
   verify (proved, probe removed).
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: extended `scripts/check-tokens.mjs`. `theme.css` is no longer skipped: it is
+    scanned from its first `@utility` on (token blocks above stay skipped). New CSS-only rule
+    "named color": a named color (white, black, the palette names, a few more) in a color-bearing
+    declaration (`color`, `*-color`, `background`, `border*`, `outline`, `fill`, `stroke`,
+    `box-shadow`, `text-shadow`, `filter`, `text-decoration`); this also catches a hardcoded
+    layer after a token (`box-shadow: var(--x), 0 0 0 1px black`). Fixtures: `banned.css` gained
+    `color: red`, `background: white`, `border: 1px solid black`, `linear-gradient(white, black)`,
+    the shadow layer after a token and `@utility lift { @apply shadow-md; }`; `allowed.css`
+    gained the token forms the helper section really uses (`var(--surface-gradient)`,
+    `var(--glow-width, 1px)`, `repeating-conic-gradient(... transparent, var(--glow))`,
+    `transparent`, `currentColor`, `@apply border-border outline-ring/50`,
+    `@apply bg-panel ring-1 ring-foreground/10`). Proved: a throwaway
+    `@utility lift { @apply shadow-md; }` in `theme.css` failed the check
+    (`theme.css:315: stock shadow`); probe removed, `theme.css` is unchanged in the diff.
+    `verify.sh` passes. Decisions the PRD left open: the mask-alpha idiom
+    `linear-gradient(#000 0 0)` (used by `glow`) is stripped before matching, since that color
+    is never painted; full-line CSS comments are skipped (theme.css has prose containing
+    "shadow"); the named-color rule reads one line per declaration, so a value split over
+    lines (the multi-line `repeating-conic-gradient` in `glow`) is not read. Stubs: none.
+    Wish: a statement-level CSS reader (or a real CSS parser) so multi-line declarations
+    are checked.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
