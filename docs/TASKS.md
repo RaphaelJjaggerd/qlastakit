@@ -1265,9 +1265,24 @@ Ref: ui-kit (reuse).
 - Read: PRD §2.5
 - Build: a dev-only route rendering every component.
 - Done when: runtime: it renders in dev and is absent from the production build.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: built `/dev/components` (`apps/web/src/routes/dev.components.tsx`), which
+    lazy-loads `apps/web/src/dev/component-preview.tsx`, one labelled section
+    (`data-preview`) per UI component (27, every file in `packages/ts/ui/src/components`).
+    Gate: `import.meta.env.DEV ? lazy(import(...)) : null` plus a `beforeLoad` that throws
+    `notFound()` outside dev. Runtime, dev: a throwaway Playwright script (in
+    `.potato/tmp`, not committed) started `vite dev` on 3190, opened `/dev/components`: 200,
+    27 sections, no console or page errors. Runtime, prod: `pnpm --filter @qlastakit/web
+    build` emits only a 0.17 kB `dev.components` stub chunk; grep of `dist` for preview
+    text finds nothing. Not run: requesting the route from a production server (the
+    `notFound()` branch is read, not run). `verify.sh` passes. Decisions the PRD left open:
+    the route stays in the route tree in prod (404) rather than being excluded from the
+    generator; the sidebar is shown with `collapsible="none"` in a bordered box; no icons
+    in the preview (Tabler is wired by 1.5). Stubs: none. Wish: a check that fails when a
+    UI component is missing from the preview (today a new component must be added by hand;
+    the file header says so).
 
 ## 1.4 Token purity
 - Read: PRD §2.5, §3.5
