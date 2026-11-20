@@ -1054,12 +1054,14 @@ Ref: ui-kit (reuse).
 - Read: PRD §3.4, §3.5
 - Done when: `/vet ui-kit` has written its report with keep, fix or reject per file, and
   no verdict needs an owner decision.
-- Status: blocked
+- Status: todo
 - Retries: 0
 - Log:
   - 2026-11-19: blocked, waiting for: the owner unpacks the finished UI project into the
     references folder (no dated owner sign-off line in this Log). Owner: add
     `YYYY-MM-DD: owner: checked, passes.` and set the card back to `todo`.
+  - 2026-11-20 Raphael: finished UI kit unpacked into `references/ui-kit/` (`src/` is
+    there). Checked, passes.
 
 ## 1.2 Move the UI kit
 - Read: PRD §2.5, §3.4, §3.5
@@ -1122,12 +1124,14 @@ Ref: ui-kit (reuse).
 - Log:
 
 ## 1.8 Stale-reference check
+- Precondition (human): the owner fixes the stale path in `.claude/commands/new-feature.md`
+  (agent edits under `.claude/` are denied).
 - Read: PRD §6
 - Build: a `scripts/verify.sh` check that fails on stale references in committed docs and
   config: backticked repo paths in `AGENTS.md`, `README.md`, `docs/recipes`, app/service
-  agent guides and `.claude/commands/*.md` that do not exist (the known stale one is
-  `.claude/commands/new-feature.md:10`, `features/notes/routes.ts`, and `:8`, the
-  reference-feature pointer; the owner fixes them or the check fails), and `localhost:8787` not followed by `/api` in `*.md`,
+  agent guides and `.claude/commands/*.md` that do not exist (the known stale one was
+  `.claude/commands/new-feature.md:10`, `features/notes/routes.ts`; the owner fixed it, see
+  the precondition), and `localhost:8787` not followed by `/api` in `*.md`,
   `.env.example` and `*.toml`. (Added by the 0.G retro: six stale-reference findings in 0.1,
   0.3 and 0.4b.)
 - Done when: verify passes on the repo and fails on a throwaway stale path and a bare
@@ -1135,6 +1139,8 @@ Ref: ui-kit (reuse).
 - Status: todo
 - Retries: 0
 - Log:
+  - 2026-11-20 Raphael: `.claude/commands/new-feature.md` fixed; it now names
+    `services/api/src/features/notes/notes.controller.ts`. Checked, passes.
 
 ## 1.9 Web env from the root file
 - Read: PRD §2.6
