@@ -78,3 +78,8 @@ One entry per finding: date, what happened, suggested fix.
   not run them. Fixed here with `Bash(bash .potato/tmp/*)`. Fix in potato-eng: setup's
   starting allow list includes running scripts in the scratch folder, next to the scratch
   folder and its gitignore line.
+- The 1.2 reviewer's icon probe had to sit at a real path (`packages/ts/_probe/`), since
+  the check skips gitignored files and so never sees `.potato/tmp/`. It deleted the probe
+  file but not the folder: `rmdir` was not on the allow list, and the empty folder was
+  left for the owner. Fixed here with `Bash(rmdir:*)` (empty folders only; recursive `rm`
+  stays blocked). Fix in potato-eng: the starting allow list has `rmdir` next to `rm`.
