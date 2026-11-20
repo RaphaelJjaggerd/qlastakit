@@ -1815,6 +1815,26 @@ Ref: ui-kit (reuse).
 - Status: todo
 - Retries: 0
 - Log:
+  - 2026-11-20 Raphael: partial start kept, uncommitted, after the loop hit the usage
+    limit mid-card. Finish it; do not start over.
+    - In the tree, under `apps/web/src/`:
+      - `access.ts`: route static data and `protect()`, a before-load check. No session
+        redirects to sign-in; missing authority throws `AccessDeniedError`.
+      - `session.ts`: the `SessionSource` interface and a stub, signed in by default.
+      - `config/app.config.ts`: layout keys, the sign-in path and the default layout.
+      - `config/navigation.config.ts`: one nav tree, plus `findTopLevel`.
+      - `shell/logo.tsx` (the name is a prop, per F6), `shell/access-denied.tsx` and
+        `shell/nav-icons.tsx` (the Tabler icon map).
+      - `i18n.ts` and `messages/en.json`: a message-key stub that 1.6 replaces.
+    - Also a `shadow-rail-active` token in `packages/ts/ui/src/theme.css` and `cn.ts`,
+      unused until the shell exists.
+    - Not started: the stacked-side shell, the side auth layout, the routes (including
+      the `/sign-in` placeholder), the app alias, the tests.
+    - Blocking verify:
+      - `access.ts:45` redirects to `/sign-in`, which is not a route yet (typecheck).
+      - The web app does not list `@tabler/icons-react` as a dependency
+        (`shell/nav-icons.tsx:1`, typecheck).
+      - `session.ts` fails `oxfmt --check`.
 
 ## 1.6 i18n
 - Read: PRD §2.4
