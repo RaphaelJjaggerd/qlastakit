@@ -2637,6 +2637,29 @@ Ref: ui-kit (reuse).
       step 5 (no product feature), line counts (1009 tooling, 4442 product).
   - Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green. Also
     for the owner: the two `/task` step 8 edits above.
+  - Review: approved 2026-11-20 (verify passes)
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, icons, tokens, stale refs, tests,
+      contract). No runtime criterion. I grepped every `[must]` in Phase 1 (`:1050-2453`) and
+      matched each one to the redone step 3. I read each cited line: they are the findings
+      named. The retry entry sits after the `Review: returned` block it answers. `/task` step
+      8 is the close step (`commands/task.md:42`), so it is the right place for the two owner
+      edits. The Phase 2 count is 13 cards plus the gate. 2.1a now moves the icons check into
+      `scripts/check-icons.mjs`. The `DESIGN.md` Logo pointer matches
+      `apps/web/src/shell/logo.tsx`. A grep of `DESIGN.md` for card and shell references
+      finds no other stale line.
+    - Spec: no `[must]`. Every first-return `[must]` (a-e) and minor now has a decision or a
+      correction. The step 4 departure is stated plainly.
+      - [minor] The retry says "every Phase 1 `[must]` listed by card and line". Three are
+        missing: 1.4 `:1446` and `:1583`, and 1.4a `:1725`. All three are line-4
+        ban-forms `[must]`s, and `:1446` and `:1725` also carry a line-1 claim. The
+        ban-forms and claims decisions already cover them, so no finding is left without a
+        decision. The completeness claim itself is false, though. **Recurs:** this is a
+        claims-standard (line 1) slip again, after 0.4b, 0.5, 1.4, 1.5 and 1.7. The 2.G gate
+        should check whether "sharper line, not a check" was enough.
+    - Standards: no `[must]`.
+      - [minor] The retry says "STANDARDS line 1 now sits next to a third line naming the
+        'from memory' ... forms". The new line is the ninth bullet (`docs/STANDARDS.md:39`),
+        not next to line 1, and "third line" matches no count. Cite it by number.
 
 # Phase 2: Accounts
 
