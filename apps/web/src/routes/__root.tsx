@@ -22,7 +22,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="bg-white text-neutral-900 antialiased">
+      <body className="bg-background text-foreground antialiased">
         {children}
         <Scripts />
       </body>

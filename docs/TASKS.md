@@ -1357,9 +1357,30 @@ Ref: ui-kit (reuse).
 - Build: no hardcoded color, shadow, border or surface in components; a verify check.
 - Done when: verify's token-purity check passes; runtime: a throwaway test theme changes
   the whole preview page without editing a component.
-- Status: todo
+- Status: done
 - Retries: 0
 - Log:
+  - 2026-11-20: built `scripts/check-tokens.mjs`, called from `scripts/verify.sh`: scans
+    `packages/ts/ui/src/components` and `apps/web/src` (tests skipped) for hex colors,
+    color functions (`rgb`, `hsl`, `oklch`...), palette and bare white/black colors,
+    arbitrary-value colors, stock shadows (`shadow`, `shadow-sm..2xl`, `shadow-[..]`,
+    `drop-shadow`), and `bg-gradient`/`bg-linear`; `shadow-none` and token shadows
+    (`shadow-card`) pass. Components were already clean; the one hit was the web root
+    `<body className="bg-white text-neutral-900">` (`routes/__root.tsx`), now
+    `bg-background text-foreground`. Proved the check fails: a throwaway probe file
+    (deleted) with `bg-white`, `shadow-md`, `text-[#fff]`, `bg-gradient-to-r` reported all
+    of them, exit 1; the repo passes. Runtime: a throwaway Playwright script (in
+    `.potato/tmp`, deleted; `vite dev` on 3196) opened `/dev/components`, added a test
+    theme (`[data-theme='probe']`, token values only: colors, shadows, surface gradient)
+    and set it on `<html>`. Body background went `oklch(1 0 0)` to `rgb(255, 0, 0)`; in
+    all 27 sections every section had changed elements (e.g. Alert 11 of 11, Card 8 of 8,
+    Button 11 of 13, Sidebar 13 of 13), and of the styled elements only one stayed the
+    same: the `--solid` Button, because the probe did not set `--solid`. 0 page errors.
+    `verify.sh` passes. Decisions the PRD left open: the check is a Node script, not an
+    oxlint rule (no lint plugin covers Tailwind class strings); one hit reported per rule
+    per line; scope is components plus the whole web app, not `theme.css` (that is where
+    token values belong). Stubs: none. Wish: the check does not see colors built in
+    template strings or `style={{}}` objects; extend it if a card needs that.
 
 ## 1.5 Shell and routing
 - Read: PRD §3.1, §3.4, §3.5
