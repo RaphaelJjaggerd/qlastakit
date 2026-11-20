@@ -2456,8 +2456,8 @@ Ref: ui-kit (reuse).
 - Done when: the six steps of the 0.G gate are logged for this phase, even if a decision
   is "nothing"; the card closes with
   `Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green`.
-- Status: done
-- Retries: 0
+- Status: todo
+- Retries: 1
 - Log:
   - 2026-11-20: gate steps.
     1. Wishes found in Phase 1 logs: shell limits (no `&&`, `sed`, redirects, `node ...;
@@ -2514,6 +2514,68 @@ Ref: ui-kit (reuse).
        until CI has run green once on GitHub (billing lock, see the 0.G log); no Phase 1
        card is unsigned.
   - Awaiting sign-off: the owner pushes the branch, opens the PR, CI is green.
+  - Review: returned 2026-11-20 (verify passes)
+    - Checked: `scripts/verify.sh` passes (typecheck, lint, icons, tokens, stale refs, tests,
+      contract). No runtime criterion. I re-read every Phase 1 log, return and approval
+      against the six 0.G steps (TASKS.md:870-889) and PRD §8. Both line counts come out at
+      the logged numbers: `git diff --shortstat` over the tooling paths gives 1009. The
+      product paths, minus `*.test.ts(x)`, `routeTree.gen.ts`, `test-setup*`, css, json, svg
+      and fonts, give 4442. The parked-list decision is right: no Phase 1 wish matches a
+      §8 trigger. The closing `Awaiting sign-off` line is there.
+    - Spec:
+      - [must] Step 3 is incomplete. It asks for a decision on "each finding that appeared
+        more than once, or that cost a retry". These have none, not even "nothing":
+        (a) 1.6, second return (TASKS.md:2012): a "Try again" button that did not retry. It
+        cost a retry and an `/advise` wake.
+        (b) 1.7 (TASKS.md:2116): the recipe failed when followed as written, because it left
+        out the required `type` field. It cost a retry.
+        (c) The claims standard (STANDARDS line 1) was broken again in 1.4 (TASKS.md:1520),
+        1.5 (`:1851`) and 1.7 (`:2126`). 1.7's review called it "the third time" and
+        "Flagged for the phase gate". 1.5's review (`:1888-1890`) asked the gate to consider
+        a mechanical form. The retro never names this standard. A judgement line that keeps
+        breaking needs a decision: a check, a sharper line, or "nothing, because ...".
+        (d) Retry entries placed above the `Review: returned` block they answer: 0.G
+        (`:1034`) and 1.7 (`:2147`), flagged for the gate both times. The selector in
+        `/review` depends on that order. This is a repeat finding with no decision.
+        (e) The log says the new order-and-timing line is "the sharper form both returns
+        asked for" on test names. It is not. The third test-name break (1.6,
+        `nav-panel.i18n.test.tsx:60`, TASKS.md:2022) was a presence check named "shows only
+        message-file text", and timing has nothing to do with it. The new line, scoped to
+        "a test of order or timing", would not catch it. So the repeat still has no decision
+        that fits it, and the log line claims more than is true (STANDARDS line 1).
+        **Recurs:** 0.G was returned for this same gap (TASKS.md:961-974): retry-costing
+        findings with no decision. The gate steps should make the retro list every
+        `[must]` of the phase by line, each with its decision. Then a missing one shows.
+      - [minor] Step 3 counts are wrong in three places. 1.4 was returned three times
+        (`:1402`, `:1476`, `:1549`), not "twice"; the same log says "1.4 three times" a
+        few lines later. "Untranslated strings (1.6 three `[must]`s)": only one of 1.6's five
+        `[must]`s was an untranslated string (`:1968`). The reference-diff line cites "1.2 and
+        1.10", but 1.5 was returned for the same thing (`:1868`).
+      - [minor] Step 4: "Phase 2 now has 14 cards plus the gate". The count is 13 cards
+        (2.1, 2.1a, 2.2, 2.3, 2.4a-c, 2.5, 2.6a-b, 2.7, 2.8a-b) plus the gate, so 14 with the
+        gate against the accepted 13. The conclusion stands. Step 4 also says to "drop or
+        park any that fails". Keeping 2.1a over the limit has a logged reason, but say
+        plainly that it departs from the step, as 0.G did for 2.4a.
+      - [minor] Step 1 leaves out two wishes. 1.1 (`:1075`): the scout's shell was denied, so
+        there was no byte-diff of the two `theme.css` copies. 1.2 (`:1143-1144`): `DESIGN.md`
+        sections that still describe the shell. List them with a decision, or say why they
+        are not wishes.
+    - Standards:
+      - [minor] `docs/STANDARDS.md:33`: "A test of order or timing ..." has an example that
+        is not about order or timing. The 1.6 title test was tautological: it passed through
+        `i18n.t`, not through the route's `head()`. Drop "of order or timing" ("a test reaches
+        its asserted result only through the path its name claims"). That covers both 1.5
+        and 1.6, and the nav-panel presence test from (e) above as well.
+      - [minor] `docs/STANDARDS.md:29`: the new reference-diff line goes in a file that
+        `/task` does not read (`STANDARDS.md:3`: "Read by `/review`, not by `/task`"). 1.10's
+        wish and both 1.10 reviews asked for a `/task` step. The log already says a standard
+        "did not stop" the ban-forms class (`:2480`), and the same thing is likely to happen
+        here. Keep the line, but also log the `/task` step as an owner edit, or give the
+        reason there is none.
+      - [minor] Card 2.1a, guard (1): "verify fails if a `scripts/check-*` ban has no fixture
+        folder". The icons ban lives inline in `verify.sh`, not in a `scripts/check-*` file,
+        so the meta-check will not see the next inline ban. Say so on the card, or move the
+        icons check into `scripts/check-icons.mjs` as part of the guard.
 
 # Phase 2: Accounts
 
