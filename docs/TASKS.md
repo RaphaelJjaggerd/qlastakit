@@ -2660,6 +2660,12 @@ Ref: ui-kit (reuse).
       - [minor] The retry says "STANDARDS line 1 now sits next to a third line naming the
         'from memory' ... forms". The new line is the ninth bullet (`docs/STANDARDS.md:39`),
         not next to line 1, and "third line" matches no count. Cite it by number.
+  - 2026-11-21 Raphael: signed off on local runs; GitHub Actions is still blocked by the
+    billing lock, so CI has not run. `scripts/verify.sh` and `pnpm smoke` pass locally on
+    `phase-1`, and the branch is pushed. Both `/task` step 8 edits accepted and made by the
+    owner: diff each reused file against its reference for a `reuse` card, and append a
+    retry entry after the latest `Review:` block. 0.8 stays `Awaiting sign-off` until CI
+    has run green once on GitHub.
 
 # Phase 2: Accounts
 
@@ -2670,13 +2676,14 @@ Ref: supastarter (study): auth, mail, organizations.
 - Read: PRD §3.5
 - Done when: `/vet supastarter` has written a report for the auth, mail, organizations
   and settings paths `docs/REFERENCES.md` lists, and no verdict needs an owner decision.
-- Status: blocked
+- Status: todo
 - Retries: 0
 - Log:
   - 2026-11-20: blocked, waiting for: the Phase 1 gate (1.G) signed in `docs/TASKS.md` on
     `origin/main`. `origin/main` is at cf77ecb (the phase-0 merge); `phase-1` (where the
     work sits, HEAD ccce6de) has not been merged, and no `phase-2` branch exists. Owner:
     merge `phase-1` to `main`, push, then set this card back to `todo`.
+  - 2026-11-21 Raphael: 1.G signed off; set back to `todo`.
 
 ## 2.1a Verify guards
 - Read: docs/STANDARDS.md, `scripts/check-tokens.mjs`, `apps/web/AGENTS.md`
