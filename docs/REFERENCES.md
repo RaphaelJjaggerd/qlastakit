@@ -116,4 +116,4 @@ only approved changes).
 - Path: references/ui-kit/
 - Mode: reuse
 - Scope: `theme.css`, `DESIGN.md`, `src/components/shared/ui/*`, the custom components, `src/shared/configs/`, layouts and screens (rebuilt per PRD §3.4)
-- Vetted:
+- Vetted: 2026-11-20, report in `docs/references/ui-kit.md`

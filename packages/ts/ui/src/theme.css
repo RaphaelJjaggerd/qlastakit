@@ -1,0 +1,355 @@
+/* ============================================================================
+   Tactile theme for @qlastakit/ui
+   shadcn/ui compatible CSS variables for Tailwind v4.
+
+   HOW THEMES WORK
+   - A theme is a set of token VALUES. Components never contain colours,
+     shadows or gradients, only token-backed utilities.
+   - Default theme:  ":root, .force-light" (light)  and  ".dark" (dark).
+   - To add a theme, copy the two blocks at the bottom of this file
+     ("ADD A THEME HERE"), rename, and change values. Nothing else.
+   - Activate with  <html data-theme="name">  plus the usual "dark" class.
+   - ".force-light" / ".dark" on any element force a mode for that subtree.
+
+   SECTIONS
+   1. Variants          2. Tailwind mapping (@theme)
+   3. Default light     4. Default dark
+   5. Utilities         6. Base styles        7. Add a theme here
+   ============================================================================ */
+
+/* 1. Variants -------------------------------------------------------------- */
+@custom-variant dark (&:is(.dark, .dark *):not(.force-light, .force-light *));
+
+/* 2. Tailwind mapping: token -> utility. Add a line here when you add a token. */
+@theme inline {
+  --font-sans: var(--font-family);
+  --font-heading: var(--font-family-heading);
+  --default-transition-duration: var(--duration-base);
+  --default-transition-timing-function: var(--ease-standard);
+  --text-overline: 0.7rem;
+  --text-overline--line-height: 1rem;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-panel: var(--panel);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
+
+  --color-raised: var(--raised);
+  --color-raised-border: var(--raised-border);
+  --color-recessed: var(--recessed);
+  --color-recessed-border: var(--recessed-border);
+  --color-solid: var(--solid);
+  --color-solid-foreground: var(--solid-foreground);
+  --color-switch-track: var(--switch-track);
+  --color-switch-track-checked: var(--switch-track-checked);
+  --color-switch-thumb: var(--switch-thumb);
+  --color-etched-line: var(--etched-line);
+  --color-etched-edge: var(--etched-edge);
+  --color-glow: var(--glow);
+
+  --shadow-raised: var(--raised-shadow);
+  --shadow-recessed: var(--recessed-shadow);
+  --shadow-card: var(--card-shadow);
+  --shadow-popover: var(--popover-shadow);
+  --shadow-subtle: var(--subtle-shadow);
+  --shadow-switch-track: var(--switch-track-shadow);
+  --shadow-switch-thumb: var(--switch-thumb-shadow);
+  --shadow-switch-thumb-checked: var(--switch-thumb-checked-shadow);
+  --shadow-etched-h: var(--etched-h-shadow);
+  --shadow-etched-v: var(--etched-v-shadow);
+  --shadow-sidebar-ring: var(--sidebar-ring-shadow);
+  --shadow-sidebar-ring-hover: var(--sidebar-ring-hover-shadow);
+  --shadow-rail-active: var(--rail-active-shadow);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* 3. Default theme, light --------------------------------------------------- */
+:root,
+.force-light {
+  --font-family: "Instrument Sans Variable", sans-serif;
+  --font-family-heading: var(--font-family);
+  --radius: 0.625rem;
+
+  /* motion */
+  --duration-fast: 100ms;
+  --duration-base: 150ms;
+  --duration-slow: 200ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-sidebar: linear;
+
+  /* surfaces */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --panel: oklch(0.965 0.001 286.375);
+  --card: oklch(0.965 0.001 286.375);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --surface-gradient: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.07));
+
+  /* actions and text */
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+
+  /* status */
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.627 0.17 149.214);
+  --warning: oklch(0.666 0.179 58.318);
+
+  /* lines and focus */
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --etched-line: rgba(0, 0, 0, 0.08);
+  --etched-edge: rgba(255, 255, 255, 0.85);
+  --glow: rgba(255, 255, 255, 0.55);
+
+  /* navigation */
+  --sidebar: oklch(0.94 0.001 286.375);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
+  --rail: oklch(0.141 0.005 285.823);
+  --rail-foreground: oklch(1 0 0);
+
+  /* tactile: raised (buttons) */
+  --raised: rgba(255, 255, 255, 0.55);
+  --raised-border: rgba(0, 0, 0, 0.08);
+  --raised-shadow: inset 0 1px 2px -0.5px #ffffff99, 0 1px 2px #00000030, 0 2px 4px #00000015;
+  /* tactile: recessed (text fields) */
+  --recessed: rgba(0, 0, 0, 0.04);
+  --recessed-border: rgba(0, 0, 0, 0.08);
+  --recessed-shadow: inset 0 2px 4px -1px #00000021, inset 0 -1.5px 1px -0.5px #ffffffe6;
+  /* tactile: solid (secondary button) */
+  --solid: rgba(0, 0, 0, 0.8);
+  --solid-foreground: oklch(1 0 0);
+  /* tactile: switch */
+  --switch-track: rgba(0, 0, 0, 0.8);
+  --switch-track-checked: oklch(1 0 0);
+  --switch-thumb: oklch(0.68 0 0);
+  --switch-track-shadow: inset 0 -1px 0 0 rgba(255, 255, 255, 0.9);
+  --switch-thumb-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.95), 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --switch-thumb-checked-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+
+  /* elevation */
+  --card-shadow: 6px 10px 24px -12px rgba(0, 0, 0, 0.22), 2px 4px 8px -5px rgba(0, 0, 0, 0.12);
+  --popover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --subtle-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  /* elevation: etched lines and sidebar outline (colours come from tokens above) */
+  --etched-h-shadow: 0 1px 0 0 var(--etched-edge);
+  --etched-v-shadow: 1px 0 0 0 var(--etched-edge);
+  --sidebar-ring-shadow: 0 0 0 1px var(--sidebar-border);
+  --sidebar-ring-hover-shadow: 0 0 0 1px var(--sidebar-accent);
+  --rail-active-shadow: inset 0 1px 2px color-mix(in oklab, var(--rail-foreground) 45%, transparent);
+  --rail-active-surface: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--rail-foreground) 20%, transparent),
+    color-mix(in oklab, var(--rail-foreground) 5%, transparent)
+  );
+}
+
+/* 4. Default theme, dark ---------------------------------------------------- */
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --panel: oklch(0.21 0.006 285.885);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --surface-gradient: linear-gradient(to bottom, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.12));
+
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.696 0.17 149.214);
+  --warning: oklch(0.828 0.156 70.08);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --etched-line: rgba(0, 0, 0, 0.4);
+  --etched-edge: rgba(255, 255, 255, 0.07);
+  --glow: rgba(255, 255, 255, 0.55);
+
+  --sidebar: oklch(0.18 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --rail: oklch(0.141 0.005 285.823);
+  --rail-foreground: oklch(1 0 0);
+
+  --raised: rgba(255, 255, 255, 0.06);
+  --raised-border: rgba(255, 255, 255, 0.08);
+  --raised-shadow: inset 0 1px 2px -0.5px #ffffff38, 0 2px 4px #00000061, 0 4px 8px #00000040;
+  --recessed: rgba(0, 0, 0, 0.22);
+  --recessed-border: rgba(255, 255, 255, 0.06);
+  --recessed-shadow: inset 0 2px 4px -1px #00000080, inset 0 -1.5px 1px -0.5px #ffffff33;
+  --solid: rgba(0, 0, 0, 0.7);
+  --solid-foreground: oklch(1 0 0);
+  --switch-track: rgba(0, 0, 0, 0.7);
+  --switch-track-checked: oklch(1 0 0);
+  --switch-thumb: oklch(0.55 0 0);
+  --switch-track-shadow:
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.3), inset 0 -4px 6px -4px rgba(255, 255, 255, 0.18);
+  --switch-thumb-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 0 1px 2px 0 rgba(0, 0, 0, 0.6);
+  --switch-thumb-checked-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.55);
+
+  --card-shadow: 0 20px 44px -18px rgba(0, 0, 0, 0.8);
+  --popover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --subtle-shadow: 0 0 #0000;
+  --etched-h-shadow: 0 1px 0 0 var(--etched-edge);
+  --etched-v-shadow: 1px 0 0 0 var(--etched-edge);
+  --sidebar-ring-shadow: 0 0 0 1px var(--sidebar-border);
+  --sidebar-ring-hover-shadow: 0 0 0 1px var(--sidebar-accent);
+  --rail-active-shadow: inset 0 1px 2px color-mix(in oklab, var(--rail-foreground) 45%, transparent);
+  --rail-active-surface: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--rail-foreground) 20%, transparent),
+    color-mix(in oklab, var(--rail-foreground) 5%, transparent)
+  );
+}
+
+/* 5. Utilities --------------------------------------------------------------- */
+/* Motion utilities: components use these instead of duration-100 / duration-200 / ease-linear */
+@utility duration-fast {
+  --tw-duration: var(--duration-fast);
+  transition-duration: var(--duration-fast);
+}
+@utility duration-slow {
+  --tw-duration: var(--duration-slow);
+  transition-duration: var(--duration-slow);
+}
+@utility ease-sidebar {
+  --tw-ease: var(--ease-sidebar);
+  transition-timing-function: var(--ease-sidebar);
+}
+
+/* Tactile utilities that are not a plain colour or shadow */
+@utility surface-gradient {
+  background-image: var(--surface-gradient);
+}
+@utility surface-rail-active {
+  background-image: var(--rail-active-surface);
+}
+@utility glow {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: var(--glow-width, 1px);
+    background: repeating-conic-gradient(
+      from var(--glow-angle, 45deg),
+      transparent 0deg,
+      var(--glow) calc(180deg / var(--glow-count, 2)),
+      transparent calc(360deg / var(--glow-count, 2))
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* Type styles. Use these instead of composing size + weight by hand. */
+@utility title-display {
+  @apply font-heading text-2xl font-semibold tracking-tight;
+}
+@utility title-page {
+  @apply font-heading text-2xl font-bold tracking-tight;
+}
+@utility title-section {
+  @apply font-heading text-base font-bold;
+}
+@utility title-row {
+  @apply text-sm font-semibold;
+}
+@utility label-overline {
+  @apply text-overline font-medium tracking-wide text-muted-foreground uppercase;
+}
+
+/* Layout shell content surface: panel tone + hairline ring. */
+@utility surface-panel {
+  @apply bg-panel ring-1 ring-foreground/10;
+}
+
+/* 6. Base styles ------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* 7. ADD A THEME HERE ---------------------------------------------------------
+   Copy both blocks, replace "name", and set every token from sections 3 and 4.
+   Tokens you leave out fall back to the default theme.
+
+[data-theme='name'],
+[data-theme='name'] .force-light {
+  --background: ...;
+}
+[data-theme='name'].dark,
+[data-theme='name'] .dark {
+  --background: ...;
+}
+----------------------------------------------------------------------------- */

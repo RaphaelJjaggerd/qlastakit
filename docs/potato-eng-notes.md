@@ -69,3 +69,29 @@ One entry per finding: date, what happened, suggested fix.
   `AGENTS.md` and `docs/recipes/` exists would catch it. Left for the 0.G retro.
 - `/task` set 0.4a `blocked` and left `docs/TASKS.md` uncommitted. Fix: commit the
   blocked status, so the tree is clean when the owner comes to sign.
+
+## 2026-11-20: run-tasks.sh, card 1.2
+
+- The builder's retry on 1.2 stopped `in-progress` because running its own probe,
+  `bash .potato/tmp/icon-probe.sh`, was not on the allow list. The working method tells
+  agents to put probes in `.potato/tmp/`, but the allow list let them write scripts there,
+  not run them. Fixed here with `Bash(bash .potato/tmp/*)`. Fix in potato-eng: setup's
+  starting allow list includes running scripts in the scratch folder, next to the scratch
+  folder and its gitignore line.
+- The 1.2 reviewer's icon probe had to sit at a real path (`packages/ts/_probe/`), since
+  the check skips gitignored files and so never sees `.potato/tmp/`. It deleted the probe
+  file but not the folder: `rmdir` was not on the allow list, and the empty folder was
+  left for the owner. Fixed here with `Bash(rmdir:*)` (empty folders only; recursive `rm`
+  stays blocked). Fix in potato-eng: the starting allow list has `rmdir` next to `rm`.
+
+## 2026-11-20: run-tasks.sh, usage limit during card 1.5
+
+- The loop hit the account's usage limit partway into `/task` on 1.5. The session ended
+  with the card `in-progress`, the work uncommitted (228 lines across nine new files plus
+  a theme token, not yet typechecking), and no log line. The next `run-tasks.sh` run
+  would stop at once on "a card is blocked or in-progress", and only the owner can tell a
+  limit stop from a real one. Fix: `run-tasks.sh` recognises the usage-limit message in
+  the session output (or its exit report), prints that the limit was hit and when it
+  resets, and stops without leaving the card `in-progress`. It sets the card back to
+  `todo`, and for uncommitted work either logs "partial work left uncommitted, limit hit"
+  on the card or stashes it under a named stash, so the owner can decide whether to keep it.

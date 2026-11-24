@@ -1,0 +1,29 @@
+.a { box-shadow: 0 1px 2px var(--x), 0 0 1px #000; }
+.b { color: #333; }
+.c { box-shadow: 0 1px 2px black; }
+.d { background: rgb(0 0 0); }
+.e { @apply shadow-md; }
+.f { @apply !shadow-md; }
+.g { @apply shadow-lg/20; }
+.h { text-shadow: 0 1px 2px black; }
+.i { @apply bg-white; }
+.j { @apply border-t-gray-200; }
+.k { filter: drop-shadow(0 1px 2px black); }
+.l { @apply hover:shadow-md; }
+.m { color: red; }
+.n { background: white; }
+.o { border: 1px solid black; }
+.p { background: linear-gradient(white, black); }
+.q { box-shadow: var(--x), 0 0 0 1px black; }
+@utility lift { @apply shadow-md; }
+* { box-shadow: 0 1px 2px #000; }
+*, ::before, ::after { border-color: black; }
+/* note */ .y { color: red; }
+.r { color: lightgray; }
+.s { background: whitesmoke; }
+.t { border-color: tomato; }
+.u { color: darkblue; }
+.v { color: rebeccapurple; }
+.w { stroke: hotpink; }
+.x { background-color: Canvas; }
+.z { background: linear-gradient(#000 0 0); }

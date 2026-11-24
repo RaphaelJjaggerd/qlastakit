@@ -1,0 +1,19 @@
+{
+  "app.name": "qlastakit",
+  "app.documentTitle": "App",
+  "dev.preview.title": "Component preview",
+  "nav.home": "Home",
+  "nav.closePanel": "Close panel",
+  "user.menu.logout": "Log out",
+  "access.denied.title": "Access denied",
+  "access.denied.body": "You have no permission to visit this page.",
+  "error.title": "Something went wrong",
+  "error.body": "This page could not be shown. Try again in a moment.",
+  "auth.signIn.title": "Sign in",
+  "auth.signIn.body": "Sign-in is a placeholder until accounts arrive.",
+  "auth.signIn.continue": "Continue as the stub user",
+  "notes.title": "Notes",
+  "notes.new.placeholder": "New note",
+  "notes.add": "Add",
+  "notes.error": "Could not reach the notes API."
+}

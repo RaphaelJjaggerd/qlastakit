@@ -1,0 +1,44 @@
+@theme inline {
+  --color-background: var(--background);
+}
+:root {
+  --background: oklch(1 0 0);
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.1);
+}
+/* 5. Utilities */
+@utility duration-fast {
+  transition-duration: var(--duration-fast);
+}
+@utility glow {
+  &::before {
+    background: repeating-conic-gradient(
+      from var(--glow-angle, 45deg),
+      transparent 0deg,
+      var(--glow) 90deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+  }
+}
+@utility lift { @apply shadow-md; } /* banned */
+@utility surface-panel {
+  @apply bg-panel ring-1 ring-foreground/10;
+}
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html { background: tomato; } /* banned */
+}
+/* 7. ADD A THEME HERE: copy the blocks below. */
+[data-theme='ocean'],
+[data-theme='ocean'] .force-light {
+  --background: oklch(0.9 0.02 240);
+  --primary: #0a66c2;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.2);
+}
+[data-theme='ocean'].dark {
+  --background: #001122;
+}
+@utility ocean-lift { box-shadow: 0 1px 2px #000; } /* banned */

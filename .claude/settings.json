@@ -16,6 +16,7 @@
       "Bash(npx:*)",
       "Bash(bash scripts/*)",
       "Bash(scripts/verify.sh)",
+      "Bash(bash .potato/tmp/*)",
       "Bash(docker compose:*)",
       "Bash(docker ps:*)",
       "Bash(ls:*)",
@@ -25,7 +26,8 @@
       "Bash(mkdir:*)",
       "Bash(cp:*)",
       "Bash(mv:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(rmdir:*)"
     ],
     "deny": ["Read(./.env)", "Edit(./.env)"]
   },

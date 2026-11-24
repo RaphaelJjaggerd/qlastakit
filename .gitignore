@@ -13,6 +13,7 @@ __pycache__
 
 # Reference kits (reading material only, see docs/REFERENCES.md)
 references/
+!docs/references/
 
 # potato-eng verify output
 Logs/

@@ -24,6 +24,28 @@ run() {
 run typecheck pnpm typecheck
 run lint      pnpm lint
 
+# PRD 3.5: one icon set. Tabler only; any other icon dependency fails.
+# General rule: any dependency name containing "icon", plus the shadcn icon libraries
+# (lucide, hugeicons, phosphor, remixicon) and the other known sets, except Tabler's.
+# Reads tracked and not-yet-added package.json files, so a new package is checked
+# before its first commit.
+icons=$(git ls-files --cached --others --exclude-standard '*package.json' \
+  | xargs grep -nEi '"[^"]*(icon|lucide|phosphor|remix|feather|fontawesome)[^"]*"[[:space:]]*:' \
+  | grep -v '"@tabler/icons-react"' || true)
+if [ -n "$icons" ]; then
+  echo "icons: FAILED, a second icon dependency (only @tabler/icons-react is allowed):"
+  echo "$icons"
+  exit 1
+fi
+echo "icons: one icon set"
+
+# PRD 2.5 / 3.5: token purity. No hardcoded color, shadow or surface in components
+# or the web app; they come from theme.css tokens.
+node scripts/check-tokens.mjs || exit 1
+
+# Card 1.8: committed guides and config must not point at paths or URLs that moved.
+node scripts/check-stale-refs.mjs || exit 1
+
 # No tests exist yet; the Phase 0 test-harness card adds a root "test" script.
 if grep -qE '"test"[[:space:]]*:' package.json; then
   run test pnpm test
